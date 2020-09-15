@@ -2,27 +2,48 @@
 # Write '. buildAndroidKernel' in terminal to run
 HASCONF=1
 USAGE="Use \033[1mkhelp\033[0m to know more"
+SUSAGE=1
 
-upcstr(){ CONFSTRING="$HOME/.qsbuild_config\n\n$QSH will used to building\nBuilder: $KBUILD_BUILD_USER@$KBUILD_BUILD_HOST"
-}
 kloadconf(){
+if [ -f $HOME/.qsbuild_config ]; then
 . $HOME/.qsbuild_config
 export QSH=$BUILDPATH
+if [ $THREADS = All ] || [ $THREADS = ALl ] || [ $THREADS = ALL ] || [ $THREADS = AlL ] || [ $THREADS = all ] || [ $THREADS = aLl ] || [ $THREADS = aLL ] || [ $THREADS = alL ]; then
+THREADS1="$(nproc --all)"
+else
+THREADS1=$THREADS
+fi
 export KBUILD_BUILD_USER=$KUSER
 export KBUILD_BUILD_HOST=$HOSTNAME
 export PATH="$QSH/proton-clang/bin:$PATH"
-upcstr
+CONFSTRING="$HOME/.qsbuild_config\n\n$QSH will used to building\nBuilder: $KBUILD_BUILD_USER@$KBUILD_BUILD_HOST\nThreads: $THREADS1"
 if [ $HASCONF = 1 ]; then
-echo -e "Configuration loaded from $CONFSTRING\n\n$USAGE"
+echo -e "Configuration loaded from $CONFSTRING"
+if [ $SUSAGE = 1 ]; then
+echo -e "\n$USAGE"
+SUSAGE=0
+fi
+fi
+else
+echo -e "Configuration not exist, use \033[1mkregen\033[0m to regenerate it"
+fi
+}
+kregen(){
+rm -rf $HOME/.qsbuild_config
+echo -e "# QuicksilveR build configuration\nBUILDPATH=$PWD\nTHREADS=all\nKUSER=$USER\nKHOST=$HOSTNAME" > $HOME/.qsbuild_config
+if [ $HASCONF = 1 ]; then
+echo -e "Configuration regenerated, use \033[1mkloadconf\033[0m to load it"
+HASCONF=1
 fi
 }
 if [ -f $HOME/.qsbuild_config ]; then
 kloadconf
 else
 HASCONF=0
-echo -e "# QuicksilveR build configuration\nBUILDPATH=$PWD\nKUSER=$USER\nKHOST=$HOSTNAME" > $HOME/.qsbuild_config
+kregen
 kloadconf
 echo -e "Configuration written to $CONFSTRING\n\n$USAGE"
+HASCONF=1
 fi
 kclone(){
 if [ -d $QSH/kernel ]; then
@@ -47,7 +68,7 @@ if
 SECONDS=0
 cd $QSH/kernel
 make O=../out ARCH=arm64 vendor/ginkgo-perf_defconfig
-make -j$(nproc --all) O=../out ARCH=arm64 CC=clang LD=ld.lld AR=llvm-ar AS=llvm-as NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- Image.gz-dtb
+make -j$THREADS1 O=../out ARCH=arm64 CC=clang LD=ld.lld AR=llvm-ar AS=llvm-as NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- Image.gz-dtb
 then
 cd $QSH
 if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
@@ -59,11 +80,11 @@ cd ..
 rm -rf AnyKernel3
 echo -e "\nCompleted in $((SECONDS / 60)) minute(s) and $((SECONDS % 60)) second(s) !"
 else
-echo -e "\nBuild failed!"
+echo -e "\nBuild failed! Output file not found"
 fi
 else
 cd $QSH
-echo -e "\nBuild failed!"
+echo -e "\nBuild failed! Something went wrong"
 fi
 else
 echo "There is no proton-clang"
@@ -82,5 +103,5 @@ kbuild
 fi
 fi
 }
-khelp(){ echo -e "Usage:\n\n\033[1mkbuild\033[0m start build kernel\n\033[1mkloadconf\033[0m load build configuration from $HOME/.qsbuild_config\n\033[1mkclone\033[0m clone kernel and clang"
+khelp(){ echo -e "Usage:\n\n\033[1mkbuild\033[0m start build kernel\n\033[1mkloadconf\033[0m load build configuration from $HOME/.qsbuild_config\n\033[1mkregen\033[0m regenerate build configuration\n\033[1mkclone\033[0m clone kernel and clang"
 }
