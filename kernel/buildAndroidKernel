@@ -15,6 +15,11 @@ THREADS1=$THREADS
 fi
 export KBUILD_BUILD_USER=$KUSER
 export KBUILD_BUILD_HOST=$KHOST
+if [ $KDEPTH1 = 1 ]; then
+DEPTH="--depth=1"
+else
+DEPTH=""
+fi
 export PATH="$QSH/proton-clang/bin:$PATH"
 CONFSTRING="$HOME/.qsbuild_config\n\n$QSH will used to building\nBuilder: $KBUILD_BUILD_USER@$KBUILD_BUILD_HOST\nThreads: $THREADS1"
 if [ $HASCONF = 1 ]; then
@@ -30,7 +35,7 @@ fi
 }
 kregen(){
 rm -rf $HOME/.qsbuild_config
-echo -e "# QuicksilveR build configuration\nBUILDPATH=$PWD\nTHREADS=all\nKUSER=$USER\nKHOST=$HOSTNAME" > $HOME/.qsbuild_config
+echo -e "# QuicksilveR build configuration\nBUILDPATH=$PWD\nTHREADS=all\nKUSER=$USER\nKHOST=$HOSTNAME\nKDEPTH1=1" > $HOME/.qsbuild_config
 if [ $HASCONF = 1 ]; then
 echo -e "Configuration regenerated, use \033[1mkloadconf\033[0m to load it"
 HASCONF=1
@@ -49,7 +54,7 @@ kclone(){
 if [ -d $QSH/kernel ]; then
 echo "Kernel already cloned"
 else
-if ! git clone https://github.com/ghostrider-reborn/android_kernel_xiaomi_ginkgo.git -b quartz $QSH/kernel; then
+if ! git clone $DEPTH https://github.com/ghostrider-reborn/android_kernel_xiaomi_ginkgo.git -b quartz $QSH/kernel; then
 echo "Cloning failed! Aborting..."
 fi
 fi
@@ -96,7 +101,7 @@ fi
 fi
 else
 echo "There is no kernel"
-if ! git clone https://github.com/ghostrider-reborn/android_kernel_xiaomi_ginkgo.git -b quartz $QSH/kernel; then
+if ! git clone $DEPTH https://github.com/ghostrider-reborn/android_kernel_xiaomi_ginkgo.git -b quartz $QSH/kernel; then
 echo "Cloning failed! Aborting..."
 else
 kbuild
