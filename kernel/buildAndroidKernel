@@ -14,7 +14,7 @@ else
 THREADS1=$THREADS
 fi
 export KBUILD_BUILD_USER=$KUSER
-export KBUILD_BUILD_HOST=$HOSTNAME
+export KBUILD_BUILD_HOST=$KHOST
 export PATH="$QSH/proton-clang/bin:$PATH"
 CONFSTRING="$HOME/.qsbuild_config\n\n$QSH will used to building\nBuilder: $KBUILD_BUILD_USER@$KBUILD_BUILD_HOST\nThreads: $THREADS1"
 if [ $HASCONF = 1 ]; then
@@ -49,14 +49,14 @@ kclone(){
 if [ -d $QSH/kernel ]; then
 echo "Kernel already cloned"
 else
-if ! git clone $KERNEL; then
+if ! git clone https://github.com/ghostrider-reborn/android_kernel_xiaomi_ginkgo.git -b quartz $QSH/kernel; then
 echo "Cloning failed! Aborting..."
 fi
 fi
 if [ -d $QSH/proton-clang ]; then
 echo "Clang already cloned"
 else
-if ! git clone --depth=1 $CLANG; then
+if ! git clone --depth=1 https://github.com/kdrag0n/proton-clang.git -b master $QSH/proton-clang; then
 echo "Cloning failed! Aborting..."
 fi
 fi
@@ -88,7 +88,7 @@ echo -e "\nBuild failed! Something went wrong"
 fi
 else
 echo "There is no proton-clang"
-if ! git clone --depth=1 https://github.com/kdrag0n/proton-clang.git -b master; then
+if ! git clone --depth=1 https://github.com/kdrag0n/proton-clang.git -b master $QSH/proton-clang; then
 echo "Cloning failed! Aborting..."
 else
 kbuild
@@ -96,7 +96,7 @@ fi
 fi
 else
 echo "There is no kernel"
-if ! git clone https://github.com/ghostrider-reborn/android_kernel_xiaomi_ginkgo.git -b quartz kernel; then
+if ! git clone https://github.com/ghostrider-reborn/android_kernel_xiaomi_ginkgo.git -b quartz $QSH/kernel; then
 echo "Cloning failed! Aborting..."
 else
 kbuild
