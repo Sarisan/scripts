@@ -5,8 +5,22 @@ USAGE="Use \033[1mkhelp\033[0m to know more"
 SUSAGE=1
 
 kloadconf(){
-if [ -f $HOME/.qsbuild_config ]; then
-. $HOME/.qsbuild_config
+if [ "$1" = "-c" ] || [ "$1" = "--custom" ] && [ "$2" ] || [ "$1" = "-d" ] || [ "$1" = "--default" ]; then
+if [ "$1" = "-c" ] || [ "$1" = "--custom" ] && [ "$2" ];then
+CONFIGFILE="$2"
+skloadconf
+fi
+if [ "$1" = "-d" ] || [ "$1" = "--default" ]; then
+CONFIGFILE=$HOME/.qsbuild_config
+skloadconf
+fi
+else
+echo -e "\tkloadconf [-c <filename>] [-d]\n\n\t\t-c <filename>, --custom <filename>\n\t\t\tLoad configuration from file\n\n\t\t-d, --default\n\t\t\tLoad configuration from default file"
+fi
+}
+skloadconf(){
+if [ -f $CONFIGFILE ]; then
+. $CONFIGFILE
 export QSH=$BUILDPATH
 if [ $THREADS = All ] || [ $THREADS = ALl ] || [ $THREADS = ALL ] || [ $THREADS = AlL ] || [ $THREADS = all ] || [ $THREADS = aLl ] || [ $THREADS = aLL ] || [ $THREADS = alL ]; then
 THREADS1="$(nproc --all)"
@@ -21,7 +35,7 @@ else
 DEPTH=""
 fi
 export PATH="$QSH/proton-clang/bin:$PATH"
-CONFSTRING="$HOME/.qsbuild_config\n\n$QSH will used to building\nBuilder: $KBUILD_BUILD_USER@$KBUILD_BUILD_HOST\nThreads: $THREADS1"
+CONFSTRING="$CONFIGFILE\n\n$QSH will used to building\nBuilder: $KBUILD_BUILD_USER@$KBUILD_BUILD_HOST\nThreads: $THREADS1"
 if [ $HASCONF = 1 ]; then
 echo -e "Configuration loaded from $CONFSTRING"
 if [ $SUSAGE = 1 ]; then
@@ -34,19 +48,23 @@ echo -e "Configuration not exist, use \033[1mkregen\033[0m to regenerate it"
 fi
 }
 kregen(){
-rm -rf $HOME/.qsbuild_config
-echo -e "# QuicksilveR build configuration\nBUILDPATH=$PWD\nTHREADS=all\nKUSER=$USER\nKHOST=$HOSTNAME\nKDEPTH1=1" > $HOME/.qsbuild_config
+rm -rf $CONFIGFILE
+echo -e "# QuicksilveR build configuration\nBUILDPATH=$PWD\nTHREADS=all\nKUSER=$USER\nKHOST=$HOSTNAME\nKDEPTH1=1" > $CONFIGFILE
 if [ $HASCONF = 1 ]; then
 echo -e "Configuration regenerated, use \033[1mkloadconf\033[0m to load it"
 HASCONF=1
 fi
 }
-if [ -f $HOME/.qsbuild_config ]; then
-kloadconf
+HASCONF=1
+USAGE="Use \033[1mkhelp\033[0m to know more"
+SUSAGE=1
+CONFIGFILE=$HOME/.qsbuild_config
+if [ -f $CONFIGFILE ]; then
+skloadconf
 else
 HASCONF=0
 kregen
-kloadconf
+skloadconf
 echo -e "Configuration written to $CONFSTRING\n\n$USAGE"
 HASCONF=1
 fi
@@ -108,5 +126,5 @@ kbuild
 fi
 fi
 }
-khelp(){ echo -e "Usage:\n\n\033[1mkbuild\033[0m start build kernel\n\033[1mkloadconf\033[0m load build configuration from $HOME/.qsbuild_config\n\033[1mkregen\033[0m regenerate build configuration\n\033[1mkclone\033[0m clone kernel and clang"
+khelp(){ echo -e "Usage:\n\n\033[1mkbuild\033[0m start build kernel\n\033[1mkloadconf\033[0m load build configuration from $CONFIGFILE\n\033[1mkregen\033[0m regenerate build configuration\n\033[1mkclone\033[0m clone kernel and clang"
 }
