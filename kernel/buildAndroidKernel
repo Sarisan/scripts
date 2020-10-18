@@ -103,7 +103,7 @@ if [ -f "out/arch/$ARCH/boot/$OUTPUTFILE" ]; then
 git clone -q $ANYKERNELURL -b $ANYKERNELBRANCH AnyKernel3
 cp out/arch/$ARCH/boot/$OUTPUTFILE AnyKernel3
 cd AnyKernel3
-zip -r9 "../$KERNELNAME-$DEVICENAME-$(date '+%Y%m%d-%H%M')" * -x '*.git*' README.md *placeholder
+zip -r9 "../$KERNELNAME-$DEVICENAME-$(date '+%Y%m%d')" * -x '*.git*' README.md *placeholder
 cd ..
 rm -rf AnyKernel3
 echo -e "\nCompleted in $((SECONDS / 60)) minute(s) and $((SECONDS % 60)) second(s) !"
