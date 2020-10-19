@@ -1,23 +1,37 @@
 #!/bin/bash
 # Write '. buildAndroidKernel' in terminal to run
-HASCONF=1
-USAGE="Use \033[1mkhelp\033[0m to know more"
-SUSAGE=1
 
-kloadconf(){
-if [ "$1" = "-c" ] || [ "$1" = "--custom" ] && [ "$2" ] || [ "$1" = "-d" ] || [ "$1" = "--default" ]; then
-if [ "$1" = "-c" ] || [ "$1" = "--custom" ] && [ "$2" ];then
-CONFIGFILE="$2"
-skloadconf
-fi
-if [ "$1" = "-d" ] || [ "$1" = "--default" ]; then
-CONFIGFILE=$HOME/.qsbuild_config
-skloadconf
-fi
-else
-echo -e "\tkloadconf [-c <filename>] [-d]\n\n\t\t-c <filename>, --custom <filename>\n\t\t\tLoad configuration from file\n\n\t\t-d, --default\n\t\t\tLoad configuration from default file"
-fi
-}
+# Default configuration values
+DEF_CONFIGFILE=$HOME/.akbuild_config
+
+# Build
+DEF_THREADS="all"
+DEF_KUSER="$USER"
+DEF_KHOST="$HOSTNAME"
+DEF_ARCH="arm64"
+DEF_DEFCONFIG="vendor/ginkgo-perf_defconfig"
+DEF_LLVMF="CC=clang LD=ld.lld AR=llvm-ar AS=llvm-as NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-"
+DEF_OUTPUTFILE="Image.gz-dtb"
+
+# Kernel
+DEF_KERNELURL="https://github.com/ghostrider-reborn/android_kernel_xiaomi_ginkgo.git"
+DEF_KERNELBRANCH="quartz"
+DEF_KERNELNAME="QuicksilveR"
+DEF_KDEPTH1=true
+
+# Clang
+DEF_CLANGURL="https://github.com/kdrag0n/proton-clang.git"
+DEF_CLANGBRANCH="master"
+
+# Device
+DEF_ANYKERNELURL="https://github.com/ghostrider-reborn/AnyKernel3"
+DEF_ANYKERNELBRANCH="master"
+DEF_DEVICENAME="ginkgo"
+
+# Colors
+DFC="\033[0m"
+BDFC="\033[1m"
+
 skloadconf(){
 if [ -f $CONFIGFILE ]; then
 . $CONFIGFILE
@@ -29,13 +43,13 @@ THREADS1=$THREADS
 fi
 export KBUILD_BUILD_USER=$KUSER
 export KBUILD_BUILD_HOST=$KHOST
-if [ $KDEPTH1 = 1 ]; then
+if [ $KDEPTH1 = true ]; then
 DEPTH="--depth=1"
 else
 DEPTH=""
 fi
-export PATH="$QSH/proton-clang/bin:$PATH"
-CONFSTRING="$CONFIGFILE\n\n$QSH will used to building\nBuilder: $KBUILD_BUILD_USER@$KBUILD_BUILD_HOST\nThreads: $THREADS1"
+export PATH="$QSH/clang/bin:$PATH"
+CONFSTRING="$CONFIGFILE\n\n$QSH will used to building\nKernel: $KERNELNAME\nDevice: $DEVICENAME\nBuilder: $KBUILD_BUILD_USER@$KBUILD_BUILD_HOST\nThreads: $THREADS1"
 if [ $HASCONF = 1 ]; then
 echo -e "Configuration loaded from $CONFSTRING"
 if [ $SUSAGE = 1 ]; then
@@ -44,21 +58,25 @@ SUSAGE=0
 fi
 fi
 else
-echo -e "Configuration not exist, use \033[1mkregen\033[0m to regenerate it"
+echo -e "Configuration file doesn't exist, use$BDFC kbuild config --regenerate$DFC to regenerate it"
 fi
 }
 kregen(){
 rm -rf $CONFIGFILE
-echo -e "# QuicksilveR build configuration\nBUILDPATH=$PWD\nTHREADS=all\nKUSER=$USER\nKHOST=$HOSTNAME\nKDEPTH1=1" > $CONFIGFILE
+echo -e "# Android kernel build configuration\nBUILDPATH=$PWD\nTHREADS=\"$DEF_THREADS\"                    # How many threads use to build, all = all, 1 = 1\nKUSER=\"$DEF_KUSER\"\nKHOST=\"$DEF_KHOST\"\nARCH=\"$DEF_ARCH\"\nDEFCONFIG=\"$DEF_DEFCONFIG\"\nLLVMF=\"$DEF_LLVMF\"\nOUTPUTFILE=\"$DEF_OUTPUTFILE\"\n\n# Kernel\nKERNELURL=\"$DEF_KERNELURL\"\nKERNELBRANCH=\"$DEF_KERNELBRANCH\"\nKERNELNAME=\"$DEF_KERNELNAME\"\nKDEPTH1=$DEF_KDEPTH1                     # Clone kernel with --depth=1 or no\n\n# Clang\nCLANGURL=\"$DEF_CLANGURL\"\nCLANGBRANCH=\"$DEF_CLANGBRANCH\"\n\n# Device\nANYKERNELURL=\"$DEF_ANYKERNELURL\"\nANYKERNELBRANCH=\"$DEF_ANYKERNELBRANCH\"\nDEVICENAME=\"$DEF_DEVICENAME\"" > $CONFIGFILE
 if [ $HASCONF = 1 ]; then
-echo -e "Configuration regenerated, use \033[1mkloadconf\033[0m to load it"
+echo -e "Configuration file regenerated, use$BDFC kbuild config --custom <filename>$DFC to load it"
 HASCONF=1
 fi
 }
+
+USAGE="Use$BDFC kbuild --help$DFC to know more"
+KBHELP="\tbuild             Start building kernel\n\tclone             Clone kernel and clang\n\tconfig            Actions with connfiguration files"
+KCHELP="\tkbuild config [--help] [-c <filename>] [-d] [-r] [-r <filename>]\n\n\t\t-c <filename>, --custom <filename>\n\t\t\tLoad configuration from file\n\n\t\t-d, --default\n\t\t\tLoad configuration from default file\n\n\t\t-r, --regenerate\n\t\t\tRegenerate current configuration file\n\n\t\t-r <filename>, --regenerate <filename>\n\t\t\tRegenerate configuration to file"
+
+CONFIGFILE=$DEF_CONFIGFILE
 HASCONF=1
-USAGE="Use \033[1mkhelp\033[0m to know more"
 SUSAGE=1
-CONFIGFILE=$HOME/.qsbuild_config
 if [ -f $CONFIGFILE ]; then
 skloadconf
 else
@@ -68,37 +86,24 @@ skloadconf
 echo -e "Configuration written to $CONFSTRING\n\n$USAGE"
 HASCONF=1
 fi
-kclone(){
-if [ -d $QSH/kernel ]; then
-echo "Kernel already cloned"
-else
-if ! git clone $DEPTH https://github.com/ghostrider-reborn/android_kernel_xiaomi_ginkgo.git -b quartz $QSH/kernel; then
-echo "Cloning failed! Aborting..."
-fi
-fi
-if [ -d $QSH/proton-clang ]; then
-echo "Clang already cloned"
-else
-if ! git clone --depth=1 https://github.com/kdrag0n/proton-clang.git -b master $QSH/proton-clang; then
-echo "Cloning failed! Aborting..."
-fi
-fi
-}
+
 kbuild(){
+if [ "$1" = "build" ] || [ "$1" = "--help" ] || [ "$1" = "clone" ] || [ "$1" = "config" ]; then
+if [ "$1" = "build" ]; then
 if [ -d $QSH/kernel ]; then
-if [ -d $QSH/proton-clang ]; then
+if [ -d $QSH/clang ]; then
 if
 SECONDS=0
 cd $QSH/kernel
-make O=../out ARCH=arm64 vendor/ginkgo-perf_defconfig
-make -j$THREADS1 O=../out ARCH=arm64 CC=clang LD=ld.lld AR=llvm-ar AS=llvm-as NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- Image.gz-dtb
+make O=../out ARCH=$ARCH $DEFCONFIG
+make -j$THREADS1 O=../out ARCH=$ARCH $LLVMF $OUTPUTFILE
 then
 cd $QSH
-if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
-git clone -q https://github.com/ghostrider-reborn/AnyKernel3
-cp out/arch/arm64/boot/Image.gz-dtb AnyKernel3
+if [ -f "out/arch/$ARCH/boot/$OUTPUTFILE" ]; then
+git clone -q $ANYKERNELURL -b $ANYKERNELBRANCH AnyKernel3
+cp out/arch/$ARCH/boot/$OUTPUTFILE AnyKernel3
 cd AnyKernel3
-zip -r9 "../QuicksilveR-ginkgo-$(date '+%Y%m%d-%H%M')" * -x '*.git*' README.md *placeholder
+zip -r9 "../$KERNELNAME-$DEVICENAME-$(date '+%Y%m%d-%H%M')" * -x '*.git*' README.md *placeholder
 cd ..
 rm -rf AnyKernel3
 echo -e "\nCompleted in $((SECONDS / 60)) minute(s) and $((SECONDS % 60)) second(s) !"
@@ -111,20 +116,61 @@ echo -e "\nBuild failed! Something went wrong"
 fi
 else
 echo "There is no proton-clang"
-if ! git clone --depth=1 https://github.com/kdrag0n/proton-clang.git -b master $QSH/proton-clang; then
+if ! git clone --depth=1 $CLANGURL -b $CLANGBRANCH $QSH/clang; then
 echo "Cloning failed! Aborting..."
 else
-kbuild
+kbuild build
 fi
 fi
 else
 echo "There is no kernel"
-if ! git clone $DEPTH https://github.com/ghostrider-reborn/android_kernel_xiaomi_ginkgo.git -b quartz $QSH/kernel; then
+if ! git clone $DEPTH $KERNELURL -b $KERNELBRANCH $QSH/kernel; then
 echo "Cloning failed! Aborting..."
 else
-kbuild
+kbuild build
 fi
 fi
-}
-khelp(){ echo -e "Usage:\n\n\033[1mkbuild\033[0m start build kernel\n\033[1mkloadconf\033[0m load build configuration from $CONFIGFILE\n\033[1mkregen\033[0m regenerate build configuration\n\033[1mkclone\033[0m clone kernel and clang"
+fi
+if [ "$1" = "--help" ]; then
+echo -e "$KBHELP\n\n$KCHELP"
+fi
+if [ "$1" = "clone" ]; then
+if [ -d $QSH/kernel ]; then
+echo "Kernel already cloned"
+else
+if ! git clone $DEPTH $KERNELURL -b $KERNELBRANCH $QSH/kernel; then
+echo "Cloning failed! Aborting..."
+fi
+fi
+if [ -d $QSH/clang ]; then
+echo "Clang already cloned"
+else
+if ! git clone --depth=1 $CLANGURL -b $CLANGBRANCH $QSH/clang; then
+echo "Cloning failed! Aborting..."
+fi
+fi
+fi
+if [ "$1" = "config" ] && [ "$2" = "-c" ] || [ "$2" = "--custom" ] && [ "$3" ] || [ "$2" = "-d" ] || [ "$2" = "--default" ] || [ "$2" = "-r" ] || [ "$2" = "--regenerate" ]; then
+if [ "$2" = "-c" ] || [ "$2" = "--custom" ] && [ "$3" ]; then
+CONFIGFILE="$3"
+skloadconf
+fi
+if [ "$2" = "-d" ] || [ "$2" = "--default" ]; then
+CONFIGFILE=$DEF_CONFIGFILE
+skloadconf
+fi
+if [ "$2" = "-r" ] || [ "$2" = "--regenerate" ]; then
+if [ "$3" ]; then
+CONFIGFILE="$3"
+fi
+kregen
+fi
+else
+if [ "$1" = "config" ]; then
+echo -e "$KCHELP"
+fi
+fi
+else
+echo -e "$KBHELP"
+fi
 }
