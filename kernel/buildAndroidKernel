@@ -5,7 +5,7 @@
 DEF_CONFIGFILE=$HOME/.akbuild_config
 
 # Build
-DEF_THREADS="all"
+DEF_THREADS="all"                                          # How many threads use to build, all = all, 1 = 1
 DEF_KUSER="$USER"
 DEF_KHOST="$HOSTNAME"
 DEF_ARCH="arm64"
@@ -17,7 +17,7 @@ DEF_OUTPUTFILE="Image.gz-dtb"
 DEF_KERNELURL="https://github.com/ghostrider-reborn/android_kernel_xiaomi_ginkgo.git"
 DEF_KERNELBRANCH="quartz"
 DEF_KERNELNAME="QuicksilveR"
-DEF_KDEPTH1=true
+DEF_KDEPTH1=true                                           # Clone kernel with --depth=1 or no
 
 # Clang
 DEF_CLANGURL="https://github.com/kdrag0n/proton-clang.git"
@@ -63,7 +63,7 @@ fi
 }
 kregen(){
 rm -rf $CONFIGFILE
-echo -e "# Android kernel build configuration\nBUILDPATH=$PWD\nTHREADS=\"$DEF_THREADS\"                    # How many threads use to build, all = all, 1 = 1\nKUSER=\"$DEF_KUSER\"\nKHOST=\"$DEF_KHOST\"\nARCH=\"$DEF_ARCH\"\nDEFCONFIG=\"$DEF_DEFCONFIG\"\nLLVMF=\"$DEF_LLVMF\"\nOUTPUTFILE=\"$DEF_OUTPUTFILE\"\n\n# Kernel\nKERNELURL=\"$DEF_KERNELURL\"\nKERNELBRANCH=\"$DEF_KERNELBRANCH\"\nKERNELNAME=\"$DEF_KERNELNAME\"\nKDEPTH1=$DEF_KDEPTH1                     # Clone kernel with --depth=1 or no\n\n# Clang\nCLANGURL=\"$DEF_CLANGURL\"\nCLANGBRANCH=\"$DEF_CLANGBRANCH\"\n\n# Device\nANYKERNELURL=\"$DEF_ANYKERNELURL\"\nANYKERNELBRANCH=\"$DEF_ANYKERNELBRANCH\"\nDEVICENAME=\"$DEF_DEVICENAME\"" > $CONFIGFILE
+echo -e "# Android kernel build configuration\nBUILDPATH=$PWD\nTHREADS=\"$DEF_THREADS\"\nKUSER=\"$DEF_KUSER\"\nKHOST=\"$DEF_KHOST\"\nARCH=\"$DEF_ARCH\"\nDEFCONFIG=\"$DEF_DEFCONFIG\"\nLLVMF=\"$DEF_LLVMF\"\nOUTPUTFILE=\"$DEF_OUTPUTFILE\"\n\n# Kernel\nKERNELURL=\"$DEF_KERNELURL\"\nKERNELBRANCH=\"$DEF_KERNELBRANCH\"\nKERNELNAME=\"$DEF_KERNELNAME\"\nKDEPTH1=$DEF_KDEPTH1\n\n# Clang\nCLANGURL=\"$DEF_CLANGURL\"\nCLANGBRANCH=\"$DEF_CLANGBRANCH\"\n\n# Device\nANYKERNELURL=\"$DEF_ANYKERNELURL\"\nANYKERNELBRANCH=\"$DEF_ANYKERNELBRANCH\"\nDEVICENAME=\"$DEF_DEVICENAME\"" > $CONFIGFILE
 if [ $HASCONF = 1 ]; then
 echo -e "Configuration file regenerated, use$BDFC kbuild config --custom <filename>$DFC to load it"
 HASCONF=1
