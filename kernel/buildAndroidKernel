@@ -70,7 +70,7 @@ fi
 }
 
 USAGE="Use$BDFC kbuild --help$DFC to know more"
-KBHELP="\tbuild             Start building kernel\n\tclone             Clone kernel and clang\n\tconfig            Actions with connfiguration files"
+KBHELP="\tbuild             Start building kernel\n\tclone             Clone kernel and clang\n\tconfig            Actions with connfiguration files\n\tclean             Remove out folder"
 KCHELP="\tkbuild config [--help] [-c <filename>] [-d] [-r] [-r <filename>]\n\n\t\t-c <filename>, --custom <filename>\n\t\t\tLoad configuration from file\n\n\t\t-d, --default\n\t\t\tLoad configuration from default file\n\n\t\t-r, --regenerate\n\t\t\tRegenerate current configuration file\n\n\t\t-r <filename>, --regenerate <filename>\n\t\t\tRegenerate configuration to file"
 
 CONFIGFILE=$DEF_CONFIGFILE
@@ -87,7 +87,7 @@ HASCONF=1
 fi
 
 kbuild(){
-if [ "$1" = "build" ] || [ "$1" = "--help" ] || [ "$1" = "clone" ] || [ "$1" = "config" ]; then
+if [ "$1" = "build" ] || [ "$1" = "--help" ] || [ "$1" = "clone" ] || [ "$1" = "config" ] || [ "$1" = "clean" ]; then
 if [ "$1" = "build" ]; then
 if [ -d $QSH/kernel ]; then
 if [ -d $QSH/clang ]; then
@@ -168,6 +168,11 @@ else
 if [ "$1" = "config" ]; then
 echo -e "$KCHELP"
 fi
+fi
+if [ "$1" = "clean" ]; then
+echo -e "Removing out folder..."
+rm -rf $QSH/out
+echo -e "\nOut folder removed"
 fi
 else
 echo -e "$KBHELP"
