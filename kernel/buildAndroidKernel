@@ -29,8 +29,8 @@ DEF_ANYKERNELBRANCH="master"
 DEF_DEVICENAME="ginkgo"
 
 # Colors
-DFC="\033[0m"
-BDFC="\033[1m"
+DFC="\033[0m"         # Standart font
+BDFC="\033[1m"        # Bold standart font
 
 skloadconf(){
 if [ -f $CONFIGFILE ]; then
@@ -69,9 +69,9 @@ echo -e "Configuration file regenerated, use$BDFC kbuild config --custom <filena
 fi
 }
 
-USAGE="Use$BDFC kbuild --help$DFC to know more"
-KBHELP="\tbuild             Start building kernel\n\tclone             Clone kernel and clang\n\tconfig            Actions with connfiguration files\n\tclean             Remove out folder"
-KCHELP="\tkbuild config [--help] [-c <filename>] [-d] [-r] [-r <filename>]\n\n\t\t-c <filename>, --custom <filename>\n\t\t\tLoad configuration from file\n\n\t\t-d, --default\n\t\t\tLoad configuration from default file\n\n\t\t-r, --regenerate\n\t\t\tRegenerate current configuration file\n\n\t\t-r <filename>, --regenerate <filename>\n\t\t\tRegenerate configuration to file"
+USAGE="Use$BDFC kbuild help$DFC to know more"
+KBHELP="\thelp              Show info about using$BDFC kbuild$DFC\n\tbuild             Start building kernel\n\tclone             Clone kernel and clang\n\tconfig            Actions with connfiguration files\n\tclean             Remove out folder"
+KCHELP="\tkbuild config [-c <filename>] [-d] [-r] [-r <filename>]\n\n\t\t-c <filename>, --custom <filename>\n\t\t\tLoad configuration from file\n\n\t\t-d, --default\n\t\t\tLoad configuration from default file\n\n\t\t-r, --regenerate\n\t\t\tRegenerate current configuration file\n\n\t\t-r <filename>, --regenerate <filename>\n\t\t\tRegenerate configuration to file"
 
 CONFIGFILE=$DEF_CONFIGFILE
 HASCONF=1
@@ -87,7 +87,7 @@ HASCONF=1
 fi
 
 kbuild(){
-if [ "$1" = "build" ] || [ "$1" = "--help" ] || [ "$1" = "clone" ] || [ "$1" = "config" ] || [ "$1" = "clean" ]; then
+if [ "$1" = "build" ] || [ "$1" = "help" ] || [ "$1" = "clone" ] || [ "$1" = "config" ] || [ "$1" = "clean" ]; then
 if [ "$1" = "build" ]; then
 if [ -d $QSH/kernel ]; then
 if [ -d $QSH/clang ]; then
@@ -130,7 +130,7 @@ kbuild build
 fi
 fi
 fi
-if [ "$1" = "--help" ]; then
+if [ "$1" = "help" ]; then
 echo -e "$KBHELP\n\n$KCHELP"
 fi
 if [ "$1" = "clone" ]; then
