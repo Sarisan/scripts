@@ -58,20 +58,20 @@ SUSAGE=0
 fi
 fi
 else
-echo -e "Configuration file doesn't exist, use$BDFC kbuild config --regenerate$DFC to regenerate it"
+echo -e "Configuration file doesn't exist, use$BDFC akbuild config --regenerate$DFC to regenerate it"
 fi
 }
 kregen(){
 rm -rf $CONFIGFILE
 echo -e "# Android kernel build configuration\nBUILDPATH=$PWD\nTHREADS=\"$DEF_THREADS\"\nKUSER=\"$DEF_KUSER\"\nKHOST=\"$DEF_KHOST\"\nARCH=\"$DEF_ARCH\"\nDEFCONFIG=\"$DEF_DEFCONFIG\"\nLLVMF=\"$DEF_LLVMF\"\nOUTPUTFILE=\"$DEF_OUTPUTFILE\"\n\n# Kernel\nKERNELURL=\"$DEF_KERNELURL\"\nKERNELBRANCH=\"$DEF_KERNELBRANCH\"\nKERNELNAME=\"$DEF_KERNELNAME\"\nKDEPTH1=$DEF_KDEPTH1\n\n# Clang\nCLANGURL=\"$DEF_CLANGURL\"\nCLANGBRANCH=\"$DEF_CLANGBRANCH\"\n\n# Device\nANYKERNELURL=\"$DEF_ANYKERNELURL\"\nANYKERNELBRANCH=\"$DEF_ANYKERNELBRANCH\"\nDEVICENAME=\"$DEF_DEVICENAME\"" > $CONFIGFILE
 if [ $HASCONF = 1 ]; then
-echo -e "Configuration file regenerated, use$BDFC kbuild config --custom <filename>$DFC to load it"
+echo -e "Configuration file regenerated, use$BDFC akbuild config --custom <filename>$DFC to load it"
 fi
 }
 
-USAGE="Use$BDFC kbuild help$DFC to know more"
-KBHELP="\thelp              Show info about using$BDFC kbuild$DFC\n\tbuild             Start building kernel\n\tclone             Clone kernel and clang\n\tconfig            Actions with connfiguration files\n\tclean             Remove out folder"
-KCHELP="\tkbuild config [-c <filename>] [-d] [-r] [-r <filename>]\n\n\t\t-c <filename>, --custom <filename>\n\t\t\tLoad configuration from file\n\n\t\t-d, --default\n\t\t\tLoad configuration from default file\n\n\t\t-r, --regenerate\n\t\t\tRegenerate current configuration file\n\n\t\t-r <filename>, --regenerate <filename>\n\t\t\tRegenerate configuration to file"
+USAGE="Use$BDFC akbuild help$DFC to know more"
+KBHELP="\thelp              Show info about using$BDFC akbuild$DFC\n\tbuild             Start building kernel\n\tclone             Clone kernel and clang\n\tconfig            Actions with connfiguration files\n\tclean             Remove out folder"
+KCHELP="\takbuild config [-c <filename>] [-d] [-r] [-r <filename>]\n\n\t\t-c <filename>, --custom <filename>\n\t\t\tLoad configuration from file\n\n\t\t-d, --default\n\t\t\tLoad configuration from default file\n\n\t\t-r, --regenerate\n\t\t\tRegenerate current configuration file\n\n\t\t-r <filename>, --regenerate <filename>\n\t\t\tRegenerate configuration to file"
 
 CONFIGFILE=$DEF_CONFIGFILE
 HASCONF=1
@@ -86,7 +86,7 @@ echo -e "Configuration written to $CONFSTRING\n\n$USAGE"
 HASCONF=1
 fi
 
-kbuild(){
+akbuild(){
 if [ "$1" = "build" ] || [ "$1" = "help" ] || [ "$1" = "clone" ] || [ "$1" = "config" ] || [ "$1" = "clean" ]; then
 if [ "$1" = "build" ]; then
 if [ -d $QSH/kernel ]; then
@@ -118,7 +118,7 @@ echo "There is no clang"
 if ! git clone --depth=1 $CLANGURL -b $CLANGBRANCH $QSH/clang; then
 echo "Cloning failed! Aborting..."
 else
-kbuild build
+akbuild build
 fi
 fi
 else
@@ -126,7 +126,7 @@ echo "There is no kernel"
 if ! git clone $DEPTH $KERNELURL -b $KERNELBRANCH $QSH/kernel; then
 echo "Cloning failed! Aborting..."
 else
-kbuild build
+akbuild build
 fi
 fi
 fi
