@@ -49,7 +49,10 @@ else
 DEPTH=""
 fi
 export PATH="$QSH/clang/bin:$PATH"
-CONFSTRING="$CONFIGFILE\n\n$QSH will used to building\nKernel: $KERNELNAME\nDevice: $DEVICENAME\nBuilder: $KBUILD_BUILD_USER@$KBUILD_BUILD_HOST\nThreads: $THREADS1"
+if [ $CACONF = 0 ]; then
+ICONFIGFILE=$CONFIGFILE
+fi
+CONFSTRING="$ICONFIGFILE\n\n$QSH will used to building\nKernel: $KERNELNAME\nDevice: $DEVICENAME\nBuilder: $KBUILD_BUILD_USER@$KBUILD_BUILD_HOST\nThreads: $THREADS1"
 if [ $HASCONF = 1 ]; then
 echo -e "Configuration loaded from $CONFSTRING"
 if [ $SUSAGE = 1 ]; then
@@ -57,12 +60,13 @@ echo -e "\n$USAGE"
 SUSAGE=0
 fi
 fi
+mkdir -p $CACHE
+echo -e "# Android kernel build configuration\nBUILDPATH=$BUILDPATH\nTHREADS=\"$THREADS\"\nKUSER=\"$KUSER\"\nKHOST=\"$KHOST\"\nARCH=\"$ARCH\"\nDEFCONFIG=\"$DEFCONFIG\"\nLLVMF=\"$LLVMF\"\nOUTPUTFILE=\"$OUTPUTFILE\"\n\n# Kernel\nKERNELURL=\"$KERNELURL\"\nKERNELBRANCH=\"$KERNELBRANCH\"\nKERNELNAME=\"$KERNELNAME\"\nKDEPTH1=$KDEPTH1\n\n# Clang\nCLANGURL=\"$CLANGURL\"\nCLANGBRANCH=\"$CLANGBRANCH\"\n\n# Device\nANYKERNELURL=\"$ANYKERNELURL\"\nANYKERNELBRANCH=\"$ANYKERNELBRANCH\"\nDEVICENAME=\"$DEVICENAME\"" > $CACHECONFIGFILE
 else
 echo -e "Configuration file doesn't exist, use$BDFC akbuild config --regenerate$DFC to regenerate it"
 fi
 }
 kregen(){
-rm -rf $CONFIGFILE
 echo -e "# Android kernel build configuration\nBUILDPATH=$PWD\nTHREADS=\"$DEF_THREADS\"\nKUSER=\"$DEF_KUSER\"\nKHOST=\"$DEF_KHOST\"\nARCH=\"$DEF_ARCH\"\nDEFCONFIG=\"$DEF_DEFCONFIG\"\nLLVMF=\"$DEF_LLVMF\"\nOUTPUTFILE=\"$DEF_OUTPUTFILE\"\n\n# Kernel\nKERNELURL=\"$DEF_KERNELURL\"\nKERNELBRANCH=\"$DEF_KERNELBRANCH\"\nKERNELNAME=\"$DEF_KERNELNAME\"\nKDEPTH1=$DEF_KDEPTH1\n\n# Clang\nCLANGURL=\"$DEF_CLANGURL\"\nCLANGBRANCH=\"$DEF_CLANGBRANCH\"\n\n# Device\nANYKERNELURL=\"$DEF_ANYKERNELURL\"\nANYKERNELBRANCH=\"$DEF_ANYKERNELBRANCH\"\nDEVICENAME=\"$DEF_DEVICENAME\"" > $CONFIGFILE
 if [ $HASCONF = 1 ]; then
 echo -e "Configuration file regenerated, use$BDFC akbuild config --custom <filename>$DFC to load it"
@@ -74,8 +78,18 @@ KBHELP="\thelp              Show info about using$BDFC akbuild$DFC\n\tbuild     
 KCHELP="\takbuild config [-c <filename>] [-d] [-r] [-r <filename>]\n\n\t\t-c <filename>, --custom <filename>\n\t\t\tLoad configuration from file\n\n\t\t-d, --default\n\t\t\tLoad configuration from default file\n\n\t\t-r, --regenerate\n\t\t\tRegenerate current configuration file\n\n\t\t-r <filename>, --regenerate <filename>\n\t\t\tRegenerate configuration to file"
 
 CONFIGFILE=$DEF_CONFIGFILE
+CACHE=$HOME/.cache
+CACHECONFIGFILE=$CACHE/akbuild
+ICONFIGFILE="last session"
 HASCONF=1
+CACONF=1
 SUSAGE=1
+if [ -f $CACHECONFIGFILE ]; then
+CONFIGFILE=$CACHECONFIGFILE
+skloadconf
+CACONF=0
+else
+CACONF=0
 if [ -f $CONFIGFILE ]; then
 skloadconf
 else
@@ -84,6 +98,7 @@ kregen
 skloadconf
 echo -e "Configuration written to $CONFSTRING\n\n$USAGE"
 HASCONF=1
+fi
 fi
 
 akbuild(){
