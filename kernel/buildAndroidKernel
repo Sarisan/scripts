@@ -5,28 +5,28 @@
 DEF_CONFIGFILE=$HOME/.akbuild_config
 
 # Build
-DEF_THREADS="all"                                          # How many threads use to build, all = all, 1 = 1
-DEF_KUSER="$USER"
-DEF_KHOST="$HOSTNAME"
-DEF_ARCH="arm64"
-DEF_DEFCONFIG="vendor/ginkgo-perf_defconfig"
-DEF_LLVMF="CC=clang LD=ld.lld AR=llvm-ar AS=llvm-as NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-"
-DEF_OUTPUTFILE="Image.gz-dtb"
+DEF_AKBUILD_THREADS="all"                                          # How many threads use to build, all = all, 1 = 1
+DEF_AKBUILD_USERNAME="$USER"
+DEF_AKBUILD_HOSTNAME="$HOSTNAME"
+DEF_AKBUILD_ARCH="arm64"
+DEF_AKBUILD_DEFCONFIG="vendor/ginkgo-perf_defconfig"
+DEF_AKBUILD_LLVM="CC=clang LD=ld.lld AR=llvm-ar AS=llvm-as NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-"
+DEF_AKBUILD_OUTPUTFILE="Image.gz-dtb"
 
 # Kernel
-DEF_KERNELURL="https://github.com/ghostrider-reborn/android_kernel_xiaomi_ginkgo.git"
-DEF_KERNELBRANCH="quartz"
-DEF_KERNELNAME="QuicksilveR"
-DEF_KDEPTH1=true                                           # Clone kernel with --depth=1 or no
+DEF_AKBUILD_KERNELURL="https://github.com/ghostrider-reborn/android_kernel_xiaomi_ginkgo.git"
+DEF_AKBUILD_KERNELBRANCH="quartz"
+DEF_AKBUILD_KERNELNAME="QuicksilveR"
+DEF_AKBUILD_KDEPTH1=true                                           # Clone kernel with --depth=1 or no
 
 # Clang
-DEF_CLANGURL="https://github.com/kdrag0n/proton-clang.git"
-DEF_CLANGBRANCH="master"
+DEF_AKBUILD_CLANGURL="https://github.com/kdrag0n/proton-clang.git"
+DEF_AKBUILD_CLANGBRANCH="master"
 
 # Device
-DEF_ANYKERNELURL="https://github.com/ghostrider-reborn/AnyKernel3"
-DEF_ANYKERNELBRANCH="master"
-DEF_DEVICENAME="ginkgo"
+DEF_AKBUILD_ANYKERNELURL="https://github.com/ghostrider-reborn/AnyKernel3"
+DEF_AKBUILD_ANYKERNELBRANCH="master"
+DEF_AKBUILD_DEVICENAME="ginkgo"
 
 # Colors
 DFC="\033[0m"         # Standart font
@@ -35,24 +35,24 @@ BDFC="\033[1m"        # Bold standart font
 skloadconf(){
 if [ -f $CONFIGFILE ]; then
 . $CONFIGFILE
-export QSH=$BUILDPATH
-if [ $THREADS = All ] || [ $THREADS = ALl ] || [ $THREADS = ALL ] || [ $THREADS = AlL ] || [ $THREADS = all ] || [ $THREADS = aLl ] || [ $THREADS = aLL ] || [ $THREADS = alL ]; then
+export QSH=$AKBUILD_PATH
+if [ $AKBUILD_THREADS = All ] || [ $AKBUILD_THREADS = ALl ] || [ $AKBUILD_THREADS = ALL ] || [ $AKBUILD_THREADS = AlL ] || [ $AKBUILD_THREADS = all ] || [ $AKBUILD_THREADS = aLl ] || [ $AKBUILD_THREADS = aLL ] || [ $AKBUILD_THREADS = alL ]; then
 THREADS1="$(nproc --all)"
 else
-THREADS1=$THREADS
+THREADS1=$AKBUILD_THREADS
 fi
-export KBUILD_BUILD_USER=$KUSER
-export KBUILD_BUILD_HOST=$KHOST
-if [ $KDEPTH1 = true ]; then
-DEPTH="--depth=1"
+export KBUILD_BUILD_USER=$AKBUILD_USERNAME
+export KBUILD_BUILD_HOST=$AKBUILD_HOSTNAME
+if [ $AKBUILD_KDEPTH1 = true ]; then
+AKDEPTH="--depth=1"
 else
-DEPTH=""
+AKDEPTH=""
 fi
 export PATH="$QSH/clang/bin:$PATH"
 if [ $CACONF = 0 ]; then
 ICONFIGFILE=$CONFIGFILE
 fi
-CONFSTRING="$ICONFIGFILE\n\n$QSH will used to building\nKernel: $KERNELNAME\nDevice: $DEVICENAME\nBuilder: $KBUILD_BUILD_USER@$KBUILD_BUILD_HOST\nThreads: $THREADS1"
+CONFSTRING="$ICONFIGFILE\n\n$QSH will used to building\nKernel: $AKBUILD_KERNELNAME\nDevice: $AKBUILD_DEVICENAME\nBuilder: $KBUILD_BUILD_USER@$KBUILD_BUILD_HOST\nThreads: $THREADS1"
 if [ $HASCONF = 1 ]; then
 echo -e "Configuration loaded from $CONFSTRING"
 if [ $SUSAGE = 1 ]; then
@@ -61,13 +61,13 @@ SUSAGE=0
 fi
 fi
 mkdir -p $CACHE
-echo -e "# Android kernel build configuration\nBUILDPATH=$BUILDPATH\nTHREADS=\"$THREADS\"\nKUSER=\"$KUSER\"\nKHOST=\"$KHOST\"\nARCH=\"$ARCH\"\nDEFCONFIG=\"$DEFCONFIG\"\nLLVMF=\"$LLVMF\"\nOUTPUTFILE=\"$OUTPUTFILE\"\n\n# Kernel\nKERNELURL=\"$KERNELURL\"\nKERNELBRANCH=\"$KERNELBRANCH\"\nKERNELNAME=\"$KERNELNAME\"\nKDEPTH1=$KDEPTH1\n\n# Clang\nCLANGURL=\"$CLANGURL\"\nCLANGBRANCH=\"$CLANGBRANCH\"\n\n# Device\nANYKERNELURL=\"$ANYKERNELURL\"\nANYKERNELBRANCH=\"$ANYKERNELBRANCH\"\nDEVICENAME=\"$DEVICENAME\"" > $CACHECONFIGFILE
+echo -e "# Android kernel build configuration\nAKBUILD_PATH=$AKBUILD_PATH\nAKBUILD_THREADS=\"$AKBUILD_THREADS\"\nAKBUILD_USERNAME=\"$AKBUILD_USERNAME\"\nAKBUILD_HOSTNAME=\"$AKBUILD_HOSTNAME\"\nAKBUILD_ARCH=\"$AKBUILD_ARCH\"\nAKBUILD_DEFCONFIG=\"$AKBUILD_DEFCONFIG\"\nAKBUILD_LLVM=\"$AKBUILD_LLVM\"\nAKBUILD_OUTPUTFILE=\"$AKBUILD_OUTPUTFILE\"\n\n# Kernel\nAKBUILD_KERNELURL=\"$AKBUILD_KERNELURL\"\nAKBUILD_KERNELBRANCH=\"$AKBUILD_KERNELBRANCH\"\nAKBUILD_KERNELNAME=\"$AKBUILD_KERNELNAME\"\nAKBUILD_KDEPTH1=$AKBUILD_KDEPTH1\n\n# Clang\nAKBUILD_CLANGURL=\"$AKBUILD_CLANGURL\"\nAKBUILD_CLANGBRANCH=\"$AKBUILD_CLANGBRANCH\"\n\n# Device\nAKBUILD_ANYKERNELURL=\"$AKBUILD_ANYKERNELURL\"\nAKBUILD_ANYKERNELBRANCH=\"$AKBUILD_ANYKERNELBRANCH\"\nAKBUILD_DEVICENAME=\"$AKBUILD_DEVICENAME\"" > $CACHECONFIGFILE
 else
 echo -e "Configuration file doesn't exist, use$BDFC akbuild config --regenerate$DFC to regenerate it"
 fi
 }
 kregen(){
-echo -e "# Android kernel build configuration\nBUILDPATH=$PWD\nTHREADS=\"$DEF_THREADS\"\nKUSER=\"$DEF_KUSER\"\nKHOST=\"$DEF_KHOST\"\nARCH=\"$DEF_ARCH\"\nDEFCONFIG=\"$DEF_DEFCONFIG\"\nLLVMF=\"$DEF_LLVMF\"\nOUTPUTFILE=\"$DEF_OUTPUTFILE\"\n\n# Kernel\nKERNELURL=\"$DEF_KERNELURL\"\nKERNELBRANCH=\"$DEF_KERNELBRANCH\"\nKERNELNAME=\"$DEF_KERNELNAME\"\nKDEPTH1=$DEF_KDEPTH1\n\n# Clang\nCLANGURL=\"$DEF_CLANGURL\"\nCLANGBRANCH=\"$DEF_CLANGBRANCH\"\n\n# Device\nANYKERNELURL=\"$DEF_ANYKERNELURL\"\nANYKERNELBRANCH=\"$DEF_ANYKERNELBRANCH\"\nDEVICENAME=\"$DEF_DEVICENAME\"" > $CONFIGFILE
+echo -e "# Android kernel build configuration\nAKBUILD_PATH=$PWD\nAKBUILD_THREADS=\"$DEF_AKBUILD_THREADS\"\nAKBUILD_USERNAME=\"$DEF_AKBUILD_USERNAME\"\nAKBUILD_HOSTNAME=\"$DEF_AKBUILD_HOSTNAME\"\nAKBUILD_ARCH=\"$DEF_AKBUILD_ARCH\"\nAKBUILD_DEFCONFIG=\"$DEF_AKBUILD_DEFCONFIG\"\nAKBUILD_LLVM=\"$DEF_AKBUILD_LLVM\"\nAKBUILD_OUTPUTFILE=\"$DEF_AKBUILD_OUTPUTFILE\"\n\n# Kernel\nAKBUILD_KERNELURL=\"$DEF_AKBUILD_KERNELURL\"\nAKBUILD_KERNELBRANCH=\"$DEF_AKBUILD_KERNELBRANCH\"\nAKBUILD_KERNELNAME=\"$DEF_AKBUILD_KERNELNAME\"\nAKBUILD_KDEPTH1=$DEF_AKBUILD_KDEPTH1\n\n# Clang\nAKBUILD_CLANGURL=\"$DEF_AKBUILD_CLANGURL\"\nAKBUILD_CLANGBRANCH=\"$DEF_AKBUILD_CLANGBRANCH\"\n\n# Device\nAKBUILD_ANYKERNELURL=\"$DEF_AKBUILD_ANYKERNELURL\"\nAKBUILD_ANYKERNELBRANCH=\"$DEF_AKBUILD_ANYKERNELBRANCH\"\nAKBUILD_DEVICENAME=\"$DEF_AKBUILD_DEVICENAME\"" > $CONFIGFILE
 if [ $HASCONF = 1 ]; then
 echo -e "Configuration file regenerated, use$BDFC akbuild config --custom <filename>$DFC to load it"
 fi
@@ -109,14 +109,14 @@ if [ -d $QSH/clang ]; then
 if
 SECONDS=0
 cd $QSH/kernel
-make O=../out ARCH=$ARCH $DEFCONFIG
-make -j$THREADS1 O=../out ARCH=$ARCH $LLVMF $OUTPUTFILE
+make O=../out ARCH=$AKBUILD_ARCH $DAKBUILD_EFCONFIG
+make -j$THREADS1 O=../out ARCH=$AKBUILD_ARCH $AKBUILD_LLVM $AKBUILD_OUTPUTFILE
 then
 cd $QSH
-if [ -f "out/arch/$ARCH/boot/$OUTPUTFILE" ]; then
-ZIPNAME="$KERNELNAME-$DEVICENAME-$(date '+%Y%m%d').zip"
-git clone -q $ANYKERNELURL -b $ANYKERNELBRANCH AnyKernel3
-cp out/arch/$ARCH/boot/$OUTPUTFILE AnyKernel3
+if [ -f "out/arch/$AKBUILD_ARCH/boot/$AKBUILD_OUTPUTFILE" ]; then
+ZIPNAME="$AKBUILD_KERNELNAME-$DAKBUILD_EVICENAME-$(date '+%Y%m%d').zip"
+git clone -q $AKBUILD_ANYKERNELURL -b $AKBUILD_ANYKERNELBRANCH AnyKernel3
+cp out/arch/$AKBUILD_ARCH/boot/$AKBUILD_OUTPUTFILE AnyKernel3
 cd AnyKernel3
 zip -r9 "../$ZIPNAME" * -x '*.git*' README.md *placeholder
 cd ..
@@ -131,7 +131,7 @@ echo -e "\nBuild failed! Something went wrong"
 fi
 else
 echo "There is no clang"
-if ! git clone --depth=1 $CLANGURL -b $CLANGBRANCH $QSH/clang; then
+if ! git clone --depth=1 $AKBUILD_CLANGURL -b $AKBUILD_CLANGBRANCH $QSH/clang; then
 echo "Cloning failed! Aborting..."
 else
 akbuild build
@@ -139,7 +139,7 @@ fi
 fi
 else
 echo "There is no kernel"
-if ! git clone $DEPTH $KERNELURL -b $KERNELBRANCH $QSH/kernel; then
+if ! git clone $AKDEPTH $AKBUILD_KERNELURL -b $AKBUILD_KERNELBRANCH $QSH/kernel; then
 echo "Cloning failed! Aborting..."
 else
 akbuild build
@@ -153,14 +153,14 @@ if [ "$1" = "clone" ]; then
 if [ -d $QSH/kernel ]; then
 echo "Kernel already cloned"
 else
-if ! git clone $DEPTH $KERNELURL -b $KERNELBRANCH $QSH/kernel; then
+if ! git clone $AKDEPTH $AKBUILD_KERNELURL -b $AKBUILD_KERNELBRANCH $QSH/kernel; then
 echo "Cloning failed! Aborting..."
 fi
 fi
 if [ -d $QSH/clang ]; then
 echo "Clang already cloned"
 else
-if ! git clone --depth=1 $CLANGURL -b $CLANGBRANCH $QSH/clang; then
+if ! git clone --depth=1 $AKBUILD_CLANGURL -b $AKBUILD_CLANGBRANCH $QSH/clang; then
 echo "Cloning failed! Aborting..."
 fi
 fi
