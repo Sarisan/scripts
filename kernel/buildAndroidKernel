@@ -192,6 +192,10 @@ fi
 if [ "$2" = "-r" ] || [ "$2" = "--regenerate" ]; then
 if [ "$3" ]; then
 CONFIGFILE="$3"
+else
+if [ $CACONF = 0 ]; then
+CONFIGFILE=$DEF_CONFIGFILE
+fi
 fi
 kregen
 fi
