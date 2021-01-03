@@ -5,9 +5,6 @@ else
 echo -e "TG_BOTTOKEN=\"\"\nTG_JSONS=\"\"" > $HOME/.tgbot
 fi
 
-WOD=$PWD
-cd $TG_JSONS
 if [ "$1" ] && [ "$2" ]; then
-curl -s -X POST -H "Content-Type: application/json" -d @$2.json https://api.telegram.org/bot$TG_BOTTOKEN/$1
+curl -s -X POST -H "Content-Type: application/json" -d @$TG_JSONS/$2.json https://api.telegram.org/bot$TG_BOTTOKEN/$1
 fi
-cd $WOD
