@@ -1,0 +1,289 @@
+#!/bin/bash
+AKBUILD_VERSION="2.1"
+
+# Default configuration values
+DEF_CONFIGFILE=$HOME/.akbuild_config
+
+# Build
+DEF_AKBUILD_JOBS="all"                                             # How many jobs use to build, all = all threads of your soc, 1 = 1
+DEF_AKBUILD_USERNAME="$USER"
+DEF_AKBUILD_HOSTNAME="$HOSTNAME"
+DEF_AKBUILD_ARCH="arm64"
+DEF_AKBUILD_DEFCONFIG="vendor/ginkgo-perf_defconfig"
+DEF_AKBUILD_OPTINONS="CC=clang LD=ld.lld AR=llvm-ar AS=llvm-as NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-"
+DEF_AKBUILD_OUTPUTFILE="Image.gz-dtb"
+DEF_AKBUILD_DTBO="true"
+
+# Kernel
+DEF_AKBUILD_KERNELURL="https://github.com/ghostrider-reborn/android_kernel_xiaomi_ginkgo.git"
+DEF_AKBUILD_KERNELBRANCH="quartz"
+DEF_AKBUILD_KERNELNAME="QuicksilveR"
+DEF_AKBUILD_KDEPTH1=true                                           # Clone kernel with --depth=1 or no
+
+# Clang
+DEF_AKBUILD_CLANGURL="https://github.com/kdrag0n/proton-clang.git"
+DEF_AKBUILD_CLANGBRANCH="master"
+DEF_AKBUILD_CLANG=""                                               # Custom path to clang, will used clang from AKBUILD_PATH if not setted. Example: AKBUILD_CLANG="/home/sarisan/proton-clang"
+DEF_AKBUILD_CLANGBIN="bin"                                         # You can set custom path to binaries, it's needed when you use AOSP clang or something like this. Example: AKBUILD_CLANGBIN="clang-r353983c1/bin"
+
+# Device
+DEF_AKBUILD_ANYKERNEL=true
+DEF_AKBUILD_ANYKERNELURL="https://github.com/ghostrider-reborn/AnyKernel3"
+DEF_AKBUILD_ANYKERNELBRANCH="master"
+DEF_AKBUILD_DEVICENAME="ginkgo"
+
+# Colors
+DFC="\033[0m"         # Default font
+BDFC="\033[1m"        # Bold default font
+GDFC="\033[0;32m"     # Green default font
+RDFC="\033[0;31m"     # Red default font
+
+# Default config
+AKBUILD_CONFIG="# Android kernel build configuration\nAKBUILD_PATH=\"$PWD\"\nAKBUILD_JOBS=\"$DEF_AKBUILD_JOBS\"\nAKBUILD_USERNAME=\"$DEF_AKBUILD_USERNAME\"\nAKBUILD_HOSTNAME=\"$DEF_AKBUILD_HOSTNAME\"\nAKBUILD_ARCH=\"$DEF_AKBUILD_ARCH\"\nAKBUILD_DEFCONFIG=\"$DEF_AKBUILD_DEFCONFIG\"\nAKBUILD_OPTINONS=\"$DEF_AKBUILD_OPTINONS\"\nAKBUILD_OUTPUTFILE=\"$DEF_AKBUILD_OUTPUTFILE\"\nAKBUILD_DTBO=$DEF_AKBUILD_DTBO\n\n# Kernel\nAKBUILD_KERNELURL=\"$DEF_AKBUILD_KERNELURL\"\nAKBUILD_KERNELBRANCH=\"$DEF_AKBUILD_KERNELBRANCH\"\nAKBUILD_KERNELNAME=\"$DEF_AKBUILD_KERNELNAME\"\nAKBUILD_KDEPTH1=$DEF_AKBUILD_KDEPTH1\n\n# Clang\nAKBUILD_CLANGURL=\"$DEF_AKBUILD_CLANGURL\"\nAKBUILD_CLANGBRANCH=\"$DEF_AKBUILD_CLANGBRANCH\"\nAKBUILD_CLANG=\"$DEF_AKBUILD_CLANG\"\nAKBUILD_CLANGBIN=\"$DEF_AKBUILD_CLANGBIN\"\n\n# Device\nAKBUILD_ANYKERNEL=$DEF_AKBUILD_ANYKERNEL\nAKBUILD_ANYKERNELURL=\"$DEF_AKBUILD_ANYKERNELURL\"\nAKBUILD_ANYKERNELBRANCH=\"$DEF_AKBUILD_ANYKERNELBRANCH\"\nAKBUILD_DEVICENAME=\"$DEF_AKBUILD_DEVICENAME\""
+
+
+AKCONFIGFILE=$DEF_CONFIGFILE
+CACHE=$HOME/.cache
+CACHECONFIGFILE=$CACHE/akbuild
+
+if [ -f $CACHECONFIGFILE ]; then
+. $CACHECONFIGFILE
+else
+if [ -f $AKCONFIGFILE ]; then
+. $AKCONFIGFILE
+else
+echo -e "$AKBUILD_CONFIG" > $AKCONFIGFILE
+. $AKCONFIGFILE
+fi
+fi
+if [ $AKBUILD_JOBS = All ] || [ $AKBUILD_JOBS = ALl ] || [ $AKBUILD_JOBS = ALL ] || [ $AKBUILD_JOBS = AlL ] || [ $AKBUILD_JOBS = all ] || [ $AKBUILD_JOBS = aLl ] || [ $AKBUILD_JOBS = aLL ] || [ $AKBUILD_JOBS = alL ]; then
+AKJOBS="$(nproc --all)"
+else
+AKJOBS="$AKBUILD_JOBS"
+fi
+export KBUILD_BUILD_USER=$AKBUILD_USERNAME
+export KBUILD_BUILD_HOST=$AKBUILD_HOSTNAME
+if [ $AKBUILD_DTBO = true ]; then
+AKDTBO="dtbo.img"
+AKDTBOS="Enabled"
+else
+AKDTBO=""
+AKDTBOS="Disabled"
+fi
+if [ $AKBUILD_KDEPTH1 = true ]; then
+AKDEPTH="--depth=1"
+else
+AKDEPTH=""
+fi
+if [ $AKBUILD_CLANG ]; then
+AKCLANG="$AKBUILD_CLANG"
+else
+AKCLANG="$AKBUILD_PATH/clang"
+fi
+export PATH="$AKCLANG/$AKBUILD_CLANGBIN:$PATH"
+if [ $AKBUILD_ANYKERNEL = true ]; then
+AKANYKERNEL="Enabled"
+else
+AKANYKERNEL="Disabled"
+fi
+AKKERNELS="$AKDEPTH $AKBUILD_KERNELURL -b $AKBUILD_KERNELBRANCH $AKBUILD_PATH/kernel"
+AKCLANGS="--depth=1 $AKBUILD_CLANGURL -b $AKBUILD_CLANGBRANCH $AKCLANG"
+
+if [ "$1" = "version" ] || [ "$1" = "help" ] || [ "$1" = "config" ] || [ "$1" = "clone" ] || [ "$1" = "pull" ] || [ "$1" = "build" ] || [ "$1" = "clean" ]; then
+
+if [ "$1" = "version" ]; then
+echo -e "akbuild version $AKBUILD_VERSION"
+fi
+
+if [ "$1" = "help" ]; then
+echo -e "\tversion\t\tShow akbuild version\n\thelp\t\tShow info about using$BDFC akbuild$DFC\n\tconfig\t\tActions with connfiguration files\n\tclone\t\tClone kernel and clang\n\tpull\t\tUpdate kernel and clang by using$BDFC git pull$DFC if possible\n\tbuild\t\tStart building kernel\n\tclean\t\tRemove out folder\n\n\takbuild config\n\t\tShow currently loaded configuration\n\n\takbuild config [-c <filename>] [-d] [-r] [-r <filename>]\n\n\t\t-c <filename>, --custom <filename>\n\t\t\tLoad configuration from file\n\n\t\t-d, --default\n\t\t\tLoad configuration from default file\n\n\t\t-r, --regenerate\n\t\t\tRegenerate default configuration file\n\n\t\t-r <filename>, --regenerate <filename>\n\t\t\tRegenerate configuration to file\n\n\takbuild clone/pull\n\t\tClone/Pull kernel and clang\n\n\takbuild clone/pull kernel\n\t\tClone/Pull kernel only\n\n\takbuild clone/pull clang\n\t\tClone/Pull clang only"
+fi
+
+if [ "$1" = "config" ] && [ "$2" = "" ] || [ "$2" = "-c" ] || [ "$2" = "--custom" ] || [ "$2" = "-d" ] || [ "$2" = "--default" ] || [ "$2" = "-r" ] || [ "$2" = "--regenerate" ]; then
+if [ "$1" = "config" ] && [ "$2" = "" ]; then
+echo -e "Work path: $AKBUILD_PATH\nJobs: $AKJOBS\nBuilder: $KBUILD_BUILD_USER@$KBUILD_BUILD_HOST\nKernel image: $AKBUILD_OUTPUTFILE\nBuild dtbo.img: $AKDTBOS\nKernel: $AKBUILD_KERNELNAME\nClang binaries: $AKCLANG/$AKBUILD_CLANGBIN\nAnyKernel: $AKANYKERNEL\nDevice: $AKBUILD_DEVICENAME"
+fi
+if [ "$1" = "config" ] && [ "$2" = "-c" ] || [ "$2" = "--custom" ] && [ "$3" ]; then
+if [ -f $3 ]; then
+. $3
+echo -e "Configuration loaded form $3"
+else
+echo -e "Configuration file deosn't exist, regenerate it"
+fi
+else
+if [ "$1" = "config" ] && [ "$2" = "-c" ] || [ "$2" = "--custom" ]; then
+echo -e "You must specify the file"
+fi
+fi
+if [ "$1" = "config" ] && [ "$2" = "-d" ] || [ "$2" = "--default" ]; then
+if [ -f $AKCONFIGFILE ]; then
+. $AKCONFIGFILE
+echo -e "Configuration loaded form $AKCONFIGFILE"
+else
+echo -e "Configuration file deosn't exist, regenerate it"
+fi
+fi
+if [ "$1" = "config" ] && [ "$2" = "-r" ] || [ "$2" = "--regenerate" ] && [ "$3" ]; then
+echo -e "$AKBUILD_CONFIG" > $3
+echo -e "Configuration file was regenerated in $3"
+else
+if [ "$1" = "config" ] && [ "$2" = "-r" ] || [ "$2" = "--regenerate" ]; then
+echo -e "$AKBUILD_CONFIG" > $AKCONFIGFILE
+echo -e "Default configuration file was regenerated"
+fi
+fi
+else
+if [ "$1" = "config" ] && [ "$2" ]; then
+echo -e "Invalid argument '$2'"
+fi
+fi
+
+if [ "$1" = "clone" ] && [ "$2" = "" ] || [ "$2" = "kernel" ] || [ "$2" = "clang" ]; then
+if [ "$1" = "clone" ] && [ "$2" = "" ]; then
+if [ -d $AKBUILD_PATH/kernel ]; then
+echo -e "The kernel has already been cloned"
+else
+if ! git clone $AKKERNELS; then
+echo -e "Error cloning the kernel"
+fi
+fi
+if [ -d $AKCLANG ]; then
+if [ $AKBUILD_CLANG ]; then
+echo -e "You are using clang from external path"
+else
+echo -e "The clang has already been cloned"
+fi
+else
+if ! git clone $AKCLANGS; then
+echo -e "Error cloning the clang"
+fi
+fi
+fi
+if [ "$1" = "clone" ] && [ "$2" = kernel ]; then
+if [ -d $AKBUILD_PATH/kernel ]; then
+echo -e "The kernel has already been cloned"
+else
+if ! git clone $AKKERNELS; then
+echo -e "Error cloning the kernel"
+fi
+fi
+fi
+if [ "$1" = "clone" ] && [ "$2" = clang ]; then
+if [ -d $AKCLANG ]; then
+if [ $AKBUILD_CLANG ]; then
+echo -e "You are using clang from external path"
+else
+echo -e "The clang has already been cloned"
+fi
+else
+if ! git clone $AKCLANGS; then
+echo -e "Error cloning the clang"
+fi
+fi
+fi
+else
+if [ "$1" = "clone" ] && [ "$2" ]; then
+echo -e "Invalid argument '$2'"
+fi
+fi
+
+if [ "$1" = "pull" ] && [ "$2" = "" ] || [ "$2" = "kernel" ] || [ "$2" = "clang" ]; then
+if [ "$1" = "pull" ] && [ "$2" = "" ]; then
+if [ -d $AKBUILD_PATH/kernel ]; then
+cd $AKBUILD_PATH/kernel
+if ! git pull; then
+echo -e "Error pulling the kernel"
+fi
+else
+echo -e "The kernel is not cloned"
+fi
+if [ -d $AKCLANG ]; then
+cd $AKCLANG
+if ! git pull; then
+echo -e "Error pulling the clang"
+fi
+else
+echo -e "The clang is not cloned"
+fi
+fi
+if [ "$1" = "pull" ] && [ "$2" = "kernel" ]; then
+if [ -d $AKBUILD_PATH/kernel ]; then
+cd $AKBUILD_PATH/kernel
+if ! git pull; then
+echo -e "Error pulling the kernel"
+fi
+else
+echo -e "The kernel is not cloned"
+fi
+fi
+if [ "$1" = "pull" ] && [ "$2" = "clang" ]; then
+if [ -d $AKCLANG ]; then
+cd $AKCLANG
+if ! git pull; then
+echo -e "Error pulling the clang"
+fi
+else
+echo -e "The clang is not cloned"
+fi
+fi
+else
+if [ "$1" = "pull" ] && [ "$2" ]; then
+echo -e "Invalid argument '$2'"
+fi
+fi
+
+if [ "$1" = "build" ]; then
+if [ -d $AKBUILD_PATH/kernel ]; then
+if [ -d $AKCLANG ]; then
+if
+SECONDS=0
+cd $AKBUILD_PATH/kernel
+make O=../out ARCH=$AKBUILD_ARCH $AKBUILD_DEFCONFIG
+make -j$AKJOBS O=../out ARCH=$AKBUILD_ARCH $AKBUILD_OPTINONS $AKBUILD_OUTPUTFILE $AKDTBO
+AKTIME="$((SECONDS / 60)):$((SECONDS % 60))"
+cd $AKBUILD_PATH
+then
+if [ $AKBUILD_ANYKERNEL = true ]; then
+if [ -f "out/arch/$AKBUILD_ARCH/boot/$AKBUILD_OUTPUTFILE" ]; then
+ZIPNAME="$AKBUILD_KERNELNAME-$AKBUILD_DEVICENAME-$(date '+%Y%m%d').zip"
+git clone -q $AKBUILD_ANYKERNELURL -b $AKBUILD_ANYKERNELBRANCH AnyKernel3
+cp out/arch/$AKBUILD_ARCH/boot/$AKBUILD_OUTPUTFILE AnyKernel3
+if [ $AKBUILD_DTBO = true ]; then
+cp out/arch/$AKBUILD_ARCH/boot/dtbo.img AnyKernel3
+fi
+cd AnyKernel3
+zip -r9 "../$ZIPNAME" * -x '*.git*' README.md *placeholder
+cd ..
+rm -rf AnyKernel3
+echo -e "$GDFC\nBuild completed successfully | $AKTIME$DFC\nOutput package: $ZIPNAME"
+else
+echo -e "$RDFC\nBuild failed! Output file not found | $AKTIME$DFC"
+fi
+else
+echo -e "$GDFC\nBuild completed successfully | $AKTIME$DFC"
+fi
+else
+echo -e "$RDFC\nBuild failed! Something went wrong | $AKTIME$DFC"
+fi
+else
+echo -e "The clang is not cloned"
+fi
+else
+echo -e "The kernel is not cloned"
+fi
+fi
+
+if [ "$1" = "clean" ]; then
+echo -e "Removing out folder..."
+rm -rf $AKBUILD_PATH/out
+echo -e "\nOut folder removed"
+fi
+
+else
+if [ "$1" ]; then
+echo -e "Invalid argument '$1'"
+fi
+fi
+
+mkdir -p $CACHE
+echo -e "# Android kernel build configuration\nAKBUILD_PATH=\"$AKBUILD_PATH\"\nAKBUILD_JOBS=\"$AKBUILD_JOBS\"\nAKBUILD_USERNAME=\"$AKBUILD_USERNAME\"\nAKBUILD_HOSTNAME=\"$AKBUILD_HOSTNAME\"\nAKBUILD_ARCH=\"$AKBUILD_ARCH\"\nAKBUILD_DEFCONFIG=\"$AKBUILD_DEFCONFIG\"\nAKBUILD_OPTINONS=\"$AKBUILD_OPTINONS\"\nAKBUILD_OUTPUTFILE=\"$AKBUILD_OUTPUTFILE\"\nAKBUILD_DTBO=$AKBUILD_DTBO\n\n# Kernel\nAKBUILD_KERNELURL=\"$AKBUILD_KERNELURL\"\nAKBUILD_KERNELBRANCH=\"$AKBUILD_KERNELBRANCH\"\nAKBUILD_KERNELNAME=\"$AKBUILD_KERNELNAME\"\nAKBUILD_KDEPTH1=$AKBUILD_KDEPTH1\n\n# Clang\nAKBUILD_CLANGURL=\"$AKBUILD_CLANGURL\"\nAKBUILD_CLANGBRANCH=\"$AKBUILD_CLANGBRANCH\"\nAKBUILD_CLANG=\"$AKBUILD_CLANG\"\nAKBUILD_CLANGBIN=\"$AKBUILD_CLANGBIN\"\n\n# Device\nAKBUILD_ANYKERNEL=$AKBUILD_ANYKERNEL\nAKBUILD_ANYKERNELURL=\"$AKBUILD_ANYKERNELURL\"\nAKBUILD_ANYKERNELBRANCH=\"$AKBUILD_ANYKERNELBRANCH\"\nAKBUILD_DEVICENAME=\"$AKBUILD_DEVICENAME\"" > $CACHECONFIGFILE
