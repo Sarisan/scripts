@@ -1,5 +1,5 @@
 #!/bin/bash
-AKBUILD_VERSION="2.1"
+AKBUILD_VERSION="2.1.1"
 
 # Default configuration values
 DEF_CONFIGFILE=$HOME/.akbuild_config
@@ -10,14 +10,14 @@ DEF_AKBUILD_USERNAME="$USER"
 DEF_AKBUILD_HOSTNAME="$HOSTNAME"
 DEF_AKBUILD_ARCH="arm64"
 DEF_AKBUILD_DEFCONFIG="vendor/ginkgo-perf_defconfig"
-DEF_AKBUILD_OPTINONS="CC=clang LD=ld.lld AR=llvm-ar AS=llvm-as NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-"
+DEF_AKBUILD_OPTINONS="CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-"
 DEF_AKBUILD_OUTPUTFILE="Image.gz-dtb"
 DEF_AKBUILD_DTBO="true"
 
 # Kernel
-DEF_AKBUILD_KERNELURL="https://github.com/ghostrider-reborn/android_kernel_xiaomi_ginkgo.git"
-DEF_AKBUILD_KERNELBRANCH="quartz"
-DEF_AKBUILD_KERNELNAME="QuicksilveR"
+DEF_AKBUILD_KERNELURL="https://github.com/ArrowOS-Devices/android_kernel_xiaomi_ginkgo.git"
+DEF_AKBUILD_KERNELBRANCH="arrow-11.0"
+DEF_AKBUILD_KERNELNAME="QuicksilveRV2"
 DEF_AKBUILD_KDEPTH1=true                                           # Clone kernel with --depth=1 or no
 
 # Clang
