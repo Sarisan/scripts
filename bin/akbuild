@@ -1,11 +1,11 @@
 #!/bin/bash
-AKBUILD_VERSION="2.2"
+AKBUILD_VERSION="2.2.1"
 
 # Default configuration values
 DEF_CONFIGFILE=$HOME/.akbuild_config
 
 # Build
-DEF_AKBUILD_JOBS="all"                                             # How many jobs use to build, all = all threads of your soc, 1 = 1
+DEF_AKBUILD_JOBS="$(nproc --all)"                                  # How many jobs use to build
 DEF_AKBUILD_USERNAME="$USER"
 DEF_AKBUILD_HOSTNAME="$HOSTNAME"
 DEF_AKBUILD_ARCH="arm64"
@@ -57,11 +57,6 @@ echo -e "$AKBUILD_CONFIG" > $AKCONFIGFILE
 . $AKCONFIGFILE
 fi
 fi
-if [ $AKBUILD_JOBS = All ] || [ $AKBUILD_JOBS = ALl ] || [ $AKBUILD_JOBS = ALL ] || [ $AKBUILD_JOBS = AlL ] || [ $AKBUILD_JOBS = all ] || [ $AKBUILD_JOBS = aLl ] || [ $AKBUILD_JOBS = aLL ] || [ $AKBUILD_JOBS = alL ]; then
-AKJOBS="$(nproc --all)"
-else
-AKJOBS="$AKBUILD_JOBS"
-fi
 export KBUILD_BUILD_USER=$AKBUILD_USERNAME
 export KBUILD_BUILD_HOST=$AKBUILD_HOSTNAME
 if [ $AKBUILD_DTBO = true ]; then
@@ -109,12 +104,12 @@ fi
 
 if [ "$1" = "config" ] && [ "$2" = "" ] || [ "$2" = "-c" ] || [ "$2" = "--custom" ] || [ "$2" = "-d" ] || [ "$2" = "--default" ] || [ "$2" = "-r" ] || [ "$2" = "--regenerate" ]; then
 if [ "$1" = "config" ] && [ "$2" = "" ]; then
-echo -e "Work path: $AKBUILD_PATH\nJobs: $AKJOBS\nBuilder: $KBUILD_BUILD_USER@$KBUILD_BUILD_HOST\nKernel image: $AKBUILD_OUTPUTFILE\nBuild dtbo.img: $AKDTBOS\nCcache: $AKCCS\nKernel: $AKBUILD_KERNELNAME\nClang binaries: $AKCLANG/$AKBUILD_CLANGBIN\nAnyKernel: $AKANYKERNEL\nDevice: $AKBUILD_DEVICENAME"
+echo -e "Work path: $AKBUILD_PATH\nJobs: $AKBUILD_JOBS\nBuilder: $KBUILD_BUILD_USER@$KBUILD_BUILD_HOST\nKernel image: $AKBUILD_OUTPUTFILE\nBuild dtbo.img: $AKDTBOS\nCcache: $AKCCS\nKernel: $AKBUILD_KERNELNAME\nClang binaries: $AKCLANG/$AKBUILD_CLANGBIN\nAnyKernel: $AKANYKERNEL\nDevice: $AKBUILD_DEVICENAME"
 fi
 if [ "$1" = "config" ] && [ "$2" = "-c" ] || [ "$2" = "--custom" ] && [ "$3" ]; then
 if [ -f $3 ]; then
 . $3
-echo -e "Configuration loaded form $3"
+echo -e "Configuration loaded from $3"
 else
 echo -e "Configuration file deosn't exist, regenerate it"
 fi
@@ -126,7 +121,7 @@ fi
 if [ "$1" = "config" ] && [ "$2" = "-d" ] || [ "$2" = "--default" ]; then
 if [ -f $AKCONFIGFILE ]; then
 . $AKCONFIGFILE
-echo -e "Configuration loaded form $AKCONFIGFILE"
+echo -e "Configuration loaded from $AKCONFIGFILE"
 else
 echo -e "Configuration file deosn't exist, regenerate it"
 fi
@@ -247,7 +242,7 @@ if
 SECONDS=0
 cd $AKBUILD_PATH/kernel
 make O=$AKBUILD_PATH/out ARCH=$AKBUILD_ARCH $AKBUILD_DEFCONFIG
-make -j$AKJOBS O=$AKBUILD_PATH/out ARCH=$AKBUILD_ARCH CC="$AKCC" $AKBUILD_OPTINONS $AKBUILD_OUTPUTFILE $AKDTBO
+make -j$AKBUILD_JOBS O=$AKBUILD_PATH/out ARCH=$AKBUILD_ARCH CC="$AKCC" $AKBUILD_OPTINONS $AKBUILD_OUTPUTFILE $AKDTBO
 AKTIME="$((SECONDS / 60)):$((SECONDS % 60))"
 cd $AKBUILD_PATH
 then
