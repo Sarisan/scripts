@@ -1,5 +1,5 @@
 #!/bin/bash
-AKBUILD_VERSION="2.2.1"
+AKBUILD_VERSION="2.3"
 
 # Default configuration values
 DEF_CONFIGFILE=$HOME/.akbuild_config
@@ -69,6 +69,9 @@ fi
 if [ $AKBUILD_CCACHE = true ]; then
 AKCC="ccache clang"
 AKCCS="Enabled"
+export CCACHE_DIR="$AKBUILD_PATH/ccache"
+mkdir -p $CCACHE_DIR
+echo "max_size = 5G" > $CCACHE_DIR/ccache.conf
 else
 AKCC="clang"
 AKCCS="Disabled"
