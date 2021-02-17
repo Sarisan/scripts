@@ -1,5 +1,5 @@
 #!/bin/bash
-AKBUILD_VERSION="2.7"
+AKBUILD_VERSION="2.8"
 
 # Default configuration values
 DEF_CONFIGFILE=$HOME/.akbuild_config
@@ -265,7 +265,9 @@ cd $AKBUILD_PATH
 if [ $AKBUILD_ANYKERNEL = true ]; then
 if [ -f "out/arch/$AKBUILD_ARCH/boot/$AKBUILD_OUTPUTFILE" ]; then
 ZIPNAME="$AKBUILD_KERNELNAME-$AKBUILD_DEVICENAME-$(date '+%Y%m%d').zip"
-git clone -q $AKBUILD_ANYKERNELURL -b $AKBUILD_ANYKERNELBRANCH AnyKernel3
+if ! git clone -q $AKBUILD_ANYKERNELURL -b $AKBUILD_ANYKERNELBRANCH AnyKernel3; then
+echo -e "$RDFC\nBuild failed! Unable to clone AnyKernel3 | $AKTIME$DFC"
+else
 cp out/arch/$AKBUILD_ARCH/boot/$AKBUILD_OUTPUTFILE AnyKernel3
 if [ $AKBUILD_DTBO = true ]; then
 cp out/arch/$AKBUILD_ARCH/boot/dtbo.img AnyKernel3
@@ -275,6 +277,7 @@ zip -r9 "../$ZIPNAME" * -x '*.git*' README.md *placeholder
 cd ..
 rm -rf AnyKernel3
 echo -e "$GDFC\nBuild completed successfully | $AKTIME$DFC\nOutput package: $ZIPNAME"
+fi
 else
 echo -e "$RDFC\nBuild failed! Output file not found | $AKTIME$DFC"
 fi
