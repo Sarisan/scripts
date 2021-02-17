@@ -1,5 +1,5 @@
 #!/bin/bash
-AKBUILD_VERSION="2.6"
+AKBUILD_VERSION="2.7"
 
 # Default configuration values
 DEF_CONFIGFILE=$HOME/.akbuild_config
@@ -259,9 +259,9 @@ SECONDS=0
 cd $AKBUILD_PATH/kernel
 make O=$AKBUILD_PATH/out ARCH=$AKBUILD_ARCH $AKBUILD_DEFCONFIG
 make -j$AKBUILD_JOBS O=$AKBUILD_PATH/out ARCH=$AKBUILD_ARCH CC="$AKCC" $AKBUILD_OPTINONS $AKBUILD_OUTPUTFILE $AKDTBO
+then
 AKTIME="$((SECONDS / 60)):$((SECONDS % 60))"
 cd $AKBUILD_PATH
-then
 if [ $AKBUILD_ANYKERNEL = true ]; then
 if [ -f "out/arch/$AKBUILD_ARCH/boot/$AKBUILD_OUTPUTFILE" ]; then
 ZIPNAME="$AKBUILD_KERNELNAME-$AKBUILD_DEVICENAME-$(date '+%Y%m%d').zip"
@@ -282,6 +282,8 @@ else
 echo -e "$GDFC\nBuild completed successfully | $AKTIME$DFC"
 fi
 else
+AKTIME="$((SECONDS / 60)):$((SECONDS % 60))"
+cd $AKBUILD_PATH
 echo -e "$RDFC\nBuild failed! Something went wrong | $AKTIME$DFC"
 fi
 else
