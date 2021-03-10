@@ -1,5 +1,5 @@
 #!/bin/bash
-AKBUILD_VERSION="2.12"
+AKBUILD_VERSION="2.13"
 
 # Default configuration values
 DEF_CONFIGFILE=$HOME/.akbuild_config
@@ -39,6 +39,7 @@ DEF_AKBUILD_DEVICENAME="ginkgo"
 # Colors
 DFC="\033[0m"         # Default font
 BDFC="\033[1m"        # Bold default font
+CDFC="\033[0;36m"     # Cyan default font
 GDFC="\033[0;32m"     # Green default font
 RDFC="\033[0;31m"     # Red default font
 
@@ -270,7 +271,11 @@ echo -e "$RDFC\nBuild failed! Unable to clone AnyKernel3 | $AKTIME$DFC"
 else
 cp out/arch/$AKBUILD_ARCH/boot/$AKBUILD_OUTPUTFILE AnyKernel3
 if [ $AKBUILD_DTBO = true ]; then
+if [ -f "out/arch/$AKBUILD_ARCH/boot/dtbo.img" ]; then
 cp out/arch/$AKBUILD_ARCH/boot/dtbo.img AnyKernel3
+else
+echo -e "$CDFC\nWARNING:$DFC dtbo.img not found"
+fi
 fi
 cd AnyKernel3
 if ! zip -r9 "../$ZIPNAME" * -x '*.git*' README.md *placeholder; then
