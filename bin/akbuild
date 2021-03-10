@@ -1,5 +1,5 @@
 #!/bin/bash
-AKBUILD_VERSION="2.8"
+AKBUILD_VERSION="2.12"
 
 # Default configuration values
 DEF_CONFIGFILE=$HOME/.akbuild_config
@@ -273,10 +273,13 @@ if [ $AKBUILD_DTBO = true ]; then
 cp out/arch/$AKBUILD_ARCH/boot/dtbo.img AnyKernel3
 fi
 cd AnyKernel3
-zip -r9 "../$ZIPNAME" * -x '*.git*' README.md *placeholder
+if ! zip -r9 "../$ZIPNAME" * -x '*.git*' README.md *placeholder; then
+echo -e "$RDFC\nBuild failed! zip is not installed or something else is wrong | $AKTIME$DFC"
+else
 cd ..
 rm -rf AnyKernel3
 echo -e "$GDFC\nBuild completed successfully | $AKTIME$DFC\nOutput package: $ZIPNAME"
+fi
 fi
 else
 echo -e "$RDFC\nBuild failed! Output file not found | $AKTIME$DFC"
