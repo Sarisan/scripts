@@ -1,5 +1,5 @@
 #!/bin/bash
-AKBUILD_VERSION="2.16"
+AKBUILD_VERSION="2.17"
 
 # Default configuration values
 DEF_CONFIGFILE=$HOME/.akbuild_config
@@ -46,6 +46,61 @@ RDFC="\033[0;31m"     # Default red font
 # Default config
 AKBUILD_CONFIG="# Android kernel build configuration\nAKBUILD_PATH=\"$PWD\"\nAKBUILD_JOBS=\"$DEF_AKBUILD_JOBS\"\nAKBUILD_USERNAME=\"$DEF_AKBUILD_USERNAME\"\nAKBUILD_HOSTNAME=\"$DEF_AKBUILD_HOSTNAME\"\nAKBUILD_ARCH=\"$DEF_AKBUILD_ARCH\"\nAKBUILD_CC=\"$DEF_AKBUILD_CC\"\nAKBUILD_OPTIONS=\"$DEF_AKBUILD_OPTIONS\"\nAKBUILD_DEFCONFIG=\"$DEF_AKBUILD_DEFCONFIG\"\nAKBUILD_OUTPUTFILE=\"$DEF_AKBUILD_OUTPUTFILE\"\nAKBUILD_DTBO=$DEF_AKBUILD_DTBO\nAKBUILD_CCACHE=$DEF_AKBUILD_CCACHE\nAKBUILD_CCACHE_DIR=\"$DEF_AKBUILD_CCACHE_DIR\"\n\n# Kernel\nAKBUILD_KERNELURL=\"$DEF_AKBUILD_KERNELURL\"\nAKBUILD_KERNELBRANCH=\"$DEF_AKBUILD_KERNELBRANCH\"\nAKBUILD_KERNELNAME=\"$DEF_AKBUILD_KERNELNAME\"\nAKBUILD_KDEPTH1=$DEF_AKBUILD_KDEPTH1\n\n# Clang\nAKBUILD_PREINSTALLED_COMPILER=$DEF_AKBUILD_PREINSTALLED_COMPILER\nAKBUILD_COMPILERURL=\"$DEF_AKBUILD_COMPILERURL\"\nAKBUILD_COMPILERBRANCH=\"$DEF_AKBUILD_COMPILERBRANCH\"\nAKBUILD_COMPILER=\"$DEF_AKBUILD_COMPILER\"\nAKBUILD_COMPILERBIN=\"$DEF_AKBUILD_COMPILERBIN\"\n\n# Device\nAKBUILD_ANYKERNEL=$DEF_AKBUILD_ANYKERNEL\nAKBUILD_ANYKERNELURL=\"$DEF_AKBUILD_ANYKERNELURL\"\nAKBUILD_ANYKERNELBRANCH=\"$DEF_AKBUILD_ANYKERNELBRANCH\"\nAKBUILD_DEVICENAME=\"$DEF_AKBUILD_DEVICENAME\""
 
+AKBUILD_L_1="Enabled"
+AKBUILD_L_2="Disabled"
+AKBUILD_L_3="Preinstalled"
+AKBUILD_L_4="Show akbuild version"
+AKBUILD_L_5="Show this"
+AKBUILD_L_6="Actions with configuration files"
+AKBUILD_L_7="Clone the kernel and the compiler"
+AKBUILD_L_8="Update the kernel and the compiler with$BDFC git pull$DFC if possible"
+AKBUILD_L_9="Start building the kernel"
+AKBUILD_L_10="Remove output folder"
+AKBUILD_L_11="Show current configuration"
+AKBUILD_L_12="Load configuration from file"
+AKBUILD_L_13="Load configuration from default file"
+AKBUILD_L_14="Regenerate default configuration file"
+AKBUILD_L_15="Regenerate configuration to file"
+AKBUILD_L_16="Clone/Pull the kernel and the compiler"
+AKBUILD_L_17="Clone/Pull only the kernel"
+AKBUILD_L_18="Clone/Pull only the compiler"
+AKBUILD_L_19="Work path"
+AKBUILD_L_20="Jobs"
+AKBUILD_L_21="Builder"
+AKBUILD_L_22="Kernel image"
+AKBUILD_L_23="Build dtbo.img"
+AKBUILD_L_24="Ccache"
+AKBUILD_L_25="Kernel"
+AKBUILD_L_26="Compiler binaries"
+AKBUILD_L_27="AnyKernel"
+AKBUILD_L_28="Device"
+AKBUILD_L_29="Configuration has been loaded from"
+AKBUILD_L_30="Configuration file does not exist, regenerate it"
+AKBUILD_L_31="You must specify the file"
+AKBUILD_L_32="Configuration file has been regenerated in"
+AKBUILD_L_33="Default configuration file has been regenerated"
+AKBUILD_L_34="The kernel has already been cloned"
+AKBUILD_L_35="Error cloning the kernel"
+AKBUILD_L_36="You are using the compiler from external path"
+AKBUILD_L_37="The compiler has already been cloned"
+AKBUILD_L_38="Error cloning the compiler"
+AKBUILD_L_39="Error pulling the kernel"
+AKBUILD_L_40="The kernel is not cloned"
+AKBUILD_L_41="Error pulling the compiler"
+AKBUILD_L_42="The compiler is not cloned"
+AKBUILD_L_43="Build failed!"
+AKBUILD_L_44="Build completed successfully!"
+AKBUILD_L_45="WARNING"
+AKBUILD_L_46="Unable to clone AnyKernel3"
+AKBUILD_L_47="dtbo.img not found"
+AKBUILD_L_48="zip is not installed or something else is wrong"
+AKBUILD_L_49="Output file not found"
+AKBUILD_L_50="Something went wrong"
+AKBUILD_L_51="Output package"
+AKBUILD_L_52="Removing output folder..."
+AKBUILD_L_53="Output folder has been removed"
+AKBUILD_L_54="Invalid argument"
+
 
 AKCONFIGFILE=$DEF_CONFIGFILE
 CACHE=$HOME/.cache
@@ -65,14 +120,14 @@ export KBUILD_BUILD_USER=$AKBUILD_USERNAME
 export KBUILD_BUILD_HOST=$AKBUILD_HOSTNAME
 if [ "$AKBUILD_DTBO" = "true" ]; then
 AKDTBO="dtbo.img"
-AKDTBOS="Enabled"
+AKDTBOS="$AKBUILD_L_1"
 else
 AKDTBO=""
-AKDTBOS="Disabled"
+AKDTBOS="$AKBUILD_L_2"
 fi
 if [ "$AKBUILD_CCACHE" = "true" ]; then
 AKCC="ccache $AKBUILD_CC"
-AKCCS="Enabled"
+AKCCS="$AKBUILD_L_1"
 if [ "$AKBUILD_CCACHE_DIR" ]; then
 export CCACHE_DIR="$AKBUILD_CCACHE_DIR"
 else
@@ -82,7 +137,7 @@ echo "max_size = 10G" > $CCACHE_DIR/ccache.conf
 fi
 else
 AKCC="$AKBUILD_CC"
-AKCCS="Disabled"
+AKCCS="$AKBUILD_L_2"
 fi
 if [ "$AKBUILD_KDEPTH1" = "true" ]; then
 AKDEPTH="--depth=1"
@@ -91,7 +146,7 @@ AKDEPTH=""
 fi
 if [ "$AKBUILD_PREINSTALLED_COMPILER" = "true" ]; then
 AKCOMPILER="$AKBUILD_PATH"
-AKCS="Preinstalled"
+AKCS="$AKBUILD_L_3"
 else
 if [ "$AKBUILD_COMPILER" ]; then
 AKCOMPILER="$AKBUILD_COMPILER"
@@ -102,9 +157,9 @@ export PATH="$AKCOMPILER/$AKBUILD_COMPILERBIN:$PATH"
 AKCS="$AKCOMPILER/$AKBUILD_COMPILERBIN"
 fi
 if [ "$AKBUILD_ANYKERNEL" = "true" ]; then
-AKANYKERNEL="Enabled"
+AKANYKERNEL="$AKBUILD_L_1"
 else
-AKANYKERNEL="Disabled"
+AKANYKERNEL="$AKBUILD_L_2"
 fi
 AKKERNELS="$AKDEPTH $AKBUILD_KERNELURL -b $AKBUILD_KERNELBRANCH $AKBUILD_PATH/kernel"
 AKCOMPILERS="--depth=1 $AKBUILD_COMPILERURL -b $AKBUILD_COMPILERBRANCH $AKCOMPILER"
@@ -116,94 +171,94 @@ echo -e "akbuild version $AKBUILD_VERSION"
 fi
 
 if [ "$1" = "help" ]; then
-echo -e "\tversion\t\tShow akbuild version\n\thelp\t\tShow this\n\tconfig\t\tActions with configuration files\n\tclone\t\tClone the kernel and the compiler\n\tpull\t\tUpdate the kernel and the compiler with$BDFC git pull$DFC if possible\n\tbuild\t\tStart building the kernel\n\tclean\t\tRemove output folder\n\n\takbuild config\n\t\tShow current configuration\n\n\takbuild config [-c <filename>] [-d] [-r] [-r <filename>]\n\n\t\t-c <filename>, --custom <filename>\n\t\t\tLoad configuration from file\n\n\t\t-d, --default\n\t\t\tLoad configuration from default file\n\n\t\t-r, --regenerate\n\t\t\tRegenerate default configuration file\n\n\t\t-r <filename>, --regenerate <filename>\n\t\t\tRegenerate configuration to file\n\n\takbuild clone/pull\n\t\tClone/Pull the kernel and the compiler\n\n\takbuild clone/pull kernel\n\t\tClone/Pull only the kernel\n\n\takbuild clone/pull compiler\n\t\tClone/Pull only the compiler"
+echo -e "\tversion\t\t$AKBUILD_L_4\n\thelp\t\t$AKBUILD_L_5\n\tconfig\t\t$AKBUILD_L_6\n\tclone\t\t$AKBUILD_L_7\n\tpull\t\t$AKBUILD_L_8\n\tbuild\t\t$AKBUILD_L_9\n\tclean\t\t$AKBUILD_L_10\n\n\takbuild config\n\t\t$AKBUILD_L_11\n\n\takbuild config [-c <filename>] [-d] [-r] [-r <filename>]\n\n\t\t-c <filename>, --custom <filename>\n\t\t\t$AKBUILD_L_12\n\n\t\t-d, --default\n\t\t\t$AKBUILD_L_13\n\n\t\t-r, --regenerate\n\t\t\t$AKBUILD_L_14\n\n\t\t-r <filename>, --regenerate <filename>\n\t\t\t$AKBUILD_L_15\n\n\takbuild clone/pull\n\t\t$AKBUILD_L_16\n\n\takbuild clone/pull kernel\n\t\t$AKBUILD_L_17\n\n\takbuild clone/pull compiler\n\t\t$AKBUILD_L_18"
 fi
 
 if [ "$1" = "config" ] && [ "$2" = "" ] || [ "$2" = "-c" ] || [ "$2" = "--custom" ] || [ "$2" = "-d" ] || [ "$2" = "--default" ] || [ "$2" = "-r" ] || [ "$2" = "--regenerate" ]; then
 if [ "$1" = "config" ] && [ "$2" = "" ]; then
-echo -e "Work path: $AKBUILD_PATH\nJobs: $AKBUILD_JOBS\nBuilder: $KBUILD_BUILD_USER@$KBUILD_BUILD_HOST\nKernel image: $AKBUILD_OUTPUTFILE\nBuild dtbo.img: $AKDTBOS\nCcache: $AKCCS\nKernel: $AKBUILD_KERNELNAME\nCompiler binaries: $AKCS\nAnyKernel: $AKANYKERNEL\nDevice: $AKBUILD_DEVICENAME"
+echo -e "$AKBUILD_L_19: $AKBUILD_PATH\n$AKBUILD_L_20: $AKBUILD_JOBS\n$AKBUILD_L_21: $KBUILD_BUILD_USER@$KBUILD_BUILD_HOST\n$AKBUILD_L_22: $AKBUILD_OUTPUTFILE\n$AKBUILD_L_23: $AKDTBOS\n$AKBUILD_L_24: $AKCCS\n$AKBUILD_L_25: $AKBUILD_KERNELNAME\n$AKBUILD_L_26: $AKCS\n$AKBUILD_L_27: $AKANYKERNEL\n$AKBUILD_L_28: $AKBUILD_DEVICENAME"
 fi
 if [ "$1" = "config" ] && [ "$2" = "-c" ] || [ "$2" = "--custom" ] && [ "$3" ]; then
 if [ -f $3 ]; then
 . $3
-echo -e "Configuration has been loaded from $3"
+echo -e "$AKBUILD_L_29 $3"
 else
-echo -e "Configuration file does not exist, regenerate it"
+echo -e "$AKBUILD_L_30"
 fi
 else
 if [ "$1" = "config" ] && [ "$2" = "-c" ] || [ "$2" = "--custom" ]; then
-echo -e "You must specify the file"
+echo -e "$AKBUILD_L_31"
 fi
 fi
 if [ "$1" = "config" ] && [ "$2" = "-d" ] || [ "$2" = "--default" ]; then
 if [ -f $AKCONFIGFILE ]; then
 . $AKCONFIGFILE
-echo -e "Configuration has been loaded from $AKCONFIGFILE"
+echo -e "$AKBUILD_L_29 $AKCONFIGFILE"
 else
-echo -e "Configuration file does not exist, regenerate it"
+echo -e "$AKBUILD_L_30"
 fi
 fi
 if [ "$1" = "config" ] && [ "$2" = "-r" ] || [ "$2" = "--regenerate" ] && [ "$3" ]; then
 echo -e "$AKBUILD_CONFIG" > $3
-echo -e "Configuration file has been regenerated in $3"
+echo -e "$AKBUILD_L_32 $3"
 else
 if [ "$1" = "config" ] && [ "$2" = "-r" ] || [ "$2" = "--regenerate" ]; then
 echo -e "$AKBUILD_CONFIG" > $AKCONFIGFILE
-echo -e "Default configuration file has been regenerated"
+echo -e "$AKBUILD_L_33"
 fi
 fi
 else
 if [ "$1" = "config" ] && [ "$2" ]; then
-echo -e "Invalid argument '$2'"
+echo -e "$AKBUILD_L_54 '$2'"
 fi
 fi
 
 if [ "$1" = "clone" ] && [ "$2" = "" ] || [ "$2" = "kernel" ] || [ "$2" = "compiler" ]; then
 if [ "$1" = "clone" ] && [ "$2" = "" ]; then
 if [ -d $AKBUILD_PATH/kernel ]; then
-echo -e "The kernel has already been cloned"
+echo -e "$AKBUILD_L_34"
 else
 if ! git clone $AKKERNELS; then
-echo -e "Error cloning the kernel"
+echo -e "$AKBUILD_L_35"
 fi
 fi
 if [ -d $AKCOMPILER ]; then
 if [ $AKBUILD_COMPILER ]; then
-echo -e "You are using compiler from external path"
+echo -e "$AKBUILD_L_36"
 else
-echo -e "The compiler has already been cloned"
+echo -e "$AKBUILD_L_37"
 fi
 else
 if ! git clone $AKCOMPILERS; then
-echo -e "Error cloning the compiler"
+echo -e "$AKBUILD_L_38"
 fi
 fi
 fi
 if [ "$1" = "clone" ] && [ "$2" = kernel ]; then
 if [ -d $AKBUILD_PATH/kernel ]; then
-echo -e "The kernel has already been cloned"
+echo -e "$AKBUILD_L_34"
 else
 if ! git clone $AKKERNELS; then
-echo -e "Error cloning the kernel"
+echo -e "$AKBUILD_L_35"
 fi
 fi
 fi
 if [ "$1" = "clone" ] && [ "$2" = compiler ]; then
 if [ -d $AKCOMPILER ]; then
 if [ $AKBUILD_COMPILER ]; then
-echo -e "You are using the compiler from external path"
+echo -e "$AKBUILD_L_36"
 else
-echo -e "The compiler has already been cloned"
+echo -e "$AKBUILD_L_37"
 fi
 else
 if ! git clone $AKCOMPILERS; then
-echo -e "Error cloning the compiler"
+echo -e "$AKBUILD_L_38"
 fi
 fi
 fi
 else
 if [ "$1" = "clone" ] && [ "$2" ]; then
-echo -e "Invalid argument '$2'"
+echo -e "$AKBUILD_L_54 '$2'"
 fi
 fi
 
@@ -212,43 +267,43 @@ if [ "$1" = "pull" ] && [ "$2" = "" ]; then
 if [ -d $AKBUILD_PATH/kernel ]; then
 cd $AKBUILD_PATH/kernel
 if ! git pull; then
-echo -e "Error pulling the kernel"
+echo -e "$AKBUILD_L_39"
 fi
 else
-echo -e "The kernel is not cloned"
+echo -e "$AKBUILD_L_40"
 fi
 if [ -d $AKCOMPILER ]; then
 cd $AKCOMPILER
 if ! git pull; then
-echo -e "Error pulling the compiler"
+echo -e "$AKBUILD_L_41"
 fi
 else
-echo -e "The compiler is not cloned"
+echo -e "$AKBUILD_L_42"
 fi
 fi
 if [ "$1" = "pull" ] && [ "$2" = "kernel" ]; then
 if [ -d $AKBUILD_PATH/kernel ]; then
 cd $AKBUILD_PATH/kernel
 if ! git pull; then
-echo -e "Error pulling the kernel"
+echo -e "$AKBUILD_L_39"
 fi
 else
-echo -e "The kernel is not cloned"
+echo -e "$AKBUILD_L_40"
 fi
 fi
 if [ "$1" = "pull" ] && [ "$2" = "compiler" ]; then
 if [ -d $AKCOMPILER ]; then
 cd $AKCOMPILER
 if ! git pull; then
-echo -e "Error pulling the compiler"
+echo -e "$AKBUILD_L_41"
 fi
 else
-echo -e "The compiler is not cloned"
+echo -e "$AKBUILD_L_42"
 fi
 fi
 else
 if [ "$1" = "pull" ] && [ "$2" ]; then
-echo -e "Invalid argument '$2'"
+echo -e "$AKBUILD_L_54 '$2'"
 fi
 fi
 
@@ -267,53 +322,53 @@ if [ $AKBUILD_ANYKERNEL = true ]; then
 if [ -f "out/arch/$AKBUILD_ARCH/boot/$AKBUILD_OUTPUTFILE" ]; then
 ZIPNAME="$AKBUILD_KERNELNAME-$AKBUILD_DEVICENAME-$(date '+%Y%m%d').zip"
 if ! git clone -q $AKBUILD_ANYKERNELURL -b $AKBUILD_ANYKERNELBRANCH AnyKernel3; then
-echo -e "$RDFC\nBuild failed! Unable to clone AnyKernel3 | $AKTIME$DFC"
+echo -e "$RDFC\n$AKBUILD_L_43 $AKBUILD_L_46 | $AKTIME$DFC"
 else
 cp out/arch/$AKBUILD_ARCH/boot/$AKBUILD_OUTPUTFILE AnyKernel3
 if [ $AKBUILD_DTBO = true ]; then
 if [ -f "out/arch/$AKBUILD_ARCH/boot/dtbo.img" ]; then
 cp out/arch/$AKBUILD_ARCH/boot/dtbo.img AnyKernel3
 else
-echo -e "$CDFC\nWARNING:$DFC dtbo.img not found"
+echo -e "$CDFC\n$AKBUILD_L_45:$DFC $AKBUILD_L_47"
 fi
 fi
 cd AnyKernel3
 if ! zip -r9 "../$ZIPNAME" * -x '*.git*' README.md *placeholder; then
-echo -e "$RDFC\nBuild failed! zip is not installed or something else is wrong | $AKTIME$DFC"
+echo -e "$RDFC\n$AKBUILD_L_43 $AKBUILD_L_48 | $AKTIME$DFC"
 else
 cd ..
 rm -rf AnyKernel3
-echo -e "$GDFC\nBuild completed successfully | $AKTIME$DFC\nOutput package: $ZIPNAME"
+echo -e "$GDFC\n$AKBUILD_L_44 | $AKTIME$DFC\n$AKBUILD_L_51: $ZIPNAME"
 fi
 fi
 else
-echo -e "$RDFC\nBuild failed! Output file not found | $AKTIME$DFC"
+echo -e "$RDFC\n$AKBUILD_L_43 $AKBUILD_L_49 | $AKTIME$DFC"
 fi
 else
-echo -e "$GDFC\nBuild completed successfully | $AKTIME$DFC"
+echo -e "$GDFC\n$AKBUILD_L_44 | $AKTIME$DFC"
 fi
 else
 AKMINUTES=$((SECONDS / 60)) && AKSECONDS=$((SECONDS % 60)) && if(($AKMINUTES<=9)); then AKMINUTES=0$AKMINUTES; fi && if(($AKSECONDS<=9)); then AKSECONDS=0$AKSECONDS; fi && AKTIME=$AKMINUTES:$AKSECONDS
 cd $AKBUILD_PATH
-echo -e "$RDFC\nBuild failed! Something went wrong | $AKTIME$DFC"
+echo -e "$RDFC\n$AKBUILD_L_43 $AKBUILD_L_50 | $AKTIME$DFC"
 fi
 else
-echo -e "The compiler is not cloned"
+echo -e "$AKBUILD_L_42"
 fi
 else
-echo -e "The kernel is not cloned"
+echo -e "$AKBUILD_L_40"
 fi
 fi
 
 if [ "$1" = "clean" ]; then
-echo -e "Removing output folder..."
+echo -e "$AKBUILD_L_52"
 rm -rf $AKBUILD_PATH/out
-echo -e "\nOutput folder has been removed"
+echo -e "\n$AKBUILD_L_53"
 fi
 
 else
 if [ "$1" ]; then
-echo -e "Invalid argument '$1'"
+echo -e "$AKBUILD_L_54 '$1'"
 fi
 fi
 
