@@ -1,5 +1,5 @@
 #!/bin/bash
-AKBUILD_VERSION="2.17"
+AKBUILD_VERSION="2.18"
 
 # Default configuration values
 DEF_CONFIGFILE=$HOME/.akbuild_config
@@ -100,11 +100,18 @@ AKBUILD_L_51="Output package"
 AKBUILD_L_52="Removing output folder..."
 AKBUILD_L_53="Output folder has been removed"
 AKBUILD_L_54="Invalid argument"
+AKBUILD_L_55="Your system language"
+AKBUILD_L_56="Downloading the language file..."
+AKBUILD_L_57="Download failed, language not supported or you have connection issues"
+AKBUILD_L_58="Download completed successfully, language has been applied"
+AKBUILD_L_59="Download the language file"
 
 
 AKCONFIGFILE=$DEF_CONFIGFILE
 CACHE=$HOME/.cache
 CACHECONFIGFILE=$CACHE/akbuild
+LOCAL=$HOME/.local/share/akbuild
+LANGFILE=$LOCAL/akbuild_$LANG
 
 if [ -f $CACHECONFIGFILE ]; then
 . $CACHECONFIGFILE
@@ -115,6 +122,9 @@ else
 echo -e "$AKBUILD_CONFIG" > $AKCONFIGFILE
 . $AKCONFIGFILE
 fi
+fi
+if [ -f $LANGFILE ]; then
+. $LANGFILE
 fi
 export KBUILD_BUILD_USER=$AKBUILD_USERNAME
 export KBUILD_BUILD_HOST=$AKBUILD_HOSTNAME
@@ -164,14 +174,14 @@ fi
 AKKERNELS="$AKDEPTH $AKBUILD_KERNELURL -b $AKBUILD_KERNELBRANCH $AKBUILD_PATH/kernel"
 AKCOMPILERS="--depth=1 $AKBUILD_COMPILERURL -b $AKBUILD_COMPILERBRANCH $AKCOMPILER"
 
-if [ "$1" = "version" ] || [ "$1" = "help" ] || [ "$1" = "config" ] || [ "$1" = "clone" ] || [ "$1" = "pull" ] || [ "$1" = "build" ] || [ "$1" = "clean" ]; then
+if [ "$1" = "version" ] || [ "$1" = "help" ] || [ "$1" = "config" ] || [ "$1" = "clone" ] || [ "$1" = "pull" ] || [ "$1" = "build" ] || [ "$1" = "clean" ] || [ "$1" = "language" ]; then
 
 if [ "$1" = "version" ]; then
 echo -e "akbuild version $AKBUILD_VERSION"
 fi
 
 if [ "$1" = "help" ]; then
-echo -e "\tversion\t\t$AKBUILD_L_4\n\thelp\t\t$AKBUILD_L_5\n\tconfig\t\t$AKBUILD_L_6\n\tclone\t\t$AKBUILD_L_7\n\tpull\t\t$AKBUILD_L_8\n\tbuild\t\t$AKBUILD_L_9\n\tclean\t\t$AKBUILD_L_10\n\n\takbuild config\n\t\t$AKBUILD_L_11\n\n\takbuild config [-c <filename>] [-d] [-r] [-r <filename>]\n\n\t\t-c <filename>, --custom <filename>\n\t\t\t$AKBUILD_L_12\n\n\t\t-d, --default\n\t\t\t$AKBUILD_L_13\n\n\t\t-r, --regenerate\n\t\t\t$AKBUILD_L_14\n\n\t\t-r <filename>, --regenerate <filename>\n\t\t\t$AKBUILD_L_15\n\n\takbuild clone/pull\n\t\t$AKBUILD_L_16\n\n\takbuild clone/pull kernel\n\t\t$AKBUILD_L_17\n\n\takbuild clone/pull compiler\n\t\t$AKBUILD_L_18"
+echo -e "\tversion\t\t$AKBUILD_L_4\n\thelp\t\t$AKBUILD_L_5\n\tconfig\t\t$AKBUILD_L_6\n\tclone\t\t$AKBUILD_L_7\n\tpull\t\t$AKBUILD_L_8\n\tbuild\t\t$AKBUILD_L_9\n\tclean\t\t$AKBUILD_L_10\n\tlanguage\t$AKBUILD_L_59\n\n\takbuild config\n\t\t$AKBUILD_L_11\n\n\takbuild config [-c <filename>] [-d] [-r] [-r <filename>]\n\n\t\t-c <filename>, --custom <filename>\n\t\t\t$AKBUILD_L_12\n\n\t\t-d, --default\n\t\t\t$AKBUILD_L_13\n\n\t\t-r, --regenerate\n\t\t\t$AKBUILD_L_14\n\n\t\t-r <filename>, --regenerate <filename>\n\t\t\t$AKBUILD_L_15\n\n\takbuild clone/pull\n\t\t$AKBUILD_L_16\n\n\takbuild clone/pull kernel\n\t\t$AKBUILD_L_17\n\n\takbuild clone/pull compiler\n\t\t$AKBUILD_L_18"
 fi
 
 if [ "$1" = "config" ] && [ "$2" = "" ] || [ "$2" = "-c" ] || [ "$2" = "--custom" ] || [ "$2" = "-d" ] || [ "$2" = "--default" ] || [ "$2" = "-r" ] || [ "$2" = "--regenerate" ]; then
@@ -364,6 +374,16 @@ if [ "$1" = "clean" ]; then
 echo -e "$AKBUILD_L_52"
 rm -rf $AKBUILD_PATH/out
 echo -e "\n$AKBUILD_L_53"
+fi
+
+if [ "$1" = "language" ]; then
+echo -e "$AKBUILD_L_55: $LANG\n$AKBUILD_L_56"
+mkdir -p $LOCAL
+if ! wget -q https://raw.githubusercontent.com/Sarisan/scripts/master/akbuild/akbuild_$LANG -O $LANGFILE; then
+echo -e "\n$AKBUILD_L_57"
+else
+echo -e "\n$AKBUILD_L_58"
+fi
 fi
 
 else
