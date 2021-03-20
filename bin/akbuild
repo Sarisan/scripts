@@ -1,5 +1,5 @@
 #!/bin/bash
-AKBUILD_VERSION="2.15"
+AKBUILD_VERSION="2.16"
 
 # Default configuration values
 DEF_CONFIGFILE=$HOME/.akbuild_config
@@ -63,17 +63,17 @@ fi
 fi
 export KBUILD_BUILD_USER=$AKBUILD_USERNAME
 export KBUILD_BUILD_HOST=$AKBUILD_HOSTNAME
-if [ $AKBUILD_DTBO = true ]; then
+if [ "$AKBUILD_DTBO" = "true" ]; then
 AKDTBO="dtbo.img"
 AKDTBOS="Enabled"
 else
 AKDTBO=""
 AKDTBOS="Disabled"
 fi
-if [ $AKBUILD_CCACHE = true ]; then
+if [ "$AKBUILD_CCACHE" = "true" ]; then
 AKCC="ccache $AKBUILD_CC"
 AKCCS="Enabled"
-if [ $AKBUILD_CCACHE_DIR ]; then
+if [ "$AKBUILD_CCACHE_DIR" ]; then
 export CCACHE_DIR="$AKBUILD_CCACHE_DIR"
 else
 export CCACHE_DIR="$AKBUILD_PATH/ccache"
@@ -84,16 +84,16 @@ else
 AKCC="$AKBUILD_CC"
 AKCCS="Disabled"
 fi
-if [ $AKBUILD_KDEPTH1 = true ]; then
+if [ "$AKBUILD_KDEPTH1" = "true" ]; then
 AKDEPTH="--depth=1"
 else
 AKDEPTH=""
 fi
-if [ $AKBUILD_PREINSTALLED_COMPILER = true ]; then
+if [ "$AKBUILD_PREINSTALLED_COMPILER" = "true" ]; then
 AKCOMPILER="$AKBUILD_PATH"
 AKCS="Preinstalled"
 else
-if [ $AKBUILD_COMPILER ]; then
+if [ "$AKBUILD_COMPILER" ]; then
 AKCOMPILER="$AKBUILD_COMPILER"
 else
 AKCOMPILER="$AKBUILD_PATH/compiler"
@@ -101,7 +101,7 @@ fi
 export PATH="$AKCOMPILER/$AKBUILD_COMPILERBIN:$PATH"
 AKCS="$AKCOMPILER/$AKBUILD_COMPILERBIN"
 fi
-if [ $AKBUILD_ANYKERNEL = true ]; then
+if [ "$AKBUILD_ANYKERNEL" = "true" ]; then
 AKANYKERNEL="Enabled"
 else
 AKANYKERNEL="Disabled"
