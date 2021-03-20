@@ -339,7 +339,7 @@ if [ $AKBUILD_DTBO = true ]; then
 if [ -f "out/arch/$AKBUILD_ARCH/boot/dtbo.img" ]; then
 cp out/arch/$AKBUILD_ARCH/boot/dtbo.img AnyKernel3
 else
-echo -e "$CDFC\n$AKBUILD_L_45:$DFC $AKBUILD_L_47"
+echo -e "$CDFC$AKBUILD_L_45:$DFC $AKBUILD_L_47"
 fi
 fi
 cd AnyKernel3
