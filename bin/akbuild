@@ -1,5 +1,5 @@
 #!/bin/bash
-AKBUILD_VERSION="2.13"
+AKBUILD_VERSION="2.14"
 
 # Default configuration values
 DEF_CONFIGFILE=$HOME/.akbuild_config
@@ -10,7 +10,7 @@ DEF_AKBUILD_USERNAME="$USER"
 DEF_AKBUILD_HOSTNAME="$HOSTNAME"
 DEF_AKBUILD_ARCH="arm64"
 DEF_AKBUILD_CC="clang"
-DEF_AKBUILD_OPTINONS="LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-"
+DEF_AKBUILD_OPTIONS="LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-"
 DEF_AKBUILD_DEFCONFIG="vendor/ginkgo-perf_defconfig"
 DEF_AKBUILD_OUTPUTFILE="Image.gz-dtb"
 DEF_AKBUILD_DTBO=true
@@ -21,14 +21,14 @@ DEF_AKBUILD_CCACHE_DIR=""                                          # Custom path
 DEF_AKBUILD_KERNELURL="https://github.com/ArrowOS-Devices/android_kernel_xiaomi_ginkgo.git"
 DEF_AKBUILD_KERNELBRANCH="arrow-11.0"
 DEF_AKBUILD_KERNELNAME="QuicksilveRV2"
-DEF_AKBUILD_KDEPTH1=true                                           # Clone kernel with --depth=1 or no
+DEF_AKBUILD_KDEPTH1=true                                           # Clone kernel with --depth=1
 
 # Clang
 DEF_AKBUILD_PREINSTALLED_CLANG=false
 DEF_AKBUILD_CLANGURL="https://github.com/kdrag0n/proton-clang.git"
 DEF_AKBUILD_CLANGBRANCH="master"
-DEF_AKBUILD_CLANG=""                                               # Custom path to clang, will used clang from AKBUILD_PATH if not setted. Example: AKBUILD_CLANG="/home/sarisan/proton-clang"
-DEF_AKBUILD_CLANGBIN="bin"                                         # You can set custom path to binaries, it's needed when you use AOSP clang or something like this. Example: AKBUILD_CLANGBIN="clang-r353983c1/bin"
+DEF_AKBUILD_CLANG=""                                               # Custom path to clang, clang from AKBUILD_PATH will be used, if not selected. Example: AKBUILD_CLANG="/home/sarisan/proton-clang"
+DEF_AKBUILD_CLANGBIN="bin"                                         # You can set custom path for binaries, it's needed when you are using AOSP clang or similar clang repository. Example: AKBUILD_CLANGBIN="clang-r353983c1/bin"
 
 # Device
 DEF_AKBUILD_ANYKERNEL=true
@@ -38,13 +38,13 @@ DEF_AKBUILD_DEVICENAME="ginkgo"
 
 # Colors
 DFC="\033[0m"         # Default font
-BDFC="\033[1m"        # Bold default font
-CDFC="\033[0;36m"     # Cyan default font
-GDFC="\033[0;32m"     # Green default font
-RDFC="\033[0;31m"     # Red default font
+BDFC="\033[1m"        # Default bold font
+CDFC="\033[0;36m"     # Default cyan font
+GDFC="\033[0;32m"     # Default green font
+RDFC="\033[0;31m"     # Default red font
 
 # Default config
-AKBUILD_CONFIG="# Android kernel build configuration\nAKBUILD_PATH=\"$PWD\"\nAKBUILD_JOBS=\"$DEF_AKBUILD_JOBS\"\nAKBUILD_USERNAME=\"$DEF_AKBUILD_USERNAME\"\nAKBUILD_HOSTNAME=\"$DEF_AKBUILD_HOSTNAME\"\nAKBUILD_ARCH=\"$DEF_AKBUILD_ARCH\"\nAKBUILD_CC=\"$DEF_AKBUILD_CC\"\nAKBUILD_OPTINONS=\"$DEF_AKBUILD_OPTINONS\"\nAKBUILD_DEFCONFIG=\"$DEF_AKBUILD_DEFCONFIG\"\nAKBUILD_OUTPUTFILE=\"$DEF_AKBUILD_OUTPUTFILE\"\nAKBUILD_DTBO=$DEF_AKBUILD_DTBO\nAKBUILD_CCACHE=$DEF_AKBUILD_CCACHE\nAKBUILD_CCACHE_DIR=\"$DEF_AKBUILD_CCACHE_DIR\"\n\n# Kernel\nAKBUILD_KERNELURL=\"$DEF_AKBUILD_KERNELURL\"\nAKBUILD_KERNELBRANCH=\"$DEF_AKBUILD_KERNELBRANCH\"\nAKBUILD_KERNELNAME=\"$DEF_AKBUILD_KERNELNAME\"\nAKBUILD_KDEPTH1=$DEF_AKBUILD_KDEPTH1\n\n# Clang\nAKBUILD_PREINSTALLED_CLANG=$DEF_AKBUILD_PREINSTALLED_CLANG\nAKBUILD_CLANGURL=\"$DEF_AKBUILD_CLANGURL\"\nAKBUILD_CLANGBRANCH=\"$DEF_AKBUILD_CLANGBRANCH\"\nAKBUILD_CLANG=\"$DEF_AKBUILD_CLANG\"\nAKBUILD_CLANGBIN=\"$DEF_AKBUILD_CLANGBIN\"\n\n# Device\nAKBUILD_ANYKERNEL=$DEF_AKBUILD_ANYKERNEL\nAKBUILD_ANYKERNELURL=\"$DEF_AKBUILD_ANYKERNELURL\"\nAKBUILD_ANYKERNELBRANCH=\"$DEF_AKBUILD_ANYKERNELBRANCH\"\nAKBUILD_DEVICENAME=\"$DEF_AKBUILD_DEVICENAME\""
+AKBUILD_CONFIG="# Android kernel build configuration\nAKBUILD_PATH=\"$PWD\"\nAKBUILD_JOBS=\"$DEF_AKBUILD_JOBS\"\nAKBUILD_USERNAME=\"$DEF_AKBUILD_USERNAME\"\nAKBUILD_HOSTNAME=\"$DEF_AKBUILD_HOSTNAME\"\nAKBUILD_ARCH=\"$DEF_AKBUILD_ARCH\"\nAKBUILD_CC=\"$DEF_AKBUILD_CC\"\nAKBUILD_OPTIONS=\"$DEF_AKBUILD_OPTIONS\"\nAKBUILD_DEFCONFIG=\"$DEF_AKBUILD_DEFCONFIG\"\nAKBUILD_OUTPUTFILE=\"$DEF_AKBUILD_OUTPUTFILE\"\nAKBUILD_DTBO=$DEF_AKBUILD_DTBO\nAKBUILD_CCACHE=$DEF_AKBUILD_CCACHE\nAKBUILD_CCACHE_DIR=\"$DEF_AKBUILD_CCACHE_DIR\"\n\n# Kernel\nAKBUILD_KERNELURL=\"$DEF_AKBUILD_KERNELURL\"\nAKBUILD_KERNELBRANCH=\"$DEF_AKBUILD_KERNELBRANCH\"\nAKBUILD_KERNELNAME=\"$DEF_AKBUILD_KERNELNAME\"\nAKBUILD_KDEPTH1=$DEF_AKBUILD_KDEPTH1\n\n# Clang\nAKBUILD_PREINSTALLED_CLANG=$DEF_AKBUILD_PREINSTALLED_CLANG\nAKBUILD_CLANGURL=\"$DEF_AKBUILD_CLANGURL\"\nAKBUILD_CLANGBRANCH=\"$DEF_AKBUILD_CLANGBRANCH\"\nAKBUILD_CLANG=\"$DEF_AKBUILD_CLANG\"\nAKBUILD_CLANGBIN=\"$DEF_AKBUILD_CLANGBIN\"\n\n# Device\nAKBUILD_ANYKERNEL=$DEF_AKBUILD_ANYKERNEL\nAKBUILD_ANYKERNELURL=\"$DEF_AKBUILD_ANYKERNELURL\"\nAKBUILD_ANYKERNELBRANCH=\"$DEF_AKBUILD_ANYKERNELBRANCH\"\nAKBUILD_DEVICENAME=\"$DEF_AKBUILD_DEVICENAME\""
 
 
 AKCONFIGFILE=$DEF_CONFIGFILE
@@ -116,7 +116,7 @@ echo -e "akbuild version $AKBUILD_VERSION"
 fi
 
 if [ "$1" = "help" ]; then
-echo -e "\tversion\t\tShow akbuild version\n\thelp\t\tShow info about using$BDFC akbuild$DFC\n\tconfig\t\tActions with connfiguration files\n\tclone\t\tClone kernel and clang\n\tpull\t\tUpdate kernel and clang by using$BDFC git pull$DFC if possible\n\tbuild\t\tStart building kernel\n\tclean\t\tRemove out folder\n\n\takbuild config\n\t\tShow currently loaded configuration\n\n\takbuild config [-c <filename>] [-d] [-r] [-r <filename>]\n\n\t\t-c <filename>, --custom <filename>\n\t\t\tLoad configuration from file\n\n\t\t-d, --default\n\t\t\tLoad configuration from default file\n\n\t\t-r, --regenerate\n\t\t\tRegenerate default configuration file\n\n\t\t-r <filename>, --regenerate <filename>\n\t\t\tRegenerate configuration to file\n\n\takbuild clone/pull\n\t\tClone/Pull kernel and clang\n\n\takbuild clone/pull kernel\n\t\tClone/Pull kernel only\n\n\takbuild clone/pull clang\n\t\tClone/Pull clang only"
+echo -e "\tversion\t\tShow akbuild version\n\thelp\t\tShow this\n\tconfig\t\tActions with configuration files\n\tclone\t\tClone the kernel and the clang\n\tpull\t\tUpdate the kernel and the clang with$BDFC git pull$DFC if possible\n\tbuild\t\tStart building the kernel\n\tclean\t\tRemove output folder\n\n\takbuild config\n\t\tShow current configuration\n\n\takbuild config [-c <filename>] [-d] [-r] [-r <filename>]\n\n\t\t-c <filename>, --custom <filename>\n\t\t\tLoad configuration from file\n\n\t\t-d, --default\n\t\t\tLoad configuration from default file\n\n\t\t-r, --regenerate\n\t\t\tRegenerate default configuration file\n\n\t\t-r <filename>, --regenerate <filename>\n\t\t\tRegenerate configuration to file\n\n\takbuild clone/pull\n\t\tClone/Pull the kernel and the clang\n\n\takbuild clone/pull kernel\n\t\tClone/Pull only the kernel\n\n\takbuild clone/pull clang\n\t\tClone/Pull only the clang"
 fi
 
 if [ "$1" = "config" ] && [ "$2" = "" ] || [ "$2" = "-c" ] || [ "$2" = "--custom" ] || [ "$2" = "-d" ] || [ "$2" = "--default" ] || [ "$2" = "-r" ] || [ "$2" = "--regenerate" ]; then
@@ -126,9 +126,9 @@ fi
 if [ "$1" = "config" ] && [ "$2" = "-c" ] || [ "$2" = "--custom" ] && [ "$3" ]; then
 if [ -f $3 ]; then
 . $3
-echo -e "Configuration loaded from $3"
+echo -e "Configuration has been loaded from $3"
 else
-echo -e "Configuration file deosn't exist, regenerate it"
+echo -e "Configuration file does not exist, regenerate it"
 fi
 else
 if [ "$1" = "config" ] && [ "$2" = "-c" ] || [ "$2" = "--custom" ]; then
@@ -138,18 +138,18 @@ fi
 if [ "$1" = "config" ] && [ "$2" = "-d" ] || [ "$2" = "--default" ]; then
 if [ -f $AKCONFIGFILE ]; then
 . $AKCONFIGFILE
-echo -e "Configuration loaded from $AKCONFIGFILE"
+echo -e "Configuration has been loaded from $AKCONFIGFILE"
 else
-echo -e "Configuration file deosn't exist, regenerate it"
+echo -e "Configuration file does not exist, regenerate it"
 fi
 fi
 if [ "$1" = "config" ] && [ "$2" = "-r" ] || [ "$2" = "--regenerate" ] && [ "$3" ]; then
 echo -e "$AKBUILD_CONFIG" > $3
-echo -e "Configuration file was regenerated in $3"
+echo -e "Configuration file has been regenerated in $3"
 else
 if [ "$1" = "config" ] && [ "$2" = "-r" ] || [ "$2" = "--regenerate" ]; then
 echo -e "$AKBUILD_CONFIG" > $AKCONFIGFILE
-echo -e "Default configuration file was regenerated"
+echo -e "Default configuration file has been regenerated"
 fi
 fi
 else
@@ -191,7 +191,7 @@ fi
 if [ "$1" = "clone" ] && [ "$2" = clang ]; then
 if [ -d $AKCLANG ]; then
 if [ $AKBUILD_CLANG ]; then
-echo -e "You are using clang from external path"
+echo -e "You are using the clang from external path"
 else
 echo -e "The clang has already been cloned"
 fi
@@ -259,7 +259,7 @@ if
 SECONDS=0
 cd $AKBUILD_PATH/kernel
 make O=$AKBUILD_PATH/out ARCH=$AKBUILD_ARCH $AKBUILD_DEFCONFIG
-make -j$AKBUILD_JOBS O=$AKBUILD_PATH/out ARCH=$AKBUILD_ARCH CC="$AKCC" $AKBUILD_OPTINONS $AKBUILD_OUTPUTFILE $AKDTBO
+make -j$AKBUILD_JOBS O=$AKBUILD_PATH/out ARCH=$AKBUILD_ARCH CC="$AKCC" $AKBUILD_OPTIONS $AKBUILD_OUTPUTFILE $AKDTBO
 then
 AKMINUTES=$((SECONDS / 60)) && AKSECONDS=$((SECONDS % 60)) && if(($AKMINUTES<=9)); then AKMINUTES=0$AKMINUTES; fi && if(($AKSECONDS<=9)); then AKSECONDS=0$AKSECONDS; fi && AKTIME=$AKMINUTES:$AKSECONDS
 cd $AKBUILD_PATH
@@ -306,9 +306,9 @@ fi
 fi
 
 if [ "$1" = "clean" ]; then
-echo -e "Removing out folder..."
+echo -e "Removing output folder..."
 rm -rf $AKBUILD_PATH/out
-echo -e "\nOut folder removed"
+echo -e "\nOutput folder has been removed"
 fi
 
 else
@@ -318,4 +318,4 @@ fi
 fi
 
 mkdir -p $CACHE
-echo -e "# Android kernel build configuration\nAKBUILD_PATH=\"$AKBUILD_PATH\"\nAKBUILD_JOBS=\"$AKBUILD_JOBS\"\nAKBUILD_USERNAME=\"$AKBUILD_USERNAME\"\nAKBUILD_HOSTNAME=\"$AKBUILD_HOSTNAME\"\nAKBUILD_ARCH=\"$AKBUILD_ARCH\"\nAKBUILD_CC=\"$AKBUILD_CC\"\nAKBUILD_OPTINONS=\"$AKBUILD_OPTINONS\"\nAKBUILD_DEFCONFIG=\"$AKBUILD_DEFCONFIG\"\nAKBUILD_OUTPUTFILE=\"$AKBUILD_OUTPUTFILE\"\nAKBUILD_DTBO=$AKBUILD_DTBO\nAKBUILD_CCACHE=$AKBUILD_CCACHE\nAKBUILD_CCACHE_DIR=\"$AKBUILD_CCACHE_DIR\"\n\n# Kernel\nAKBUILD_KERNELURL=\"$AKBUILD_KERNELURL\"\nAKBUILD_KERNELBRANCH=\"$AKBUILD_KERNELBRANCH\"\nAKBUILD_KERNELNAME=\"$AKBUILD_KERNELNAME\"\nAKBUILD_KDEPTH1=$AKBUILD_KDEPTH1\n\n# Clang\nAKBUILD_PREINSTALLED_CLANG=$AKBUILD_PREINSTALLED_CLANG\nAKBUILD_CLANGURL=\"$AKBUILD_CLANGURL\"\nAKBUILD_CLANGBRANCH=\"$AKBUILD_CLANGBRANCH\"\nAKBUILD_CLANG=\"$AKBUILD_CLANG\"\nAKBUILD_CLANGBIN=\"$AKBUILD_CLANGBIN\"\n\n# Device\nAKBUILD_ANYKERNEL=$AKBUILD_ANYKERNEL\nAKBUILD_ANYKERNELURL=\"$AKBUILD_ANYKERNELURL\"\nAKBUILD_ANYKERNELBRANCH=\"$AKBUILD_ANYKERNELBRANCH\"\nAKBUILD_DEVICENAME=\"$AKBUILD_DEVICENAME\"" > $CACHECONFIGFILE
+echo -e "# Android kernel build configuration\nAKBUILD_PATH=\"$AKBUILD_PATH\"\nAKBUILD_JOBS=\"$AKBUILD_JOBS\"\nAKBUILD_USERNAME=\"$AKBUILD_USERNAME\"\nAKBUILD_HOSTNAME=\"$AKBUILD_HOSTNAME\"\nAKBUILD_ARCH=\"$AKBUILD_ARCH\"\nAKBUILD_CC=\"$AKBUILD_CC\"\nAKBUILD_OPTIONS=\"$AKBUILD_OPTIONS\"\nAKBUILD_DEFCONFIG=\"$AKBUILD_DEFCONFIG\"\nAKBUILD_OUTPUTFILE=\"$AKBUILD_OUTPUTFILE\"\nAKBUILD_DTBO=$AKBUILD_DTBO\nAKBUILD_CCACHE=$AKBUILD_CCACHE\nAKBUILD_CCACHE_DIR=\"$AKBUILD_CCACHE_DIR\"\n\n# Kernel\nAKBUILD_KERNELURL=\"$AKBUILD_KERNELURL\"\nAKBUILD_KERNELBRANCH=\"$AKBUILD_KERNELBRANCH\"\nAKBUILD_KERNELNAME=\"$AKBUILD_KERNELNAME\"\nAKBUILD_KDEPTH1=$AKBUILD_KDEPTH1\n\n# Clang\nAKBUILD_PREINSTALLED_CLANG=$AKBUILD_PREINSTALLED_CLANG\nAKBUILD_CLANGURL=\"$AKBUILD_CLANGURL\"\nAKBUILD_CLANGBRANCH=\"$AKBUILD_CLANGBRANCH\"\nAKBUILD_CLANG=\"$AKBUILD_CLANG\"\nAKBUILD_CLANGBIN=\"$AKBUILD_CLANGBIN\"\n\n# Device\nAKBUILD_ANYKERNEL=$AKBUILD_ANYKERNEL\nAKBUILD_ANYKERNELURL=\"$AKBUILD_ANYKERNELURL\"\nAKBUILD_ANYKERNELBRANCH=\"$AKBUILD_ANYKERNELBRANCH\"\nAKBUILD_DEVICENAME=\"$AKBUILD_DEVICENAME\"" > $CACHECONFIGFILE
