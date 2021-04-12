@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2020-2021 Sarisan Sekoohaka
 #
-AKBUILD_VERSION="2.21"
+AKBUILD_VERSION="2.22"
 
 # Default configuration values
 DEF_CONFIGFILE=$HOME/.akbuild_config
@@ -110,6 +110,7 @@ AKBUILD_L_57="Download failed, language not supported or you have connection iss
 AKBUILD_L_58="Download completed successfully, language has been applied"
 AKBUILD_L_59="Download the language file"
 AKBUILD_L_60="Compiler libraries"
+AKBUILD_L_61="Undefined"
 
 
 AKCONFIGFILE=$DEF_CONFIGFILE
@@ -169,10 +170,18 @@ AKCOMPILER="$AKBUILD_COMPILER"
 else
 AKCOMPILER="$AKBUILD_PATH/compiler"
 fi
+if [ "$AKBUILD_COMPILERBIN" ]; then
 export PATH="$AKCOMPILER/$AKBUILD_COMPILERBIN:$PATH"
-export LD_LIBRARY_PATH="$AKCOMPILER/$AKBUILD_COMPILERLIB:$LD_LIBRARY_PATH"
 AKCS="$AKCOMPILER/$AKBUILD_COMPILERBIN"
+else
+AKCS="$AKBUILD_L_61"
+fi
+if [ "$AKBUILD_COMPILERLIB" ]; then
+export LD_LIBRARY_PATH="$AKCOMPILER/$AKBUILD_COMPILERLIB:$LD_LIBRARY_PATH"
 AKLS="$AKCOMPILER/$AKBUILD_COMPILERLIB"
+else
+AKLS="$AKBUILD_L_61"
+fi
 fi
 if [ "$AKBUILD_ANYKERNEL" = "true" ]; then
 AKANYKERNEL="$AKBUILD_L_1"
