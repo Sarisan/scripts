@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2020-2021 Sarisan Sekoohaka
 #
-AKBUILD_VERSION="2.22"
+AKBUILD_VERSION="2.23"
 
 # Default configuration values
 DEF_CONFIGFILE=$HOME/.akbuild_config
@@ -111,6 +111,9 @@ AKBUILD_L_58="Download completed successfully, language has been applied"
 AKBUILD_L_59="Download the language file"
 AKBUILD_L_60="Compiler libraries"
 AKBUILD_L_61="Undefined"
+AKBUILD_L_62="Write defconfig"
+AKBUILD_L_63="Defconfig has been written successfully"
+AKBUILD_L_64="Defconfig has not been written!"
 
 
 AKCONFIGFILE=$DEF_CONFIGFILE
@@ -191,14 +194,14 @@ fi
 AKKERNELS="$AKDEPTH $AKBUILD_KERNELURL -b $AKBUILD_KERNELBRANCH $AKBUILD_PATH/kernel"
 AKCOMPILERS="--depth=1 $AKBUILD_COMPILERURL -b $AKBUILD_COMPILERBRANCH $AKCOMPILER"
 
-if [ "$1" = "version" ] || [ "$1" = "help" ] || [ "$1" = "config" ] || [ "$1" = "clone" ] || [ "$1" = "pull" ] || [ "$1" = "build" ] || [ "$1" = "clean" ] || [ "$1" = "language" ]; then
+if [ "$1" = "version" ] || [ "$1" = "help" ] || [ "$1" = "config" ] || [ "$1" = "clone" ] || [ "$1" = "pull" ] || [ "$1" = "build" ] || [ "$1" = "clean" ] || [ "$1" = "language" ] || [ "$1" = "defconfig" ]; then
 
 if [ "$1" = "version" ]; then
 echo -e "akbuild version $AKBUILD_VERSION"
 fi
 
 if [ "$1" = "help" ]; then
-echo -e "\tversion\t\t$AKBUILD_L_4\n\thelp\t\t$AKBUILD_L_5\n\tconfig\t\t$AKBUILD_L_6\n\tclone\t\t$AKBUILD_L_7\n\tpull\t\t$AKBUILD_L_8\n\tbuild\t\t$AKBUILD_L_9\n\tclean\t\t$AKBUILD_L_10\n\tlanguage\t$AKBUILD_L_59\n\n\takbuild config\n\t\t$AKBUILD_L_11\n\n\takbuild config [-c <filename>] [-d] [-r] [-r <filename>]\n\n\t\t-c <filename>, --custom <filename>\n\t\t\t$AKBUILD_L_12\n\n\t\t-d, --default\n\t\t\t$AKBUILD_L_13\n\n\t\t-r, --regenerate\n\t\t\t$AKBUILD_L_14\n\n\t\t-r <filename>, --regenerate <filename>\n\t\t\t$AKBUILD_L_15\n\n\takbuild clone/pull\n\t\t$AKBUILD_L_16\n\n\takbuild clone/pull kernel\n\t\t$AKBUILD_L_17\n\n\takbuild clone/pull compiler\n\t\t$AKBUILD_L_18"
+echo -e "\tversion\t\t$AKBUILD_L_4\n\thelp\t\t$AKBUILD_L_5\n\tconfig\t\t$AKBUILD_L_6\n\tclone\t\t$AKBUILD_L_7\n\tpull\t\t$AKBUILD_L_8\n\tbuild\t\t$AKBUILD_L_9\n\tclean\t\t$AKBUILD_L_10\n\tlanguage\t$AKBUILD_L_59\n\tdefconfig\t$AKBUILD_L_62\n\n\takbuild config\n\t\t$AKBUILD_L_11\n\n\takbuild config [-c <filename>] [-d] [-r] [-r <filename>]\n\n\t\t-c <filename>, --custom <filename>\n\t\t\t$AKBUILD_L_12\n\n\t\t-d, --default\n\t\t\t$AKBUILD_L_13\n\n\t\t-r, --regenerate\n\t\t\t$AKBUILD_L_14\n\n\t\t-r <filename>, --regenerate <filename>\n\t\t\t$AKBUILD_L_15\n\n\takbuild clone/pull\n\t\t$AKBUILD_L_16\n\n\takbuild clone/pull kernel\n\t\t$AKBUILD_L_17\n\n\takbuild clone/pull compiler\n\t\t$AKBUILD_L_18"
 fi
 
 if [ "$1" = "config" ] && [ "$2" = "" ] || [ "$2" = "-c" ] || [ "$2" = "--custom" ] || [ "$2" = "-d" ] || [ "$2" = "--default" ] || [ "$2" = "-r" ] || [ "$2" = "--regenerate" ]; then
@@ -400,6 +403,30 @@ if ! wget -q https://raw.githubusercontent.com/Sarisan/scripts/master/akbuild/ak
 echo -e "\n$AKBUILD_L_57"
 else
 echo -e "\n$AKBUILD_L_58"
+fi
+fi
+
+if [ "$1" = "defconfig" ]; then
+if [ -d $AKBUILD_PATH/kernel ]; then
+if [ -d $AKCOMPILER ]; then
+if
+SECONDS=0
+cd $AKBUILD_PATH/kernel
+make -j$AKBUILD_JOBS O=$AKBUILD_PATH/out ARCH=$AKBUILD_ARCH CC="$AKCC" $AKBUILD_OPTIONS $AKBUILD_DEFCONFIG
+then
+AKMINUTES=$((SECONDS / 60)) && AKSECONDS=$((SECONDS % 60)) && if(($AKMINUTES<=9)); then AKMINUTES=0$AKMINUTES; fi && if(($AKSECONDS<=9)); then AKSECONDS=0$AKSECONDS; fi && AKTIME=$AKMINUTES:$AKSECONDS
+cd $AKBUILD_PATH
+echo -e "$GDFC\n$AKBUILD_L_63 | $AKTIME$DFC"
+else
+AKMINUTES=$((SECONDS / 60)) && AKSECONDS=$((SECONDS % 60)) && if(($AKMINUTES<=9)); then AKMINUTES=0$AKMINUTES; fi && if(($AKSECONDS<=9)); then AKSECONDS=0$AKSECONDS; fi && AKTIME=$AKMINUTES:$AKSECONDS
+cd $AKBUILD_PATH
+echo -e "$RDFC\n$AKBUILD_L_64 $AKBUILD_L_50 | $AKTIME$DFC"
+fi
+else
+echo -e "$AKBUILD_L_42"
+fi
+else
+echo -e "$AKBUILD_L_40"
 fi
 fi
 
