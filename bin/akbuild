@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2020-2021 Sarisan Sekoohaka
 #
-AKBUILD_VERSION="2.23"
+AKBUILD_VERSION="2.24"
 
 # Default configuration values
 DEF_CONFIGFILE=$HOME/.akbuild_config
@@ -146,13 +146,14 @@ AKDTBOS="$AKBUILD_L_2"
 fi
 if [ "$AKBUILD_CCACHE" = "true" ]; then
 AKCC="ccache $AKBUILD_CC"
-AKCCS="$AKBUILD_L_1"
 if [ "$AKBUILD_CCACHE_DIR" ]; then
 export CCACHE_DIR="$AKBUILD_CCACHE_DIR"
+AKCCS="$AKBUILD_L_1 ($CCACHE_DIR)"
 else
 export CCACHE_DIR="$AKBUILD_PATH/ccache"
 mkdir -p $CCACHE_DIR
 echo "max_size = 10G" > $CCACHE_DIR/ccache.conf
+AKCCS="$AKBUILD_L_1"
 fi
 else
 AKCC="$AKBUILD_CC"
