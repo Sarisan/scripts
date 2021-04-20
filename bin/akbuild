@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2020-2021 Sarisan Sekoohaka
 #
-AKBUILD_VERSION="2.25"
+AKBUILD_VERSION="2.26"
 
 # Default configuration values
 DEF_CONFIGFILE=$HOME/.akbuild_config
@@ -114,6 +114,7 @@ AKBUILD_L_61="Undefined"
 AKBUILD_L_62="Write defconfig"
 AKBUILD_L_63="Defconfig has been written successfully"
 AKBUILD_L_64="Defconfig has not been written!"
+AKBUILD_L_65="Output folder not found or it has been already removed"
 
 
 AKCONFIGFILE=$DEF_CONFIGFILE
@@ -404,9 +405,13 @@ fi
 fi
 
 if [ "$1" = "clean" ] && [ "$2" = "" ]; then
+if [ -d $AKBUILD_PATH/out ]; then
 echo -e "$AKBUILD_L_52"
 rm -rf $AKBUILD_PATH/out
 echo -e "\n$AKBUILD_L_53"
+else
+echo -e "$AKBUILD_L_65"
+fi
 else
 if [ "$1" = "clean" ] && [ "$2" ]; then
 echo -e "$AKBUILD_L_54 '$2'"
