@@ -2,11 +2,9 @@
 #
 # Copyright (C) 2020-2021 Sarisan Sekoohaka
 #
-AKBUILD_VERSION="2.28"
+AKBUILD_VERSION="2.29"
 
 # Default configuration values
-DEF_CONFIGFILE=$HOME/.akbuild_config
-
 # Build
 DEF_AKBUILD_JOBS="$(nproc --all)"                                  # How many jobs use to build
 DEF_AKBUILD_USERNAME="$USER"
@@ -48,23 +46,23 @@ GDFC="\033[0;32m"     # Default green font
 RDFC="\033[0;31m"     # Default red font
 
 # Default config
-AKBUILD_CONFIG="# Android kernel build configuration\nAKBUILD_PATH=\"$PWD\"\nAKBUILD_JOBS=\"$DEF_AKBUILD_JOBS\"\nAKBUILD_USERNAME=\"$DEF_AKBUILD_USERNAME\"\nAKBUILD_HOSTNAME=\"$DEF_AKBUILD_HOSTNAME\"\nAKBUILD_ARCH=\"$DEF_AKBUILD_ARCH\"\nAKBUILD_CC=\"$DEF_AKBUILD_CC\"\nAKBUILD_OPTIONS=\"$DEF_AKBUILD_OPTIONS\"\nAKBUILD_DEFCONFIG=\"$DEF_AKBUILD_DEFCONFIG\"\nAKBUILD_OUTPUTFILE=\"$DEF_AKBUILD_OUTPUTFILE\"\nAKBUILD_DTBO=$DEF_AKBUILD_DTBO\nAKBUILD_CCACHE=$DEF_AKBUILD_CCACHE\nAKBUILD_CCACHE_DIR=\"$DEF_AKBUILD_CCACHE_DIR\"\n\n# Kernel\nAKBUILD_KERNELURL=\"$DEF_AKBUILD_KERNELURL\"\nAKBUILD_KERNELBRANCH=\"$DEF_AKBUILD_KERNELBRANCH\"\nAKBUILD_KERNELNAME=\"$DEF_AKBUILD_KERNELNAME\"\nAKBUILD_KDEPTH1=$DEF_AKBUILD_KDEPTH1\n\n# Clang\nAKBUILD_PREINSTALLED_COMPILER=$DEF_AKBUILD_PREINSTALLED_COMPILER\nAKBUILD_COMPILERURL=\"$DEF_AKBUILD_COMPILERURL\"\nAKBUILD_COMPILERBRANCH=\"$DEF_AKBUILD_COMPILERBRANCH\"\nAKBUILD_COMPILER=\"$DEF_AKBUILD_COMPILER\"\nAKBUILD_COMPILERBIN=\"$DEF_AKBUILD_COMPILERBIN\"\nAKBUILD_COMPILERLIB=\"$DEF_AKBUILD_COMPILERLIB\"\n\n# Device\nAKBUILD_ANYKERNEL=$DEF_AKBUILD_ANYKERNEL\nAKBUILD_ANYKERNELURL=\"$DEF_AKBUILD_ANYKERNELURL\"\nAKBUILD_ANYKERNELBRANCH=\"$DEF_AKBUILD_ANYKERNELBRANCH\"\nAKBUILD_DEVICENAME=\"$DEF_AKBUILD_DEVICENAME\""
+AKBUILD_CONFIG="# Android kernel build configuration\nAKBUILD_PATH=\"$PWD\"\nAKBUILD_JOBS=\"$DEF_AKBUILD_JOBS\"\nAKBUILD_USERNAME=\"$DEF_AKBUILD_USERNAME\"\nAKBUILD_HOSTNAME=\"$DEF_AKBUILD_HOSTNAME\"\nAKBUILD_ARCH=\"$DEF_AKBUILD_ARCH\"\nAKBUILD_CC=\"$DEF_AKBUILD_CC\"\nAKBUILD_OPTIONS=\"$DEF_AKBUILD_OPTIONS\"\nAKBUILD_DEFCONFIG=\"$DEF_AKBUILD_DEFCONFIG\"\nAKBUILD_OUTPUTFILE=\"$DEF_AKBUILD_OUTPUTFILE\"\nAKBUILD_DTBO=$DEF_AKBUILD_DTBO\nAKBUILD_CCACHE=$DEF_AKBUILD_CCACHE\nAKBUILD_CCACHE_DIR=\"$DEF_AKBUILD_CCACHE_DIR\"\n\n# Kernel\nAKBUILD_KERNELURL=\"$DEF_AKBUILD_KERNELURL\"\nAKBUILD_KERNELBRANCH=\"$DEF_AKBUILD_KERNELBRANCH\"\nAKBUILD_KERNELNAME=\"$DEF_AKBUILD_KERNELNAME\"\nAKBUILD_KDEPTH1=$DEF_AKBUILD_KDEPTH1\n\n# Compiler\nAKBUILD_PREINSTALLED_COMPILER=$DEF_AKBUILD_PREINSTALLED_COMPILER\nAKBUILD_COMPILERURL=\"$DEF_AKBUILD_COMPILERURL\"\nAKBUILD_COMPILERBRANCH=\"$DEF_AKBUILD_COMPILERBRANCH\"\nAKBUILD_COMPILER=\"$DEF_AKBUILD_COMPILER\"\nAKBUILD_COMPILERBIN=\"$DEF_AKBUILD_COMPILERBIN\"\nAKBUILD_COMPILERLIB=\"$DEF_AKBUILD_COMPILERLIB\"\n\n# Device\nAKBUILD_ANYKERNEL=$DEF_AKBUILD_ANYKERNEL\nAKBUILD_ANYKERNELURL=\"$DEF_AKBUILD_ANYKERNELURL\"\nAKBUILD_ANYKERNELBRANCH=\"$DEF_AKBUILD_ANYKERNELBRANCH\"\nAKBUILD_DEVICENAME=\"$DEF_AKBUILD_DEVICENAME\""
 
 AKBUILD_L_1="Enabled"
 AKBUILD_L_2="Disabled"
 AKBUILD_L_3="Preinstalled"
 AKBUILD_L_4="Show akbuild version"
 AKBUILD_L_5="Show this"
-AKBUILD_L_6="Actions with configuration files"
+AKBUILD_L_6="Initialize configuration file in the current directory"
 AKBUILD_L_7="Clone the kernel and the compiler"
 AKBUILD_L_8="Update the kernel and the compiler with$BDFC git pull$DFC if possible"
 AKBUILD_L_9="Start building the kernel"
 AKBUILD_L_10="Remove output folder"
 AKBUILD_L_11="Show current configuration"
-AKBUILD_L_12="Load configuration from file"
-AKBUILD_L_13="Load configuration from default file"
-AKBUILD_L_14="Regenerate default configuration file"
-AKBUILD_L_15="Regenerate configuration to file"
+AKBUILD_L_12="Configuration file has not been initialized yet"
+AKBUILD_L_13="Configuration file has been initialized"
+AKBUILD_L_14=""
+AKBUILD_L_15=""
 AKBUILD_L_16="Clone/Pull the kernel and the compiler"
 AKBUILD_L_17="Clone/Pull only the kernel"
 AKBUILD_L_18="Clone/Pull only the compiler"
@@ -78,11 +76,11 @@ AKBUILD_L_25="Kernel"
 AKBUILD_L_26="Compiler binaries"
 AKBUILD_L_27="AnyKernel"
 AKBUILD_L_28="Device"
-AKBUILD_L_29="Configuration has been loaded from"
-AKBUILD_L_30="Configuration file does not exist, regenerate it"
-AKBUILD_L_31="You must specify the file"
-AKBUILD_L_32="Configuration file has been regenerated in"
-AKBUILD_L_33="Default configuration file has been regenerated"
+AKBUILD_L_29=""
+AKBUILD_L_30=""
+AKBUILD_L_31=""
+AKBUILD_L_32=""
+AKBUILD_L_33=""
 AKBUILD_L_34="The kernel has already been cloned"
 AKBUILD_L_35="Error cloning the kernel"
 AKBUILD_L_36="You are using the compiler from external path"
@@ -117,26 +115,12 @@ AKBUILD_L_64="Defconfig has not been written!"
 AKBUILD_L_65="Output folder not found or it has already been removed"
 AKBUILD_L_66="You are using pre-installed compiler"
 
-
-AKCONFIGFILE=$DEF_CONFIGFILE
-CACHE=$HOME/.cache
-CACHECONFIGFILE=$CACHE/akbuild
 LOCAL=$HOME/.local/share/akbuild
 LANGFILE=$LOCAL/akbuild_$LANG
 
-if [ -f $PWD/.akbuild ]; then
-. $PWD/.akbuild
-else
-if [ -f $CACHECONFIGFILE ]; then
-. $CACHECONFIGFILE
-else
-if [ -f $AKCONFIGFILE ]; then
-. $AKCONFIGFILE
-else
-echo -e "$AKBUILD_CONFIG" > $AKCONFIGFILE
-. $AKCONFIGFILE
-fi
-fi
+if [ -f $PWD/akbuild.conf ]; then
+. $PWD/akbuild.conf
+AKCONFIG=1
 fi
 if [ -f $LANGFILE ]; then
 . $LANGFILE
@@ -201,7 +185,7 @@ fi
 AKKERNELS="$AKDEPTH $AKBUILD_KERNELURL -b $AKBUILD_KERNELBRANCH $AKBUILD_PATH/kernel"
 AKCOMPILERS="--depth=1 $AKBUILD_COMPILERURL -b $AKBUILD_COMPILERBRANCH $AKCOMPILER"
 
-if [ "$1" = "version" ] || [ "$1" = "help" ] || [ "$1" = "config" ] || [ "$1" = "clone" ] || [ "$1" = "pull" ] || [ "$1" = "build" ] || [ "$1" = "clean" ] || [ "$1" = "language" ] || [ "$1" = "defconfig" ]; then
+if [ "$1" = "version" ] || [ "$1" = "help" ] || [ "$1" = "init" ] || [ "$1" = "config" ] || [ "$1" = "clone" ] || [ "$1" = "pull" ] || [ "$1" = "build" ] || [ "$1" = "clean" ] || [ "$1" = "language" ] || [ "$1" = "defconfig" ]; then
 
 if [ "$1" = "version" ] && [ "$2" = "" ]; then
 echo -e "akbuild version $AKBUILD_VERSION"
@@ -212,45 +196,28 @@ fi
 fi
 
 if [ "$1" = "help" ] && [ "$2" = "" ]; then
-echo -e "\tversion\t\t$AKBUILD_L_4\n\thelp\t\t$AKBUILD_L_5\n\tconfig\t\t$AKBUILD_L_6\n\tclone\t\t$AKBUILD_L_7\n\tpull\t\t$AKBUILD_L_8\n\tbuild\t\t$AKBUILD_L_9\n\tclean\t\t$AKBUILD_L_10\n\tlanguage\t$AKBUILD_L_59\n\tdefconfig\t$AKBUILD_L_62\n\n\takbuild config\n\t\t$AKBUILD_L_11\n\n\takbuild config [-c <filename>] [-d] [-r] [-r <filename>]\n\n\t\t-c <filename>, --custom <filename>\n\t\t\t$AKBUILD_L_12\n\n\t\t-d, --default\n\t\t\t$AKBUILD_L_13\n\n\t\t-r, --regenerate\n\t\t\t$AKBUILD_L_14\n\n\t\t-r <filename>, --regenerate <filename>\n\t\t\t$AKBUILD_L_15\n\n\takbuild clone/pull\n\t\t$AKBUILD_L_16\n\n\takbuild clone/pull kernel\n\t\t$AKBUILD_L_17\n\n\takbuild clone/pull compiler\n\t\t$AKBUILD_L_18"
+echo -e "\tversion\t\t$AKBUILD_L_4\n\thelp\t\t$AKBUILD_L_5\n\tinit\t\t$AKBUILD_L_6\n\tconfig\t\t$AKBUILD_L_11\n\tclone\t\t$AKBUILD_L_7\n\tpull\t\t$AKBUILD_L_8\n\tbuild\t\t$AKBUILD_L_9\n\tclean\t\t$AKBUILD_L_10\n\tlanguage\t$AKBUILD_L_59\n\tdefconfig\t$AKBUILD_L_62\n\n\takbuild clone/pull\n\t\t$AKBUILD_L_16\n\n\takbuild clone/pull kernel\n\t\t$AKBUILD_L_17\n\n\takbuild clone/pull compiler\n\t\t$AKBUILD_L_18"
 else
 if [ "$1" = "help" ] && [ "$2" ]; then
 echo -e "$AKBUILD_L_54 '$2'"
 fi
 fi
 
-if [ "$1" = "config" ] && [ "$2" = "" ] || [ "$2" = "-c" ] || [ "$2" = "--custom" ] || [ "$2" = "-d" ] || [ "$2" = "--default" ] || [ "$2" = "-r" ] || [ "$2" = "--regenerate" ]; then
+if [ "$1" = "init" ] && [ "$2" = "" ]; then
+echo -e "$AKBUILD_CONFIG" > $PWD/akbuild.conf
+. $PWD/akbuild.conf
+echo -e "$AKBUILD_L_13"
+else
+if [ "$1" = "init" ] && [ "$2" ]; then
+echo -e "$AKBUILD_L_54 '$2'"
+fi
+fi
+
 if [ "$1" = "config" ] && [ "$2" = "" ]; then
+if [ $AKCONFIG ]; then
 echo -e "$AKBUILD_L_19: $AKBUILD_PATH\n$AKBUILD_L_20: $AKBUILD_JOBS\n$AKBUILD_L_21: $KBUILD_BUILD_USER@$KBUILD_BUILD_HOST\n$AKBUILD_L_22: $AKBUILD_OUTPUTFILE\n$AKBUILD_L_23: $AKDTBOS\n$AKBUILD_L_24: $AKCCS\n$AKBUILD_L_25: $AKBUILD_KERNELNAME\n$AKBUILD_L_26: $AKCS\n$AKBUILD_L_60: $AKLS\n$AKBUILD_L_27: $AKANYKERNEL\n$AKBUILD_L_28: $AKBUILD_DEVICENAME"
-fi
-if [ "$1" = "config" ] && [ "$2" = "-c" ] || [ "$2" = "--custom" ] && [ "$3" ]; then
-if [ -f $3 ]; then
-. $3
-echo -e "$AKBUILD_L_29 $3"
 else
-echo -e "$AKBUILD_L_30"
-fi
-else
-if [ "$1" = "config" ] && [ "$2" = "-c" ] || [ "$2" = "--custom" ]; then
-echo -e "$AKBUILD_L_31"
-fi
-fi
-if [ "$1" = "config" ] && [ "$2" = "-d" ] || [ "$2" = "--default" ]; then
-if [ -f $AKCONFIGFILE ]; then
-. $AKCONFIGFILE
-echo -e "$AKBUILD_L_29 $AKCONFIGFILE"
-else
-echo -e "$AKBUILD_L_30"
-fi
-fi
-if [ "$1" = "config" ] && [ "$2" = "-r" ] || [ "$2" = "--regenerate" ] && [ "$3" ]; then
-echo -e "$AKBUILD_CONFIG" > $3
-echo -e "$AKBUILD_L_32 $3"
-else
-if [ "$1" = "config" ] && [ "$2" = "-r" ] || [ "$2" = "--regenerate" ]; then
-echo -e "$AKBUILD_CONFIG" > $AKCONFIGFILE
-echo -e "$AKBUILD_L_33"
-fi
+echo -e "$AKBUILD_L_12"
 fi
 else
 if [ "$1" = "config" ] && [ "$2" ]; then
@@ -259,6 +226,7 @@ fi
 fi
 
 if [ "$1" = "clone" ] && [ "$2" = "" ] || [ "$2" = "kernel" ] || [ "$2" = "compiler" ]; then
+if [ $AKCONFIG ]; then
 if [ "$1" = "clone" ] && [ "$2" = "" ]; then
 if [ -d $AKBUILD_PATH/kernel ]; then
 echo -e "$AKBUILD_L_34"
@@ -310,12 +278,16 @@ fi
 fi
 fi
 else
+echo -e "$AKBUILD_L_12"
+fi
+else
 if [ "$1" = "clone" ] && [ "$2" ]; then
 echo -e "$AKBUILD_L_54 '$2'"
 fi
 fi
 
 if [ "$1" = "pull" ] && [ "$2" = "" ] || [ "$2" = "kernel" ] || [ "$2" = "compiler" ]; then
+if [ $AKCONFIG ]; then
 if [ "$1" = "pull" ] && [ "$2" = "" ]; then
 if [ -d $AKBUILD_PATH/kernel ]; then
 cd $AKBUILD_PATH/kernel
@@ -363,12 +335,16 @@ fi
 fi
 fi
 else
+echo -e "$AKBUILD_L_12"
+fi
+else
 if [ "$1" = "pull" ] && [ "$2" ]; then
 echo -e "$AKBUILD_L_54 '$2'"
 fi
 fi
 
 if [ "$1" = "build" ] && [ "$2" = "" ]; then
+if [ $AKCONFIG ]; then
 if [ -d $AKBUILD_PATH/kernel ]; then
 if [ -d $AKCOMPILER ]; then
 if
@@ -420,18 +396,25 @@ else
 echo -e "$AKBUILD_L_40"
 fi
 else
+echo -e "$AKBUILD_L_12"
+fi
+else
 if [ "$1" = "build" ] && [ "$2" ]; then
 echo -e "$AKBUILD_L_54 '$2'"
 fi
 fi
 
 if [ "$1" = "clean" ] && [ "$2" = "" ]; then
+if [ $AKCONFIG ]; then
 if [ -d $AKBUILD_PATH/out ]; then
 echo -e "$AKBUILD_L_52"
 rm -rf $AKBUILD_PATH/out
 echo -e "\n$AKBUILD_L_53"
 else
 echo -e "$AKBUILD_L_65"
+fi
+else
+echo -e "$AKBUILD_L_12"
 fi
 else
 if [ "$1" = "clean" ] && [ "$2" ]; then
@@ -454,6 +437,7 @@ fi
 fi
 
 if [ "$1" = "defconfig" ] && [ "$2" = "" ]; then
+if [ $AKCONFIG ]; then
 if [ -d $AKBUILD_PATH/kernel ]; then
 if [ -d $AKCOMPILER ]; then
 if
@@ -476,6 +460,9 @@ else
 echo -e "$AKBUILD_L_40"
 fi
 else
+echo -e "$AKBUILD_L_12"
+fi
+else
 if [ "$1" = "defconfig" ] && [ "$2" ]; then
 echo -e "$AKBUILD_L_54 '$2'"
 fi
@@ -486,6 +473,3 @@ if [ "$1" ]; then
 echo -e "$AKBUILD_L_54 '$1'"
 fi
 fi
-
-mkdir -p $CACHE
-echo -e "# Android kernel build configuration\nAKBUILD_PATH=\"$AKBUILD_PATH\"\nAKBUILD_JOBS=\"$AKBUILD_JOBS\"\nAKBUILD_USERNAME=\"$AKBUILD_USERNAME\"\nAKBUILD_HOSTNAME=\"$AKBUILD_HOSTNAME\"\nAKBUILD_ARCH=\"$AKBUILD_ARCH\"\nAKBUILD_CC=\"$AKBUILD_CC\"\nAKBUILD_OPTIONS=\"$AKBUILD_OPTIONS\"\nAKBUILD_DEFCONFIG=\"$AKBUILD_DEFCONFIG\"\nAKBUILD_OUTPUTFILE=\"$AKBUILD_OUTPUTFILE\"\nAKBUILD_DTBO=$AKBUILD_DTBO\nAKBUILD_CCACHE=$AKBUILD_CCACHE\nAKBUILD_CCACHE_DIR=\"$AKBUILD_CCACHE_DIR\"\n\n# Kernel\nAKBUILD_KERNELURL=\"$AKBUILD_KERNELURL\"\nAKBUILD_KERNELBRANCH=\"$AKBUILD_KERNELBRANCH\"\nAKBUILD_KERNELNAME=\"$AKBUILD_KERNELNAME\"\nAKBUILD_KDEPTH1=$AKBUILD_KDEPTH1\n\n# Clang\nAKBUILD_PREINSTALLED_COMPILER=$AKBUILD_PREINSTALLED_COMPILER\nAKBUILD_COMPILERURL=\"$AKBUILD_COMPILERURL\"\nAKBUILD_COMPILERBRANCH=\"$AKBUILD_COMPILERBRANCH\"\nAKBUILD_COMPILER=\"$AKBUILD_COMPILER\"\nAKBUILD_COMPILERBIN=\"$AKBUILD_COMPILERBIN\"\nAKBUILD_COMPILERLIB=\"$AKBUILD_COMPILERLIB\"\n\n# Device\nAKBUILD_ANYKERNEL=$AKBUILD_ANYKERNEL\nAKBUILD_ANYKERNELURL=\"$AKBUILD_ANYKERNELURL\"\nAKBUILD_ANYKERNELBRANCH=\"$AKBUILD_ANYKERNELBRANCH\"\nAKBUILD_DEVICENAME=\"$AKBUILD_DEVICENAME\"" > $CACHECONFIGFILE
