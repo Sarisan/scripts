@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2020-2021 Sarisan Sekoohaka
 #
-AKBUILD_VERSION="2.26"
+AKBUILD_VERSION="2.27"
 
 # Default configuration values
 DEF_CONFIGFILE=$HOME/.akbuild_config
@@ -114,7 +114,8 @@ AKBUILD_L_61="Undefined"
 AKBUILD_L_62="Write defconfig"
 AKBUILD_L_63="Defconfig has been written successfully"
 AKBUILD_L_64="Defconfig has not been written!"
-AKBUILD_L_65="Output folder not found or it has been already removed"
+AKBUILD_L_65="Output folder not found or it has already been removed"
+AKBUILD_L_66="You are using pre-installed compiler"
 
 
 AKCONFIGFILE=$DEF_CONFIGFILE
@@ -262,6 +263,9 @@ if ! git clone $AKKERNELS; then
 echo -e "$AKBUILD_L_35"
 fi
 fi
+if [ "$AKBUILD_PREINSTALLED_COMPILER" = "true" ]; then
+echo -e "$AKBUILD_L_66"
+else
 if [ -d $AKCOMPILER ]; then
 if [ $AKBUILD_COMPILER ]; then
 echo -e "$AKBUILD_L_36"
@@ -271,6 +275,7 @@ fi
 else
 if ! git clone $AKCOMPILERS; then
 echo -e "$AKBUILD_L_38"
+fi
 fi
 fi
 fi
@@ -284,6 +289,9 @@ fi
 fi
 fi
 if [ "$1" = "clone" ] && [ "$2" = compiler ]; then
+if [ "$AKBUILD_PREINSTALLED_COMPILER" = "true" ]; then
+echo -e "$AKBUILD_L_66"
+else
 if [ -d $AKCOMPILER ]; then
 if [ $AKBUILD_COMPILER ]; then
 echo -e "$AKBUILD_L_36"
@@ -293,6 +301,7 @@ fi
 else
 if ! git clone $AKCOMPILERS; then
 echo -e "$AKBUILD_L_38"
+fi
 fi
 fi
 fi
@@ -312,6 +321,9 @@ fi
 else
 echo -e "$AKBUILD_L_40"
 fi
+if [ "$AKBUILD_PREINSTALLED_COMPILER" = "true" ]; then
+echo -e "$AKBUILD_L_66"
+else
 if [ -d $AKCOMPILER ]; then
 cd $AKCOMPILER
 if ! git pull; then
@@ -319,6 +331,7 @@ echo -e "$AKBUILD_L_41"
 fi
 else
 echo -e "$AKBUILD_L_42"
+fi
 fi
 fi
 if [ "$1" = "pull" ] && [ "$2" = "kernel" ]; then
@@ -332,6 +345,9 @@ echo -e "$AKBUILD_L_40"
 fi
 fi
 if [ "$1" = "pull" ] && [ "$2" = "compiler" ]; then
+if [ "$AKBUILD_PREINSTALLED_COMPILER" = "true" ]; then
+echo -e "$AKBUILD_L_66"
+else
 if [ -d $AKCOMPILER ]; then
 cd $AKCOMPILER
 if ! git pull; then
@@ -339,6 +355,7 @@ echo -e "$AKBUILD_L_41"
 fi
 else
 echo -e "$AKBUILD_L_42"
+fi
 fi
 fi
 else
