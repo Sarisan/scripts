@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2020-2021 Sarisan Sekoohaka
 #
-AKBUILD_VERSION="2.30"
+AKBUILD_VERSION="2.31"
 
 # Default configuration values
 AKBUILD_PATH=$PWD
@@ -63,7 +63,7 @@ AKBUILD_L_10="Remove output folder"
 AKBUILD_L_11="Show current configuration"
 AKBUILD_L_12="Configuration file has not been initialized yet"
 AKBUILD_L_13="Configuration file has been initialized"
-AKBUILD_L_14=""
+AKBUILD_L_14="Build without writing a defconfig"
 AKBUILD_L_15=""
 AKBUILD_L_16="Clone/Pull the kernel and the compiler"
 AKBUILD_L_17="Clone/Pull only the kernel"
@@ -198,7 +198,7 @@ fi
 fi
 
 if [ "$1" = "help" ] && [ "$2" = "" ]; then
-echo -e "\tversion\t\t$AKBUILD_L_4\n\thelp\t\t$AKBUILD_L_5\n\tinit\t\t$AKBUILD_L_6\n\tconfig\t\t$AKBUILD_L_11\n\tclone\t\t$AKBUILD_L_7\n\tpull\t\t$AKBUILD_L_8\n\tbuild\t\t$AKBUILD_L_9\n\tclean\t\t$AKBUILD_L_10\n\tlanguage\t$AKBUILD_L_59\n\tdefconfig\t$AKBUILD_L_62\n\n\takbuild clone/pull\n\t\t$AKBUILD_L_16\n\n\takbuild clone/pull kernel\n\t\t$AKBUILD_L_17\n\n\takbuild clone/pull compiler\n\t\t$AKBUILD_L_18"
+echo -e "\tversion\t\t$AKBUILD_L_4\n\thelp\t\t$AKBUILD_L_5\n\tinit\t\t$AKBUILD_L_6\n\tconfig\t\t$AKBUILD_L_11\n\tclone\t\t$AKBUILD_L_7\n\tpull\t\t$AKBUILD_L_8\n\tbuild\t\t$AKBUILD_L_9\n\tclean\t\t$AKBUILD_L_10\n\tlanguage\t$AKBUILD_L_59\n\tdefconfig\t$AKBUILD_L_62\n\n\takbuild build [-d]\n\n\t\t-d, --no-defconfig\n\t\t\t$AKBUILD_L_14\n\n\takbuild clone/pull\n\t\t$AKBUILD_L_16\n\n\takbuild clone/pull kernel\n\t\t$AKBUILD_L_17\n\n\takbuild clone/pull compiler\n\t\t$AKBUILD_L_18"
 else
 if [ "$1" = "help" ] && [ "$2" ]; then
 echo -e "$AKBUILD_L_54 '$2'"
@@ -345,14 +345,16 @@ echo -e "$AKBUILD_L_54 '$2'"
 fi
 fi
 
-if [ "$1" = "build" ] && [ "$2" = "" ]; then
+if [ "$1" = "build" ] && [ "$2" = "" ] || [ "$2" = "-d" ] || [ "$2" = "--no-defconfig" ]; then
 if [ $AKCONFIG ]; then
 if [ -d $AKBUILD_PATH/kernel ]; then
 if [ -d $AKCOMPILER ]; then
 if
 SECONDS=0
 cd $AKBUILD_PATH/kernel
+if [ "$1" = "build" ] && [ "$2" = "" ] && [ "$2" != "-d" ] && [ "$2" != "--no-defconfig" ]; then
 make -j$AKBUILD_JOBS O=$AKBUILD_PATH/out ARCH=$AKBUILD_ARCH CC="$AKCC" $AKBUILD_OPTIONS $AKBUILD_DEFCONFIG
+fi
 make -j$AKBUILD_JOBS O=$AKBUILD_PATH/out ARCH=$AKBUILD_ARCH CC="$AKCC" $AKBUILD_OPTIONS $AKBUILD_OUTPUTFILE $AKDTBO
 then
 AKMINUTES=$((SECONDS / 60)) && AKSECONDS=$((SECONDS % 60)) && if(($AKMINUTES<=9)); then AKMINUTES=0$AKMINUTES; fi && if(($AKSECONDS<=9)); then AKSECONDS=0$AKSECONDS; fi && AKTIME=$AKMINUTES:$AKSECONDS
