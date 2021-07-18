@@ -1,0 +1,206 @@
+#!/bin/bash
+#
+# Copyright (C) 2021 Sarisan Sekoohaka
+# Copyright (C) 2021 Sakuyou Sekoohaka
+#
+# chan.sankakucomplex.com downloader
+# Dependencies: curl, jq, sed
+# Run before using to create configuration files in config directory.
+# chan.sankakucomplex.com has some limits, for example you cant download more than 1000 works with the same tags.
+# Can be used to send posts to Telegram, there is limit in Telegram Bot API, images larger than 10 MiB and other media larger than 50 MiB will be sent as preview. It already sends images as sample, so don't care about image size.
+
+if command -v curl &> /dev/null && command -v jq &> /dev/null && command -v sed &> /dev/null; then
+
+VERSION="CSCD v1.0"
+CONFIG=$HOME/.config/cscd
+CACHE=$HOME/.cache/cscd
+
+mkdir -p $CONFIG
+mkdir -p $CACHE
+
+if [ -f $CONFIG/cscd.conf ]; then
+. $CONFIG/cscd.conf
+else
+echo -e "TG_BOTTOKEN=\"\"\nDOWNLOAD_DIR=\"\"" > $CONFIG/cscd.conf
+fi
+
+unset CSCD_RUN CSCD_AUTH CSCD_DDE CSCD_TELEGRAM CSCD_HELP CSCD_VER CSCD_STOP
+if [ "$1" ]; then
+CSCD_RUN=0
+while [ "$1" ]; do
+case "$1" in
+-a|--authorize) CSCD_AUTH=0;;
+-d|--download-dir) if [ -d "$2" ]; then DOWNLOAD_DIR=$2; else CSCD_DDE=0; CSCD_STOP=0; fi; shift;;
+-t|--telegram) CSCD_TELEGRAM=0;;
+-h|--help) CSCD_HELP=0; unset CSCD_RUN;;
+-v|--version) CSCD_VER=0; unset CSCD_RUN;;
+*) echo "Unknown option '$1'"; CSCD_STOP=0;;
+esac
+shift
+done
+if [ "$CSCD_AUTH" ]; then
+unset CSCD_RUN CSCD_HELP CSCD_VER
+fi
+if [ "$CSCD_DDE" ]; then
+echo "You must specify the path to an exisiting directory"
+fi
+if [ "$CSCD_STOP" ]; then
+unset CSCD_RUN CSCD_AUTH CSCD_HELP CSCD_VER
+echo "Try 'cscd --help' for more information"
+fi
+else
+echo "Try 'cscd --help' for more information"
+fi
+
+if [ "$CSCD_AUTH" ]; then
+
+while [ "$CSANKAKU_LOGIN" = "" ]; do
+echo -n "Login: "
+read CSANKAKU_LOGIN
+done
+while [ "$CSANKAKU_PASSWORD" = "" ]; do
+echo -n "Password: "
+read CSANKAKU_PASSWORD
+done
+
+echo "{\"login\":\"$CSANKAKU_LOGIN\",\"password\":\"$CSANKAKU_PASSWORD\"}" > $CONFIG/login.json
+curl -s -A "Chrome" -X POST -H "Content-Type: application/json" -d @$CONFIG/login.json https://capi-v2.sankakucomplex.com/auth/token -o $CACHE/login
+
+if [ "$(jq -r 'map_values(tostring)|.success' $CACHE/login)" = "true" ]; then
+jq -r '.access_token' $CACHE/login | cat > $CONFIG/token
+echo -e "\nAuthorized successfully\n"
+else
+
+if ! [ -f $CACHE/login ]; then
+echo -e "\nError: failed to access https://capi-v2.sankakucomplex.com\n"
+else
+echo -e "\nError: $(jq -r .error $CACHE/login)\n"
+fi
+
+fi
+fi
+
+if [ "$CSCD_HELP" ]; then
+echo -e "Usage: cscd [-a] [-d <path>] [-t] [-h] [-v]\n\n-a, --authorize\n\tGet authorization token with login and password\n\n-d <path>, --download-dir <path>\n\tSet path where to download\n\n-t, --telegram\n\tUse Telegram Bot API to send artworks to Telegram\n\n-h, --help\n\tShow help information\n\n-v, --version\n\tShow CSCD version"
+fi
+
+if [ "$CSCD_VER" ]; then
+echo "$VERSION"
+fi
+
+if [ "$CSCD_RUN" ] && [ -f $CONFIG/token ] && [ -d "$DOWNLOAD_DIR" ]; then
+
+while [ "$TAGS" = "" ]; do
+echo -n "Enter tags: "
+read TAGS
+TAGS=$(echo $TAGS | sed "s| |+|g")
+done
+
+while [ "$NUMBER" = "" ]; do
+echo -n "Enter number of posts: "
+read NUMBER
+COUNT=0
+PAGE=1
+
+if [ "$NUMBER" = "" ]; then
+NUMBER="-1"
+fi
+done
+
+if [ "$CSCD_TELEGRAM" ]; then
+while [ "$CHAT" = "" ]; do
+echo -n "Enter chat id: "
+read CHAT
+done
+
+until [ "$CHATT" = "1" ] || [ "$CHATT" = "2" ]; do
+echo -e "1. User id\n2. Group id"
+echo -n "Choose type of chat id: "
+read CHATT
+if [ "$CHATT" = "2" ]; then CHAT=-100$CHAT; fi
+done
+fi
+
+echo -ne "\n\rDownloaded posts: 0"
+while ! [ $COUNT = $NUMBER ]; do
+
+curl -s -A "Chrome" -X GET -H "Authorization: Bearer $(cat $CONFIG/token)" -o $CACHE/posts "https://capi-v2.sankakucomplex.com/posts?page=$PAGE\&tags=$TAGS"
+
+if [ "$(cat $CACHE/posts)" = "[]" ]; then
+break
+fi
+
+cat $CACHE/posts | jq -r '.[]|map_values(tostring)|"{\"id\":\"\(.id)\",\"rating\":\"\(.rating)\",\"sample_url\":\"\(.sample_url)\",\"preview_url\":\"\(.preview_url)\",\"file_url\":\"\(.file_url)\",\"file_size\":\"\(.file_size)\",\"file_type\":\"\(.file_type)\",\"width\":\"\(.width)\",\"height\":\"\(.height)\"}"' | sed "s|:\"s\"|:\"Safe\"|g" | sed "s|:\"q\"|:\"Questionable\"|g" | sed "s|:\"e\"|:\"Explicit\"|g" | sed "s|type\":\"image\/|type\":\"|g" | sed "s|type\":\"video\/|type\":\"|g" | cat > $CACHE/info
+
+for info in $(cat $CACHE/info); do
+
+if [ $COUNT = $NUMBER ]; then
+break
+fi
+
+if ! [ -f "$DOWNLOAD_DIR/$(echo $info | jq -r '.file_url' | cut -d'?' -f1 | cut -d'/' -f7)" ]; then
+curl -s -A "Chrome" "$(echo $info | jq -r '.file_url')" -o $CACHE/file
+
+if [ -f $CACHE/file ]; then
+mv "$CACHE/file" "$DOWNLOAD_DIR/$(echo $info | jq -r '.file_url' | cut -d'?' -f1 | cut -d'/' -f7)"
+else
+NSKIP=$((NSKIP+1))
+COUNT=$((COUNT-1))
+fi
+
+COUNT=$((COUNT+1))
+
+if [ "$CSCD_TELEGRAM" ] && ! [ "$(echo $info | jq -r '.file_type')" = "null" ]; then
+SIZE=$(echo $info | jq -r '.file_size')
+
+if(($SIZE>=1073741824)); then
+SIZE=$((SIZE/1073741824))GiB
+elif(($SIZE>=1048576)); then
+SIZE=$((SIZE/1048576))MiB
+elif(($SIZE>=1024)); then
+SIZE=$((SIZE/1024))KiB
+else
+SIZE=$((SIZE))B
+fi
+
+if [ "$(echo $info | jq -r '.file_type')" = "jpeg" ] || [ "$(echo $info | jq -r '.file_type')" = "png" ]; then
+curl -s -A "Chrome" "$(echo $info | jq -r '.sample_url')" -o $CACHE/sample
+curl -s -X POST https://api.telegram.org/bot$TG_BOTTOKEN/sendPhoto -F chat_id=$CHAT -F caption="$VERSION$(if [ $NUMBER != '-1' ]; then echo -e "\n$COUNT/$NUMBER"; fi)" -F photo="@$CACHE/sample" -F reply_markup=$(echo '{"inline_keyboard":[[{"text":"rating","url":"spid"},{"text":"widthxheight","url":"spid"}]],"inline_keyboard":[[{"text":"fsize","url":"spid"},{"text":"ftype","url":"spid"}]]}' | sed "s|rating|$(echo $info | jq -r '.rating')|g" | sed "s|width|$(echo $info | jq -r '.width')|g" | sed "s|height|$(echo $info | jq -r '.height')|g" | sed "s|fsize|$SIZE|g" | sed "s|ftype|$(echo $info | jq -r '.file_type')|g" | sed "s|spid|https://chan.sankakucomplex.com/post/show/$(echo $info | jq -r '.id')|g") | cat > /dev/null
+else
+if (("$(echo $info | jq -r '.file_size')"<="52428800")) && [ "$(echo $info | jq -r '.file_type')" = "mp4" ] || [ "$(echo $info | jq -r '.file_type')" = "webm" ]; then
+curl -s -X POST https://api.telegram.org/bot$TG_BOTTOKEN/sendVideo -F chat_id=$CHAT -F caption="$VERSION$(if [ $NUMBER != '-1' ]; then echo -e "\n$COUNT/$NUMBER"; fi)" -F video="@$DOWNLOAD_DIR/$(echo $info | jq -r '.file_url' | cut -d'?' -f1 | cut -d'/' -f7)" -F reply_markup=$(echo '{"inline_keyboard":[[{"text":"rating","url":"spid"},{"text":"widthxheight","url":"spid"}]],"inline_keyboard":[[{"text":"fsize","url":"spid"},{"text":"ftype","url":"spid"}]]}' | sed "s|rating|$(echo $info | jq -r '.rating')|g" | sed "s|width|$(echo $info | jq -r '.width')|g" | sed "s|height|$(echo $info | jq -r '.height')|g" | sed "s|fsize|$SIZE|g" | sed "s|ftype|$(echo $info | jq -r '.file_type')|g" | sed "s|spid|https://chan.sankakucomplex.com/post/show/$(echo $info | jq -r '.id')|g") | cat > /dev/null
+else
+if (("$(echo $info | jq -r '.file_size')"<="52428800")) && [ "$(echo $info | jq -r '.file_type')" = "gif" ]; then
+curl -s -X POST https://api.telegram.org/bot$TG_BOTTOKEN/sendAnimation -F chat_id=$CHAT -F caption="$VERSION$(if [ $NUMBER != '-1' ]; then echo -e "\n$COUNT/$NUMBER"; fi)" -F animation="@$DOWNLOAD_DIR/$(echo $info | jq -r '.file_url' | cut -d'?' -f1 | cut -d'/' -f7)" -F reply_markup=$(echo '{"inline_keyboard":[[{"text":"rating","url":"spid"},{"text":"widthxheight","url":"spid"}]],"inline_keyboard":[[{"text":"fsize","url":"spid"},{"text":"ftype","url":"spid"}]]}' | sed "s|rating|$(echo $info | jq -r '.rating')|g" | sed "s|width|$(echo $info | jq -r '.width')|g" | sed "s|height|$(echo $info | jq -r '.height')|g" | sed "s|fsize|$SIZE|g" | sed "s|ftype|$(echo $info | jq -r '.file_type')|g" | sed "s|spid|https://chan.sankakucomplex.com/post/show/$(echo $info | jq -r '.id')|g") | cat > /dev/null
+else
+curl -s -A "Chrome" "$(echo $info | jq -r '.preview_url')" -o $CACHE/preview
+curl -s -X POST https://api.telegram.org/bot$TG_BOTTOKEN/sendPhoto -F chat_id=$CHAT -F caption="$VERSION$(if [ $NUMBER != '-1' ]; then echo -e "\n$COUNT/$NUMBER"; fi)" -F photo="@$CACHE/preview" -F reply_markup=$(echo '{"inline_keyboard":[[{"text":"rating","url":"spid"},{"text":"widthxheight","url":"spid"}]],"inline_keyboard":[[{"text":"fsize","url":"spid"},{"text":"ftype","url":"spid"}]]}' | sed "s|rating|$(echo $info | jq -r '.rating')|g" | sed "s|width|$(echo $info | jq -r '.width')|g" | sed "s|height|$(echo $info | jq -r '.height')|g" | sed "s|fsize|$SIZE|g" | sed "s|ftype|$(echo $info | jq -r '.file_type')|g" | sed "s|spid|https://chan.sankakucomplex.com/post/show/$(echo $info | jq -r '.id')|g") | cat > /dev/null
+fi
+fi
+fi
+
+fi
+
+echo -ne "\rDownloaded posts: $COUNT"
+fi
+
+done
+
+PAGE=$((PAGE+1))
+done
+
+elif ! [ -f $CONFIG/token ] && [ "$CSCD_RUN" ]; then
+echo -e "You are not authorized"
+elif ! [ -d "$DOWNLOAD_DIR" ] && [ "$CSCD_RUN" ]; then
+echo -e "Download dir does not exist"
+fi
+
+if [ "$NSKIP" ]; then
+echo -e "\nSkipped due to connectivity: $NSKIP\n"
+elif [ "$COUNT" ]; then
+echo -e "\n"
+fi
+
+else
+echo "Missing dependencies, make sure you have all of them: curl, jq, sed"
+fi
