@@ -11,7 +11,7 @@
 
 if command -v curl &> /dev/null && command -v jq &> /dev/null && command -v sed &> /dev/null; then
 
-VERSION="CSCD v1.3"
+VERSION="CSCD v1.4"
 CONFIG=$HOME/.config/cscd
 CACHE=$HOME/.cache/cscd
 CPID_CACHE=$CACHE/$$
@@ -126,10 +126,15 @@ if [ "$CHATT" = "2" ]; then CHAT=-100$CHAT; fi
 done
 fi
 
-echo -ne "\n\rDownloaded posts: 0"
+echo -n -e "\n\rDownloaded posts: 0"
 while ! [ $COUNT = $NUMBER ]; do
 
 curl -s -A "Chrome" -X GET -H "Authorization: Bearer $(cat $CONFIG/token)" -o $CPID_CACHE/posts "https://capi-v2.sankakucomplex.com/posts?page=$PAGE\&tags=$TAGS"
+
+if jq -r '.success' $CPID_CACHE/posts &> /dev/null; then
+echo -n -e "\nError: $(jq -r '.code' $CPID_CACHE/posts)"
+break
+fi
 
 if [ "$(cat $CPID_CACHE/posts)" = "[]" ]; then
 break
@@ -186,7 +191,7 @@ fi
 
 fi
 
-echo -ne "\rDownloaded posts: $COUNT"
+echo -n -e "\rDownloaded posts: $COUNT"
 fi
 
 done
