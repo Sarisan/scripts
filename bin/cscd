@@ -11,7 +11,7 @@
 
 if command -v curl &> /dev/null && command -v jq &> /dev/null && command -v sed &> /dev/null; then
 
-VERSION="CSCD v1.4"
+VERSION="CSCD v1.5"
 CONFIG=$HOME/.config/cscd
 CACHE=$HOME/.cache/cscd
 CPID_CACHE=$CACHE/$$
@@ -49,9 +49,11 @@ fi
 if [ "$CSCD_STOP" ]; then
 unset CSCD_RUN CSCD_AUTH CSCD_HELP CSCD_VER
 echo "Try 'cscd --help' for more information"
+exit 1
 fi
 else
 echo "Try 'cscd --help' for more information"
+exit 1
 fi
 
 if [ "$CSCD_AUTH" ]; then
@@ -73,8 +75,10 @@ else
 
 if ! [ -f $CPID_CACHE/login ]; then
 echo -e "\nError: failed to access https://capi-v2.sankakucomplex.com\n"
+exit 1
 else
 echo -e "\nError: $(jq -r .error $CPID_CACHE/login)\n"
+exit 1
 fi
 
 fi
@@ -132,8 +136,11 @@ while ! [ $COUNT = $NUMBER ]; do
 curl -s -A "Chrome" -X GET -H "Authorization: Bearer $(cat $CONFIG/token)" -o $CPID_CACHE/posts "https://capi-v2.sankakucomplex.com/posts?page=$PAGE\&tags=$TAGS"
 
 if jq -r '.success' $CPID_CACHE/posts &> /dev/null; then
-echo -n -e "\nError: $(jq -r '.code' $CPID_CACHE/posts)"
-break
+echo -e "\nError: $(jq -r '.code' $CPID_CACHE/posts)\n"
+exit 1
+elif ! [ -f $CPID_CACHE/posts ]; then
+echo -e "\nError: failed to access https://capi-v2.sankakucomplex.com\n"
+exit 1
 fi
 
 if [ "$(cat $CPID_CACHE/posts)" = "[]" ]; then
@@ -201,8 +208,10 @@ done
 
 elif ! [ -f $CONFIG/token ] && [ "$CSCD_RUN" ]; then
 echo -e "You are not authorized"
+exit 1
 elif ! [ -d "$DOWNLOAD_DIR" ] && [ "$CSCD_RUN" ]; then
 echo -e "Download dir does not exist"
+exit 1
 fi
 
 if [ "$NSKIP" ]; then
@@ -213,4 +222,5 @@ fi
 
 else
 echo "Missing dependencies, make sure you have all of them: curl, jq, sed"
+exit 1
 fi
