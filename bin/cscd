@@ -11,7 +11,7 @@
 
 if command -v curl &> /dev/null && command -v jq &> /dev/null && command -v sed &> /dev/null; then
 
-VERSION="CSCD v1.1"
+VERSION="CSCD v1.2"
 CONFIG=$HOME/.config/cscd
 CACHE=$HOME/.cache/cscd
 
@@ -56,12 +56,10 @@ fi
 if [ "$CSCD_AUTH" ]; then
 
 while [ "$CSANKAKU_LOGIN" = "" ]; do
-echo -n "Login: "
-read CSANKAKU_LOGIN
+read -e -p "Login: " CSANKAKU_LOGIN
 done
 while [ "$CSANKAKU_PASSWORD" = "" ]; do
-echo -n "Password: "
-read CSANKAKU_PASSWORD
+read -e -p "Password: " CSANKAKU_PASSWORD
 done
 
 echo "{\"login\":\"$CSANKAKU_LOGIN\",\"password\":\"$CSANKAKU_PASSWORD\"}" > $CONFIG/login.json
@@ -83,10 +81,8 @@ fi
 
 if [ "$CSCD_CONFIG" ]; then
 
-echo -n "Telegram Bot API token: "
-read TG_BOT_TOKEN
-echo -n "Default download dir: "
-read DOWNLOAD_DIR
+read -e -p "Telegram Bot API token: " TG_BOT_TOKEN
+read -e -p "Default download dir: " DOWNLOAD_DIR
 
 echo -e "TG_BOT_TOKEN=\"$TG_BOT_TOKEN\"\nDOWNLOAD_DIR=\"$DOWNLOAD_DIR\"" > $CONFIG/cscd.conf
 
@@ -103,14 +99,12 @@ fi
 if [ "$CSCD_RUN" ] && [ -f $CONFIG/token ] && [ -d "$DOWNLOAD_DIR" ]; then
 
 while [ "$TAGS" = "" ]; do
-echo -n "Enter tags: "
-read TAGS
+read -e -p "Enter tags: " TAGS
 TAGS=$(echo $TAGS | sed "s| |+|g")
 done
 
 while [ "$NUMBER" = "" ]; do
-echo -n "Enter number of posts: "
-read NUMBER
+read -e -p "Enter number of posts: " NUMBER
 COUNT=0
 PAGE=1
 
@@ -121,14 +115,12 @@ done
 
 if [ "$CSCD_TELEGRAM" ]; then
 while [ "$CHAT" = "" ]; do
-echo -n "Enter chat id: "
-read CHAT
+read -e -p "Enter chat id: " CHAT
 done
 
 until [ "$CHATT" = "1" ] || [ "$CHATT" = "2" ]; do
 echo -e "1. User id\n2. Group id"
-echo -n "Choose type of chat id: "
-read CHATT
+read -e -p "Choose type of chat id: " CHATT
 if [ "$CHATT" = "2" ]; then CHAT=-100$CHAT; fi
 done
 fi
