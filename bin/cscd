@@ -11,7 +11,7 @@
 
 if command -v curl &> /dev/null && command -v jq &> /dev/null && command -v sed &> /dev/null; then
 
-VERSION="CSCD v1.5"
+VERSION="CSCD v1.6"
 CONFIG=$HOME/.config/cscd
 CACHE=$HOME/.cache/cscd
 CPID_CACHE=$CACHE/$$
@@ -156,11 +156,9 @@ break
 fi
 
 if ! [ -f "$DOWNLOAD_DIR/$(echo $info | jq -r '.file_url' | cut -d'?' -f1 | cut -d'/' -f7)" ]; then
-curl -s -A "Chrome" "$(echo $info | jq -r '.file_url')" -o $CPID_CACHE/file
+curl -s -A "Chrome" "$(echo $info | jq -r '.file_url')" -o "$DOWNLOAD_DIR/$(echo $info | jq -r '.file_url' | cut -d'?' -f1 | cut -d'/' -f7)"
 
-if [ -f $CPID_CACHE/file ]; then
-mv "$CPID_CACHE/file" "$DOWNLOAD_DIR/$(echo $info | jq -r '.file_url' | cut -d'?' -f1 | cut -d'/' -f7)"
-else
+if ! [ -f "$DOWNLOAD_DIR/$(echo $info | jq -r '.file_url' | cut -d'?' -f1 | cut -d'/' -f7)" ]; then
 NSKIP=$((NSKIP+1))
 COUNT=$((COUNT-1))
 fi
@@ -181,8 +179,8 @@ SIZE=$((SIZE))B
 fi
 
 if [ "$(echo $info | jq -r '.file_type')" = "jpeg" ] || [ "$(echo $info | jq -r '.file_type')" = "png" ]; then
-curl -s -A "Chrome" "$(echo $info | jq -r '.sample_url')" -o $CPID_CACHE/sample
-curl -s -X POST https://api.telegram.org/bot$TG_BOT_TOKEN/sendPhoto -F chat_id=$CHAT -F caption="$VERSION$(if [ $NUMBER != '-1' ]; then echo -e "\n$COUNT/$NUMBER"; fi)" -F photo="@$CPID_CACHE/sample" -F reply_markup=$(echo '{"inline_keyboard":[[{"text":"rating","url":"spid"},{"text":"widthxheight","url":"spid"}]],"inline_keyboard":[[{"text":"fsize","url":"spid"},{"text":"ftype","url":"spid"}]]}' | sed "s|rating|$(echo $info | jq -r '.rating')|g" | sed "s|width|$(echo $info | jq -r '.width')|g" | sed "s|height|$(echo $info | jq -r '.height')|g" | sed "s|fsize|$SIZE|g" | sed "s|ftype|$(echo $info | jq -r '.file_type')|g" | sed "s|spid|https://chan.sankakucomplex.com/post/show/$(echo $info | jq -r '.id')|g") | cat > /dev/null
+curl -s -A "Chrome" "$(echo $info | jq -r '.sample_url')" -o $DOWNLOAD_DIR/.sample
+curl -s -X POST https://api.telegram.org/bot$TG_BOT_TOKEN/sendPhoto -F chat_id=$CHAT -F caption="$VERSION$(if [ $NUMBER != '-1' ]; then echo -e "\n$COUNT/$NUMBER"; fi)" -F photo="@$DOWNLOAD_DIR/.sample" -F reply_markup=$(echo '{"inline_keyboard":[[{"text":"rating","url":"spid"},{"text":"widthxheight","url":"spid"}]],"inline_keyboard":[[{"text":"fsize","url":"spid"},{"text":"ftype","url":"spid"}]]}' | sed "s|rating|$(echo $info | jq -r '.rating')|g" | sed "s|width|$(echo $info | jq -r '.width')|g" | sed "s|height|$(echo $info | jq -r '.height')|g" | sed "s|fsize|$SIZE|g" | sed "s|ftype|$(echo $info | jq -r '.file_type')|g" | sed "s|spid|https://chan.sankakucomplex.com/post/show/$(echo $info | jq -r '.id')|g") | cat > /dev/null
 else
 if (("$(echo $info | jq -r '.file_size')"<="52428800")) && [ "$(echo $info | jq -r '.file_type')" = "mp4" ] || [ "$(echo $info | jq -r '.file_type')" = "webm" ]; then
 curl -s -X POST https://api.telegram.org/bot$TG_BOT_TOKEN/sendVideo -F chat_id=$CHAT -F caption="$VERSION$(if [ $NUMBER != '-1' ]; then echo -e "\n$COUNT/$NUMBER"; fi)" -F video="@$DOWNLOAD_DIR/$(echo $info | jq -r '.file_url' | cut -d'?' -f1 | cut -d'/' -f7)" -F reply_markup=$(echo '{"inline_keyboard":[[{"text":"rating","url":"spid"},{"text":"widthxheight","url":"spid"}]],"inline_keyboard":[[{"text":"fsize","url":"spid"},{"text":"ftype","url":"spid"}]]}' | sed "s|rating|$(echo $info | jq -r '.rating')|g" | sed "s|width|$(echo $info | jq -r '.width')|g" | sed "s|height|$(echo $info | jq -r '.height')|g" | sed "s|fsize|$SIZE|g" | sed "s|ftype|$(echo $info | jq -r '.file_type')|g" | sed "s|spid|https://chan.sankakucomplex.com/post/show/$(echo $info | jq -r '.id')|g") | cat > /dev/null
@@ -190,8 +188,8 @@ else
 if (("$(echo $info | jq -r '.file_size')"<="52428800")) && [ "$(echo $info | jq -r '.file_type')" = "gif" ]; then
 curl -s -X POST https://api.telegram.org/bot$TG_BOT_TOKEN/sendAnimation -F chat_id=$CHAT -F caption="$VERSION$(if [ $NUMBER != '-1' ]; then echo -e "\n$COUNT/$NUMBER"; fi)" -F animation="@$DOWNLOAD_DIR/$(echo $info | jq -r '.file_url' | cut -d'?' -f1 | cut -d'/' -f7)" -F reply_markup=$(echo '{"inline_keyboard":[[{"text":"rating","url":"spid"},{"text":"widthxheight","url":"spid"}]],"inline_keyboard":[[{"text":"fsize","url":"spid"},{"text":"ftype","url":"spid"}]]}' | sed "s|rating|$(echo $info | jq -r '.rating')|g" | sed "s|width|$(echo $info | jq -r '.width')|g" | sed "s|height|$(echo $info | jq -r '.height')|g" | sed "s|fsize|$SIZE|g" | sed "s|ftype|$(echo $info | jq -r '.file_type')|g" | sed "s|spid|https://chan.sankakucomplex.com/post/show/$(echo $info | jq -r '.id')|g") | cat > /dev/null
 else
-curl -s -A "Chrome" "$(echo $info | jq -r '.preview_url')" -o $CPID_CACHE/preview
-curl -s -X POST https://api.telegram.org/bot$TG_BOT_TOKEN/sendPhoto -F chat_id=$CHAT -F caption="$VERSION$(if [ $NUMBER != '-1' ]; then echo -e "\n$COUNT/$NUMBER"; fi)" -F photo="@$CPID_CACHE/preview" -F reply_markup=$(echo '{"inline_keyboard":[[{"text":"rating","url":"spid"},{"text":"widthxheight","url":"spid"}]],"inline_keyboard":[[{"text":"fsize","url":"spid"},{"text":"ftype","url":"spid"}]]}' | sed "s|rating|$(echo $info | jq -r '.rating')|g" | sed "s|width|$(echo $info | jq -r '.width')|g" | sed "s|height|$(echo $info | jq -r '.height')|g" | sed "s|fsize|$SIZE|g" | sed "s|ftype|$(echo $info | jq -r '.file_type')|g" | sed "s|spid|https://chan.sankakucomplex.com/post/show/$(echo $info | jq -r '.id')|g") | cat > /dev/null
+curl -s -A "Chrome" "$(echo $info | jq -r '.preview_url')" -o $DOWNLOAD_DIR/.preview
+curl -s -X POST https://api.telegram.org/bot$TG_BOT_TOKEN/sendPhoto -F chat_id=$CHAT -F caption="$VERSION$(if [ $NUMBER != '-1' ]; then echo -e "\n$COUNT/$NUMBER"; fi)" -F photo="@$DOWNLOAD_DIR/.preview" -F reply_markup=$(echo '{"inline_keyboard":[[{"text":"rating","url":"spid"},{"text":"widthxheight","url":"spid"}]],"inline_keyboard":[[{"text":"fsize","url":"spid"},{"text":"ftype","url":"spid"}]]}' | sed "s|rating|$(echo $info | jq -r '.rating')|g" | sed "s|width|$(echo $info | jq -r '.width')|g" | sed "s|height|$(echo $info | jq -r '.height')|g" | sed "s|fsize|$SIZE|g" | sed "s|ftype|$(echo $info | jq -r '.file_type')|g" | sed "s|spid|https://chan.sankakucomplex.com/post/show/$(echo $info | jq -r '.id')|g") | cat > /dev/null
 fi
 fi
 fi
@@ -206,18 +204,21 @@ done
 PAGE=$((PAGE+1))
 done
 
+rm -f $DOWNLOAD_DIR/.sample
+rm -f $DOWNLOAD_DIR/.preview
+
+if [ "$NSKIP" ]; then
+echo -e "\nSkipped due to connectivity: $NSKIP\n"
+elif [ "$COUNT" ]; then
+echo -e "\n"
+fi
+
 elif ! [ -f $CONFIG/token ] && [ "$CSCD_RUN" ]; then
 echo -e "You are not authorized"
 exit 1
 elif ! [ -d "$DOWNLOAD_DIR" ] && [ "$CSCD_RUN" ]; then
 echo -e "Download dir does not exist"
 exit 1
-fi
-
-if [ "$NSKIP" ]; then
-echo -e "\nSkipped due to connectivity: $NSKIP\n"
-elif [ "$COUNT" ]; then
-echo -e "\n"
 fi
 
 else
