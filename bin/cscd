@@ -12,7 +12,7 @@
 if command -v curl &> /dev/null && command -v jq &> /dev/null && command -v sed &> /dev/null
 then
 
-VERSION="CSCD v1.8"
+VERSION="CSCD v1.9"
 CONFIG=$HOME/.config/cscd
 CACHE=$HOME/.cache/cscd
 CPID_CACHE=$CACHE/$$
@@ -120,7 +120,7 @@ then
 while [[ "$TAGS" = "" ]]
 do
 read -e -p "Enter tags: " TAGS
-TAGS=$(echo $TAGS | sed "s| |+|g")
+TAGS=$(echo $TAGS | sed "s|+|%2B|g" | sed "s| |+|g")
 done
 
 while [[ "$NUMBER" = "" ]]
