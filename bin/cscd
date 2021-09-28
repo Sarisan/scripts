@@ -3,11 +3,10 @@
 # Copyright (C) 2021 Sarisan Sekoohaka
 # Copyright (C) 2021 Sakuyou Sekoohaka
 #
-# chan.sankakucomplex.com downloader
+# Sankaku Channel downloader
 # Dependencies: curl, jq, sed
 # Run before using to create configuration files in config directory.
-# chan.sankakucomplex.com has some limits, for example you cant download more than 1000 works with the same tags.
-# Can be used to send posts to Telegram, there is limit in Telegram Bot API, images larger than 10 MiB and other media larger than 50 MiB will be sent as preview. It already sends images as sample, so don't care about image size.
+# Sankaku Channel has some limits, for example you cant download more than 2000 works with the same tags.
 
 if command -v curl &> /dev/null && command -v jq &> /dev/null && command -v sed &> /dev/null
 then
