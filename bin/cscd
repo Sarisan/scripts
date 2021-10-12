@@ -5,190 +5,176 @@
 #
 # Sankaku Channel downloader
 # Dependencies: curl, jq, sed
-# Run before using to create configuration files in config directory.
-# Sankaku Channel has some limits, for example you cant download more than 2000 works with the same tags.
+# Sankaku Channel has some limits, for example you cant download more than 2000 posts with the same tags without premium account.
 
 if command -v curl &> /dev/null && command -v jq &> /dev/null && command -v sed &> /dev/null
 then
 
-VERSION="CSCD v1.10"
-CONFIG=$HOME/.config/cscd
-CACHE=$HOME/.cache/cscd
-CPID_CACHE=$CACHE/$$
+    CSCD_VERSION="CSCD v2.0"
+    CSCD_CONFIG=$HOME/.config/cscd
+    CSCD_CACHE=$HOME/.cache/cscd
+    CSCD_CPID_CACHE=$CSCD_CACHE/$$
 
-mkdir -p $CONFIG
-mkdir -p $CPID_CACHE
+    mkdir -p $CSCD_CONFIG
+    mkdir -p $CSCD_CPID_CACHE
 
-unset CSCD_RUN CSCD_AUTH CSCD_CONFIG CSCD_DDE CSCD_HELP CSCD_VER CSCD_STOP
-if [[ "$1" ]]
-then
-CSCD_RUN=0
-while [[ "$1" ]]
-do
-case "$1" in
--a|--authorize) CSCD_AUTH=0;;
--d|--download-dir) if [[ -d $2 ]]; then DOWNLOAD_DIR=$2; else CSCD_DDE=0; CSCD_STOP=0; fi; shift;;
--h|--help) CSCD_HELP=0; unset CSCD_RUN;;
--v|--version) CSCD_VER=0; unset CSCD_RUN;;
-*) echo "Unknown option '$1'"; CSCD_STOP=0;;
-esac
-shift
-done
-if [[ "$CSCD_AUTH" ]]
-then
-unset CSCD_RUN CSCD_HELP CSCD_VER
-fi
-if [[ "$CSCD_DDE" ]]
-then
-echo "You must specify the path to an exisiting directory"
-fi
-if [[ "$CSCD_STOP" ]]
-then
-unset CSCD_RUN CSCD_AUTH CSCD_HELP CSCD_VER
-echo "Try 'cscd --help' for more information"
-exit 1
-fi
-else
-echo "Try 'cscd --help' for more information"
-exit 1
-fi
+    unset CSCD_AUTH CSCD_RUN CSCD_DDE CSCD_HELP CSCD_VER CSCD_STOP
+    if [[ "$1" ]]
+    then
+        while [[ "$1" ]]
+        do
+            case "$1" in
+                -a|--authorize) CSCD_AUTH=0;;
+                -d|--download-dir) CSCD_RUN=0; if [[ -d $2 ]]; then CSCD_DOWNLOAD_DIR=$2; else CSCD_DDE=0; CSCD_STOP=0; fi; shift;;
+                -h|--help) CSCD_HELP=0;;
+                -v|--version) CSCD_VER=0;;
+                *) echo "Unknown option '$1'"; CSCD_STOP=0;;
+            esac
+            shift
+        done
+        if [[ "$CSCD_DDE" ]]
+        then
+            echo "You must specify the path to an exisiting directory"
+        fi
+        if [[ "$CSCD_STOP" ]]
+        then
+            unset CSCD_AUTH CSCD_RUN CSCD_HELP CSCD_VER
+            echo "Try 'cscd --help' for more information"
+            exit 1
+        fi
+    else
+        echo "Try 'cscd --help' for more information"
+        exit 1
+    fi
 
-if [[ "$CSCD_AUTH" ]]
-then
+    if [[ "$CSCD_AUTH" ]]
+    then
 
-while [[ "$CSANKAKU_LOGIN" = "" ]]
-do
-read -e -p "Login: " CSANKAKU_LOGIN
-done
-while [[ "$CSANKAKU_PASSWORD" = "" ]]
-do
-read -e -p "Password: " CSANKAKU_PASSWORD
-done
+        while [[ "$CSANKAKU_LOGIN" = "" ]]
+        do
+            read -e -p "Login: " CSANKAKU_LOGIN
+        done
+        while [[ "$CSANKAKU_PASSWORD" = "" ]]
+        do
+            read -e -p "Password: " CSANKAKU_PASSWORD
+        done
 
-echo "{\"login\":\"$CSANKAKU_LOGIN\",\"password\":\"$CSANKAKU_PASSWORD\"}" | jq > $CONFIG/login.json
-curl -s -A "Chrome" -X POST -H "Content-Type: application/json" -d @$CONFIG/login.json "https://capi-v2.sankakucomplex.com/auth/token" -o $CPID_CACHE/login.json
+        curl -s -A "CSCD" -X POST -H "Content-Type: application/json" -d "{\"login\":\"$CSANKAKU_LOGIN\",\"password\":\"$CSANKAKU_PASSWORD\"}" "https://capi-v2.sankakucomplex.com/auth/token" -o $CSCD_CPID_CACHE/login.json
 
-if [[ "$(jq -r 'map_values(tostring)|.success' $CPID_CACHE/login.json)" = "true" ]]
-then
-jq -r '.access_token' $CPID_CACHE/login.json > $CONFIG/token
-echo -e "\nAuthorized successfully\n"
-else
+        if [[ "$(jq -r 'map_values(tostring)|.success' $CSCD_CPID_CACHE/login.json)" = "true" ]]
+        then
+            jq -r '.access_token' $CSCD_CPID_CACHE/login.json > $CSCD_CONFIG/token
+            echo -e "\nAuthorized successfully\n"
+        else
+            if [[ -f $CSCD_CPID_CACHE/login.json ]]
+            then
+                echo -e "\nError: $(jq -r '.error' $CSCD_CPID_CACHE/login.json)\n"
+                exit 1
+            else
+                echo -e "\nError: failed to access https://capi-v2.sankakucomplex.com\n"
+                exit 1
+            fi
+        fi
+    fi
 
-if [[ -f $CPID_CACHE/login.json ]]
-then
-echo -e "\nError: $(jq -r '.error' $CPID_CACHE/login.json)\n"
-exit 1
-else
-echo -e "\nError: failed to access https://capi-v2.sankakucomplex.com\n"
-exit 1
-fi
+    if [[ "$CSCD_HELP" ]]
+    then
+        echo -e "Usage: cscd [-a] [-d <path>] [-h] [-v]\n\n-a, --authorize\n\tGet authorization token with login and password\n\n-d <path>, --download-dir <path>\n\tStart downloading to the selected download dir\n\n-h, --help\n\tShow help information\n\n-v, --version\n\tShow CSCD version"
+    fi
 
-fi
-fi
+    if [[ "$CSCD_VER" ]]
+    then
+        echo "$CSCD_VERSION"
+    fi
 
-if [[ "$CSCD_HELP" ]]
-then
-echo -e "Usage: cscd [-a] [-d <path>] [-t] [-h] [-v]\n\n-a, --authorize\n\tGet authorization token with login and password\n\n-d <path>, --download-dir <path>\n\tSet path where to download\n\n-h, --help\n\tShow help information\n\n-v, --version\n\tShow CSCD version"
-fi
+    if [[ "$CSCD_RUN" ]] && [[ -f $CSCD_CONFIG/token ]] && [[ -d $CSCD_DOWNLOAD_DIR ]]
+    then
 
-if [[ "$CSCD_VER" ]]
-then
-echo "$VERSION"
-fi
+        while [[ "$CSCD_TAGS" = "" ]]
+        do
+            read -e -p "Enter tags: " CSCD_TAGS
+        done
 
-if [[ "$CSCD_RUN" ]] && [[ -f $CONFIG/token ]] && [[ -d $DOWNLOAD_DIR ]]
-then
+        while [[ "$CSCD_NUMBER" = "" ]]
+        do
+            read -e -p "Enter number of posts: " CSCD_NUMBER
 
-while [[ "$TAGS" = "" ]]
-do
-read -e -p "Enter tags: " TAGS
-TAGS=$(echo $TAGS | sed "s|+|%2B|g" | sed "s| |+|g")
-done
+            if [[ "$CSCD_NUMBER" = "" ]]
+            then
+                CSCD_NUMBER="-1"
+            fi
+        done
 
-while [[ "$NUMBER" = "" ]]
-do
-read -e -p "Enter number of posts: " NUMBER
-COUNT=0
-PAGE=1
+        CSCD_PAGE=1
+        CSCD_COUNT=0
+        CSCD_ERRORS=0
 
-if [[ "$NUMBER" = "" ]]
-then
-NUMBER="-1"
-fi
-done
+        echo -n -e "\n\rDownloaded posts: $CSCD_COUNT\t\tErrors: $CSCD_ERRORS"
+        until [[ $CSCD_COUNT = $CSCD_NUMBER ]]
+        do
+            curl -s -A "CSCD" -G -H "Authorization: Bearer $(cat $CSCD_CONFIG/token)" -o $CSCD_CPID_CACHE/posts.json --data-urlencode "page=$CSCD_PAGE" --data-urlencode "tags=$CSCD_TAGS" "https://capi-v2.sankakucomplex.com/posts"
 
-echo -n -e "\n\rDownloaded posts: 0"
-until [[ $COUNT = $NUMBER ]]
-do
+            if [[ -f $CSCD_CPID_CACHE/posts.json ]]
+            then
+                if jq -r '.success' $CSCD_CPID_CACHE/posts.json &> /dev/null
+                then
+                    echo -e "\nError: $(jq -r '.code' $CSCD_CPID_CACHE/posts.json)\n"
+                    exit 1
+                fi
+            else
+                echo -e "\nError: failed to access https://capi-v2.sankakucomplex.com\n"
+                exit 1
+            fi
 
-curl -s -A "Chrome" -X GET -H "Authorization: Bearer $(cat $CONFIG/token)" -o $CPID_CACHE/posts.json "https://capi-v2.sankakucomplex.com/posts?page=$PAGE\&tags=$TAGS"
+            if [[ "$(cat $CSCD_CPID_CACHE/posts.json)" = "[]" ]]
+            then
+                break
+            fi
 
-if [[ -f $CPID_CACHE/posts.json ]]
-then
-if jq -r '.success' $CPID_CACHE/posts.json &> /dev/null
-then
-echo -e "\nError: $(jq -r '.code' $CPID_CACHE/posts.json)\n"
-exit 1
-fi
-else
-echo -e "\nError: failed to access https://capi-v2.sankakucomplex.com\n"
-exit 1
-fi
+            jq -r '.[].file_url' $CSCD_CPID_CACHE/posts.json > $CSCD_CPID_CACHE/urls.json
 
-if [[ "$(cat $CPID_CACHE/posts.json)" = "[]" ]]
-then
-break
-fi
+            for CSCD_URLS in $(cat $CSCD_CPID_CACHE/urls.json)
+            do
 
-jq -r '.[]|map_values(tostring)|"{\"id\":\"\(.id)\",\"rating\":\"\(.rating)\",\"sample_url\":\"\(.sample_url)\",\"preview_url\":\"\(.preview_url)\",\"file_url\":\"\(.file_url)\",\"file_size\":\"\(.file_size)\",\"file_type\":\"\(.file_type)\",\"width\":\"\(.width)\",\"height\":\"\(.height)\"}"' $CPID_CACHE/posts.json | sed "s|:\"s\"|:\"Safe\"|g" | sed "s|:\"q\"|:\"Questionable\"|g" | sed "s|:\"e\"|:\"Explicit\"|g" | sed "s|type\":\"image\/|type\":\"|g" | sed "s|type\":\"video\/|type\":\"|g" > $CPID_CACHE/info.json
+                if [[ $CSCD_COUNT = $CSCD_NUMBER ]]
+                then
+                    break
+                fi
 
-for info in $(cat $CPID_CACHE/info.json)
-do
+                if ! [[ -d $CSCD_DOWNLOAD_DIR ]]
+                then
+                    echo -e "\nDownload dir does not exist\n"
+                    exit 1
+                fi
 
-if [[ $COUNT = $NUMBER ]]
-then
-break
-fi
+                if ! [[ -f $CSCD_DOWNLOAD_DIR/$(echo $CSCD_URLS | cut -d'?' -f1 | cut -d'/' -f7) ]]
+                then
+                    curl -s -A "CSCD" "$CSCD_URLS" -o "$CSCD_DOWNLOAD_DIR/$(echo $CSCD_URLS | cut -d'?' -f1 | cut -d'/' -f7)"
 
-if ! [[ -f $DOWNLOAD_DIR/$(echo $info | jq -r '.file_url' | cut -d'?' -f1 | cut -d'/' -f7) ]]
-then
-curl -s -A "Chrome" "$(echo $info | jq -r '.file_url')" -o $DOWNLOAD_DIR/$(echo $info | jq -r '.file_url' | cut -d'?' -f1 | cut -d'/' -f7)
+                    if ! [[ -f $CSCD_DOWNLOAD_DIR/$(echo $CSCD_URLS | cut -d'?' -f1 | cut -d'/' -f7) ]]
+                    then
+                        CSCD_ERRORS=$((CSCD_ERRORS+1))
+                    else
+                        CSCD_COUNT=$((CSCD_COUNT+1))
+                    fi
 
-if ! [[ -f $DOWNLOAD_DIR/$(echo $info | jq -r '.file_url' | cut -d'?' -f1 | cut -d'/' -f7) ]]
-then
-NSKIP=$((NSKIP+1))
-COUNT=$((COUNT-1))
-fi
+                    echo -n -e "\rDownloaded posts: $CSCD_COUNT\t\tErrors: $CSCD_ERRORS"
+                fi
 
-COUNT=$((COUNT+1))
+            done
 
-echo -n -e "\rDownloaded posts: $COUNT"
-fi
+            CSCD_PAGE=$((CSCD_PAGE+1))
+        done
 
-done
+        echo -e "\n"
 
-PAGE=$((PAGE+1))
-done
-
-if [[ "$NSKIP" ]]
-then
-echo -e "\nSkipped due to connectivity: $NSKIP\n"
-elif [[ "$COUNT" ]]
-then
-echo -e "\n"
-fi
-
-elif ! [[ -f $CONFIG/token ]] && [[ "$CSCD_RUN" ]]
-then
-echo -e "You are not authorized"
-exit 1
-elif ! [[ -d $DOWNLOAD_DIR ]] && [[ "$CSCD_RUN" ]]
-then
-echo -e "Download dir does not exist"
-exit 1
-fi
+    elif ! [[ -f $CSCD_CONFIG/token ]] && [[ "$CSCD_RUN" ]]
+    then
+        echo -e "You are not authorized"
+        exit 1
+    fi
 
 else
-echo "Missing dependencies, make sure you have all of them: curl, jq, sed"
-exit 1
+    echo "Missing dependencies, make sure you have all of them: curl, jq, sed"
+    exit 1
 fi
