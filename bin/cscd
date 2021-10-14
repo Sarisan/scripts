@@ -9,7 +9,7 @@
 
 if command -v curl &> /dev/null && command -v jq &> /dev/null && command -v sed &> /dev/null
 then
-    CSCD_VERSION="CSCD v2.1"
+    CSCD_VERSION="CSCD v2.2"
     CSCD_CONFIG=$HOME/.config/cscd
     CSCD_CACHE=$HOME/.cache/cscd
     CSCD_CPID_CACHE=$CSCD_CACHE/$$
@@ -109,7 +109,7 @@ then
         CSCD_COUNT=0
         CSCD_ERRORS=0
 
-        echo -n -e "\n\rDownloaded artworks: $CSCD_COUNT\t\tErrors: $CSCD_ERRORS"
+        echo -n -e "\n\rDownloaded artworks: $CSCD_COUNT  \t\tErrors: $CSCD_ERRORS"
         until [[ $CSCD_COUNT = $CSCD_NUMBER ]]
         do
             curl -s -A "CSCD" -G -H "Authorization: Bearer $(cat $CSCD_CONFIG/token)" -o $CSCD_CPID_CACHE/posts.json --data-urlencode "page=$CSCD_PAGE" --data-urlencode "tags=$CSCD_TAGS" "https://capi-v2.sankakucomplex.com/posts"
@@ -163,7 +163,7 @@ then
                     else
                         CSCD_ERRORS=$((CSCD_ERRORS+1))
                     fi
-                    echo -n -e "\rDownloaded artworks: $CSCD_COUNT\t\tErrors: $CSCD_ERRORS"
+                    echo -n -e "\rDownloaded artworks: $CSCD_COUNT  \t\tErrors: $CSCD_ERRORS"
                 fi
             done
             CSCD_PAGE=$((CSCD_PAGE+1))
