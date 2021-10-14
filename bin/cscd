@@ -9,7 +9,7 @@
 
 if command -v curl &> /dev/null && command -v jq &> /dev/null && command -v sed &> /dev/null
 then
-    CSCD_VERSION="CSCD v2.2"
+    CSCD_VERSION="CSCD v2.3"
     CSCD_CONFIG=$HOME/.config/cscd
     CSCD_CACHE=$HOME/.cache/cscd
     CSCD_CPID_CACHE=$CSCD_CACHE/$$
@@ -158,10 +158,12 @@ then
                             CSCD_COUNT=$((CSCD_COUNT+1))
                         else
                             CSCD_ERRORS=$((CSCD_ERRORS+1))
+                            echo $CSCD_FILENAME >> "$CSCD_DOWNLOAD_DIR/errors.txt"
                             rm -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME"
                         fi
                     else
                         CSCD_ERRORS=$((CSCD_ERRORS+1))
+                        echo $CSCD_FILENAME >> "$CSCD_DOWNLOAD_DIR/errors.txt"
                     fi
                     echo -n -e "\rDownloaded artworks: $CSCD_COUNT  \t\tErrors: $CSCD_ERRORS"
                 fi
