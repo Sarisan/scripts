@@ -5,12 +5,11 @@
 #
 # Sankaku Channel downloader
 # Dependencies: curl, jq, sed
-# Sankaku Channel has some limits, for example you cant download more than 2000 posts with the same tags without premium account.
+# Sankaku Channel has some limits, for example you cant download more than 2000 artworks with the same tags without premium account.
 
 if command -v curl &> /dev/null && command -v jq &> /dev/null && command -v sed &> /dev/null
 then
-
-    CSCD_VERSION="CSCD v2.0"
+    CSCD_VERSION="CSCD v2.1"
     CSCD_CONFIG=$HOME/.config/cscd
     CSCD_CACHE=$HOME/.cache/cscd
     CSCD_CPID_CACHE=$CSCD_CACHE/$$
@@ -25,17 +24,19 @@ then
         do
             case "$1" in
                 -a|--authorize) CSCD_AUTH=0;;
-                -d|--download-dir) CSCD_RUN=0; if [[ -d $2 ]]; then CSCD_DOWNLOAD_DIR=$2; else CSCD_DDE=0; CSCD_STOP=0; fi; shift;;
+                -d|--download-dir) CSCD_RUN=0; if [[ -d "$2" ]]; then CSCD_DOWNLOAD_DIR="$2"; else CSCD_DDE=0; CSCD_STOP=0; fi; shift;;
                 -h|--help) CSCD_HELP=0;;
                 -v|--version) CSCD_VER=0;;
                 *) echo "Unknown option '$1'"; CSCD_STOP=0;;
             esac
             shift
         done
+
         if [[ "$CSCD_DDE" ]]
         then
             echo "You must specify the path to an exisiting directory"
         fi
+
         if [[ "$CSCD_STOP" ]]
         then
             unset CSCD_AUTH CSCD_RUN CSCD_HELP CSCD_VER
@@ -49,11 +50,11 @@ then
 
     if [[ "$CSCD_AUTH" ]]
     then
-
         while [[ "$CSANKAKU_LOGIN" = "" ]]
         do
             read -e -p "Login: " CSANKAKU_LOGIN
         done
+
         while [[ "$CSANKAKU_PASSWORD" = "" ]]
         do
             read -e -p "Password: " CSANKAKU_PASSWORD
@@ -61,7 +62,7 @@ then
 
         curl -s -A "CSCD" -X POST -H "Content-Type: application/json" -d "{\"login\":\"$CSANKAKU_LOGIN\",\"password\":\"$CSANKAKU_PASSWORD\"}" "https://capi-v2.sankakucomplex.com/auth/token" -o $CSCD_CPID_CACHE/login.json
 
-        if [[ "$(jq -r 'map_values(tostring)|.success' $CSCD_CPID_CACHE/login.json)" = "true" ]]
+        if [[ $(jq -r 'map_values(tostring)|.success' $CSCD_CPID_CACHE/login.json) = true ]]
         then
             jq -r '.access_token' $CSCD_CPID_CACHE/login.json > $CSCD_CONFIG/token
             echo -e "\nAuthorized successfully\n"
@@ -87,9 +88,8 @@ then
         echo "$CSCD_VERSION"
     fi
 
-    if [[ "$CSCD_RUN" ]] && [[ -f $CSCD_CONFIG/token ]] && [[ -d $CSCD_DOWNLOAD_DIR ]]
+    if [[ "$CSCD_RUN" ]] && [[ -f $CSCD_CONFIG/token ]] && [[ -d "$CSCD_DOWNLOAD_DIR" ]]
     then
-
         while [[ "$CSCD_TAGS" = "" ]]
         do
             read -e -p "Enter tags: " CSCD_TAGS
@@ -97,11 +97,11 @@ then
 
         while [[ "$CSCD_NUMBER" = "" ]]
         do
-            read -e -p "Enter number of posts: " CSCD_NUMBER
+            read -e -p "Enter number of artworks: " CSCD_NUMBER
 
-            if [[ "$CSCD_NUMBER" = "" ]]
+            if [[ $CSCD_NUMBER = "" ]]
             then
-                CSCD_NUMBER="-1"
+                CSCD_NUMBER=-1
             fi
         done
 
@@ -109,7 +109,7 @@ then
         CSCD_COUNT=0
         CSCD_ERRORS=0
 
-        echo -n -e "\n\rDownloaded posts: $CSCD_COUNT\t\tErrors: $CSCD_ERRORS"
+        echo -n -e "\n\rDownloaded artworks: $CSCD_COUNT\t\tErrors: $CSCD_ERRORS"
         until [[ $CSCD_COUNT = $CSCD_NUMBER ]]
         do
             curl -s -A "CSCD" -G -H "Authorization: Bearer $(cat $CSCD_CONFIG/token)" -o $CSCD_CPID_CACHE/posts.json --data-urlencode "page=$CSCD_PAGE" --data-urlencode "tags=$CSCD_TAGS" "https://capi-v2.sankakucomplex.com/posts"
@@ -126,7 +126,7 @@ then
                 exit 1
             fi
 
-            if [[ "$(cat $CSCD_CPID_CACHE/posts.json)" = "[]" ]]
+            if [[ $(cat $CSCD_CPID_CACHE/posts.json) = "[]" ]]
             then
                 break
             fi
@@ -135,45 +135,45 @@ then
 
             for CSCD_URLS in $(cat $CSCD_CPID_CACHE/urls.json)
             do
+                CSCD_FILENAME="$(echo $CSCD_URLS | cut -d '?' -f 1 | cut -d '/' -f 7)"
 
                 if [[ $CSCD_COUNT = $CSCD_NUMBER ]]
                 then
                     break
                 fi
 
-                if ! [[ -d $CSCD_DOWNLOAD_DIR ]]
+                if ! [[ -d "$CSCD_DOWNLOAD_DIR" ]]
                 then
                     echo -e "\nDownload dir does not exist\n"
                     exit 1
                 fi
 
-                if ! [[ -f $CSCD_DOWNLOAD_DIR/$(echo $CSCD_URLS | cut -d'?' -f1 | cut -d'/' -f7) ]]
+                if ! [[ -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" ]]
                 then
-                    curl -s -A "CSCD" "$CSCD_URLS" -o "$CSCD_DOWNLOAD_DIR/$(echo $CSCD_URLS | cut -d'?' -f1 | cut -d'/' -f7)"
-
-                    if ! [[ -f $CSCD_DOWNLOAD_DIR/$(echo $CSCD_URLS | cut -d'?' -f1 | cut -d'/' -f7) ]]
+                    curl -s -A "CSCD" --connect-timeout 86400 --max-time 86400 "$CSCD_URLS" -o "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME"
+                    if [[ -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" ]]
                     then
-                        CSCD_ERRORS=$((CSCD_ERRORS+1))
+                        if [[ $(md5sum "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" | cut -d ' ' -f 1) = $(echo $CSCD_FILENAME | cut -d '.' -f 1) ]]
+                        then
+                            CSCD_COUNT=$((CSCD_COUNT+1))
+                        else
+                            CSCD_ERRORS=$((CSCD_ERRORS+1))
+                            rm -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME"
+                        fi
                     else
-                        CSCD_COUNT=$((CSCD_COUNT+1))
+                        CSCD_ERRORS=$((CSCD_ERRORS+1))
                     fi
-
-                    echo -n -e "\rDownloaded posts: $CSCD_COUNT\t\tErrors: $CSCD_ERRORS"
+                    echo -n -e "\rDownloaded artworks: $CSCD_COUNT\t\tErrors: $CSCD_ERRORS"
                 fi
-
             done
-
             CSCD_PAGE=$((CSCD_PAGE+1))
         done
-
         echo -e "\n"
-
     elif ! [[ -f $CSCD_CONFIG/token ]] && [[ "$CSCD_RUN" ]]
     then
         echo -e "You are not authorized"
         exit 1
     fi
-
 else
     echo "Missing dependencies, make sure you have all of them: curl, jq, sed"
     exit 1
