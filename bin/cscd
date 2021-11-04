@@ -9,7 +9,7 @@
 
 if command -v curl &> /dev/null && command -v jq &> /dev/null && command -v sed &> /dev/null
 then
-    CSCD_VERSION="CSCD v2.3"
+    CSCD_VERSION="CSCD v2.4"
     CSCD_CONFIG=$HOME/.config/cscd
     CSCD_CACHE=$HOME/.cache/cscd
     CSCD_CPID_CACHE=$CSCD_CACHE/$$
@@ -17,17 +17,42 @@ then
     mkdir -p $CSCD_CONFIG
     mkdir -p $CSCD_CPID_CACHE
 
-    unset CSCD_AUTH CSCD_RUN CSCD_DDE CSCD_HELP CSCD_VER CSCD_STOP
+    unset CSCD_AUTH CSCD_RUN CSCD_DDE CSCD_HELP CSCD_VER CSCD_SKIP_MD5 CSCD_KEEP_MD5 CSCD_STOP
     if [[ "$1" ]]
     then
         while [[ "$1" ]]
         do
             case "$1" in
-                -a|--authorize) CSCD_AUTH=0;;
-                -d|--download-dir) CSCD_RUN=0; if [[ -d "$2" ]]; then CSCD_DOWNLOAD_DIR="$2"; else CSCD_DDE=0; CSCD_STOP=0; fi; shift;;
-                -h|--help) CSCD_HELP=0;;
-                -v|--version) CSCD_VER=0;;
-                *) echo "Unknown option '$1'"; CSCD_STOP=0;;
+                -a|--authorize)
+                    CSCD_AUTH=0
+                    ;;
+                -d|--download)
+                    CSCD_RUN=0
+                    if [[ -d "$2" ]]
+                    then
+                        CSCD_DOWNLOAD_DIR="$2"
+                    else 
+                        CSCD_DDE=0
+                        CSCD_STOP=0
+                    fi
+                    shift
+                    ;;
+                -h|--help)
+                    CSCD_HELP=0
+                    ;;
+                -v|--version)
+                    CSCD_VER=0
+                    ;;
+                -s|--skip)
+                    CSCD_SKIP_MD5=0
+                    ;;
+                -k|--keep)
+                    CSCD_KEEP_MD5=0
+                    ;;
+                *)
+                    echo "Unknown option '$1'"
+                    CSCD_STOP=0
+                    ;;
             esac
             shift
         done
@@ -39,7 +64,6 @@ then
 
         if [[ "$CSCD_STOP" ]]
         then
-            unset CSCD_AUTH CSCD_RUN CSCD_HELP CSCD_VER
             echo "Try 'cscd --help' for more information"
             exit 1
         fi
@@ -80,7 +104,7 @@ then
 
     if [[ "$CSCD_HELP" ]]
     then
-        echo -e "Usage: cscd [-a] [-d <path>] [-h] [-v]\n\n-a, --authorize\n\tGet authorization token with login and password\n\n-d <path>, --download-dir <path>\n\tStart downloading to the selected download dir\n\n-h, --help\n\tShow help information\n\n-v, --version\n\tShow CSCD version"
+        echo -e "Usage: cscd [-a] [-d <path>] [-h] [-v]\n\n-a, --authorize\n\tGet authorization token with login and password\n\n-d <path>, --download-dir <path>\n\tStart downloading to the selected download dir\n\n-h, --help\n\tShow help information\n\n-v, --version\n\tShow CSCD version\n\n-s, --skip\n\tSkip md5 checksums\n\n-k, --keep\n\tKeep files failed md5 checksums"
     fi
 
     if [[ "$CSCD_VER" ]]
@@ -153,17 +177,25 @@ then
                     curl -s -A "CSCD" --connect-timeout 86400 --max-time 86400 "$CSCD_URLS" -o "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME"
                     if [[ -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" ]]
                     then
-                        if [[ $(md5sum "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" | cut -d ' ' -f 1) = $(echo $CSCD_FILENAME | cut -d '.' -f 1) ]]
+                        if [[ "$CSCD_SKIP_MD5" ]]
                         then
                             CSCD_COUNT=$((CSCD_COUNT+1))
                         else
-                            CSCD_ERRORS=$((CSCD_ERRORS+1))
-                            echo $CSCD_FILENAME >> "$CSCD_DOWNLOAD_DIR/errors.txt"
-                            rm -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME"
+                            if [[ $(md5sum "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" | cut -d ' ' -f 1) = $(echo $CSCD_FILENAME | cut -d '.' -f 1) ]]
+                            then
+                                CSCD_COUNT=$((CSCD_COUNT+1))
+                            else
+                                CSCD_ERRORS=$((CSCD_ERRORS+1))
+                                echo $CSCD_FILENAME >> "$CSCD_DOWNLOAD_DIR/md5_errors.txt"
+                                if ! [[ "$CSCD_KEEP_MD5" ]]
+                                then
+                                    rm -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME"
+                                fi
+                            fi
                         fi
                     else
                         CSCD_ERRORS=$((CSCD_ERRORS+1))
-                        echo $CSCD_FILENAME >> "$CSCD_DOWNLOAD_DIR/errors.txt"
+                        echo $CSCD_FILENAME >> "$CSCD_DOWNLOAD_DIR/connection_errors.txt"
                     fi
                     echo -n -e "\rDownloaded artworks: $CSCD_COUNT  \t\tErrors: $CSCD_ERRORS"
                 fi
