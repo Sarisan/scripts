@@ -9,7 +9,7 @@
 
 if command -v curl &> /dev/null && command -v jq &> /dev/null && command -v sed &> /dev/null
 then
-    CSCD_VERSION="CSCD v2.5"
+    CSCD_VERSION="2.6"
     CSCD_CONFIG=$HOME/.config/cscd
     CSCD_CACHE=$HOME/.cache/cscd
     CSCD_CPID_CACHE=$CSCD_CACHE/$$
@@ -51,9 +51,6 @@ then
                 -h|--help)
                     CSCD_HELP=0
                     ;;
-                -v|--version)
-                    CSCD_VER=0
-                    ;;
                 -s|--skip)
                     CSCD_SKIP_MD5=0
                     ;;
@@ -75,11 +72,11 @@ then
 
         if [[ "$CSCD_STOP" ]]
         then
-            echo "Try 'cscd --help' for more information"
+            echo "Try '$0 --help' for more information"
             exit 1
         fi
     else
-        echo "Try 'cscd --help' for more information"
+        echo "Try '$0 --help' for more information"
         exit 1
     fi
 
@@ -115,12 +112,7 @@ then
 
     if [[ "$CSCD_HELP" ]]
     then
-        echo -e "Usage: cscd [-a] [-d <path>] [-h] [-v]\n\n-a, --authorize\n\tGet authorization token with login and password\n\n-d <path>, --download-dir <path>\n\tStart downloading to the selected download dir\n\n-h, --help\n\tShow help information\n\n-v, --version\n\tShow CSCD version\n\n-s, --skip\n\tSkip md5 checksums\n\n-k, --keep\n\tKeep files failed md5 checksums"
-    fi
-
-    if [[ "$CSCD_VER" ]]
-    then
-        echo "$CSCD_VERSION"
+        echo -e "CSCD $CSCD_VERSION\nUsage: $0 [options]\n  -a, --authorize\tGet authorization token with login and password\n  -p, --posts <path>\tStart downloading posts to the selected download directory\n  -b, --books <path>\tStart downloading books to the selected download directory\n  -h, --help\t\tShow help information\n  -s, --skip\t\tSkip md5 checksums\n  -k, --keep\t\tKeep files failed md5 checksums"
     fi
 
     if [[ "$CSCD_POSTS" ]] && [[ -f $CSCD_CONFIG/token ]] && [[ -d "$CSCD_DOWNLOAD_DIR" ]]
