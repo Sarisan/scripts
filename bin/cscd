@@ -9,7 +9,7 @@
 
 if command -v curl &> /dev/null && command -v jq &> /dev/null && command -v sed &> /dev/null && command -v wget &> /dev/null
 then
-    CSCD_VERSION="2.9"
+    CSCD_VERSION="2.10"
     CSCD_CONFIG=$HOME/.config/cscd
     CSCD_CACHE=$HOME/.cache/cscd
     CSCD_CPID_CACHE=$CSCD_CACHE/$$
@@ -20,7 +20,7 @@ then
     unset CSCD_OPTIONS CSCD_AUTH CSCD_POSTS CSCD_HELP CSCD_SKIP_MD5 CSCD_KEEP_MD5
     if [[ "$1" ]]
     then
-        CSCD_OPTIONS=$(getopt --longoptions authorize,posts:,books:,help,skip,keep,tags:,number: --name $0 --options ap:b:hskt:n: -- $@)
+        CSCD_OPTIONS=$(getopt --longoptions authorize,posts:,books:,help,skip,keep,tags:,number: --name "$0" --options ap:b:hskt:n: -- "$@")
         eval set -- "$CSCD_OPTIONS"
 
         while [[ "$1" ]]
