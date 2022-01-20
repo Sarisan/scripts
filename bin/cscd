@@ -9,7 +9,7 @@
 
 if command -v curl &> /dev/null && command -v jq &> /dev/null && command -v sed &> /dev/null && command -v wget &> /dev/null
 then
-    CSCD_VERSION="2.11"
+    CSCD_VERSION="2.12"
     CSCD_CONFIG=$HOME/.config/cscd
     CSCD_CACHE=$HOME/.cache/cscd
     CSCD_CPID_CACHE=$CSCD_CACHE/$$
@@ -20,7 +20,7 @@ then
     unset CSCD_OPTIONS CSCD_AUTH CSCD_POSTS CSCD_HELP CSCD_SKIP_MD5 CSCD_KEEP_MD5 CSCD_REPAIR
     if [[ "$1" ]]
     then
-        CSCD_OPTIONS=$(getopt --longoptions authorize,posts:,books:,help,skip,keep,tags:,number:,repair --name "$0" --options ap:b:hskt:n:r -- "$@")
+        CSCD_OPTIONS=$(getopt --longoptions authorize,login:,password:,posts:,books:,help,skip,keep,tags:,number:,repair --name "$0" --options aL:P:p:b:hskt:n:r -- "$@")
         eval set -- "$CSCD_OPTIONS"
 
         while [[ "$1" ]]
@@ -28,6 +28,16 @@ then
             case "$1" in
                 -a|--authorize)
                     CSCD_AUTH=0
+                    ;;
+                -L|--login)
+                    CSCD_AUTH=0
+                    CSANKAKU_LOGIN="$2"
+                    shift
+                    ;;
+                -P|--password)
+                    CSCD_AUTH=0
+                    CSANKAKU_PASSWORD="$2"
+                    shift
                     ;;
                 -p|--posts)
                     CSCD_POSTS=0
@@ -78,6 +88,8 @@ then
     then
         echo -e "CSCD $CSCD_VERSION\nUsage: $0 [options]"
         echo -e "  -a, --authorize\tGet authorization token with login and password"
+        echo -e "  -L, --login <arg>\tYour Sankaku Channel login"
+        echo -e "  -P, --password <arg>\tYour Sankaku Channel password"
         echo -e "  -p, --posts <path>\tStart downloading posts to the selected download directory"
         echo -e "  -b, --books <path>\tStart downloading books to the selected download directory"
         echo -e "  -h, --help\t\tShow help information"
