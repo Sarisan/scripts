@@ -9,7 +9,7 @@
 
 if command -v curl &> /dev/null && command -v jq &> /dev/null && command -v sed &> /dev/null && command -v wget &> /dev/null
 then
-    CSCD_VERSION="2.10"
+    CSCD_VERSION="2.11"
     CSCD_CONFIG=$HOME/.config/cscd
     CSCD_CACHE=$HOME/.cache/cscd
     CSCD_CPID_CACHE=$CSCD_CACHE/$$
@@ -17,10 +17,10 @@ then
     mkdir -p $CSCD_CONFIG
     mkdir -p $CSCD_CPID_CACHE
 
-    unset CSCD_OPTIONS CSCD_AUTH CSCD_POSTS CSCD_HELP CSCD_SKIP_MD5 CSCD_KEEP_MD5
+    unset CSCD_OPTIONS CSCD_AUTH CSCD_POSTS CSCD_HELP CSCD_SKIP_MD5 CSCD_KEEP_MD5 CSCD_REPAIR
     if [[ "$1" ]]
     then
-        CSCD_OPTIONS=$(getopt --longoptions authorize,posts:,books:,help,skip,keep,tags:,number: --name "$0" --options ap:b:hskt:n: -- "$@")
+        CSCD_OPTIONS=$(getopt --longoptions authorize,posts:,books:,help,skip,keep,tags:,number:,repair --name "$0" --options ap:b:hskt:n:r -- "$@")
         eval set -- "$CSCD_OPTIONS"
 
         while [[ "$1" ]]
@@ -56,6 +56,9 @@ then
                     CSCD_NUMBER=$2
                     shift
                     ;;
+                -r|--repair)
+                    CSCD_REPAIR=0
+                    ;;
                 --)
                     break
                     ;;
@@ -82,6 +85,7 @@ then
         echo -e "  -k, --keep\t\tKeep files failed md5 checksums"
         echo -e "  -t, --tags <arg>\tSearch tags"
         echo -e "  -n, --number <num>\tNumber of posts/books to download. 0 - unlimited"
+        echo -e "  -r, --repair\t\tRedownload broken files"
     fi
 
     if [[ "$CSCD_AUTH" ]]
@@ -141,7 +145,7 @@ then
         CSCD_ERRORS=0
 
         echo -n -e "\n\rDownloaded artworks: $CSCD_COUNT  \t\tErrors: $CSCD_ERRORS"
-        until [[ $CSCD_COUNT = $CSCD_NUMBER ]]
+        while true
         do
             curl -s -A "CSCD" -G -H "Authorization: Bearer $(cat $CSCD_CONFIG/token)" -o $CSCD_CPID_CACHE/posts.json --data-urlencode "page=$CSCD_PAGE" --data-urlencode "tags=$CSCD_TAGS" "https://capi-v2.sankakucomplex.com/posts"
 
@@ -179,7 +183,7 @@ then
                     exit 1
                 fi
 
-                if ! [[ -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" ]]
+                if ! [[ -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" ]] || ([[ "$CSCD_REPAIR" ]] && [[ -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" ]] && ! [[ $(md5sum "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" | cut -d ' ' -f 1) = $(echo $CSCD_FILENAME | cut -d '.' -f 1) ]])
                 then
                     wget --quiet --tries=0 --retry-connrefused --output-document="$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" --user-agent="CSCD" "$CSCD_URLS" &> /dev/null
                     if [[ -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" ]]
@@ -277,7 +281,7 @@ then
 
                 CSCD_DOWNLOAD_DIR_POOL="$CSCD_DOWNLOAD_DIR/$CSCD_POOL"
 
-                if ! [[ -d "$CSCD_DOWNLOAD_DIR/$CSCD_POOL" ]]
+                if ! [[ -d "$CSCD_DOWNLOAD_DIR/$CSCD_POOL" ]] || [[ "$CSCD_REPAIR" ]]
                 then
                     mkdir -p "$CSCD_DOWNLOAD_DIR_POOL"
 
@@ -320,7 +324,7 @@ then
                                 exit 1
                             fi
 
-                            if ! [[ -f "$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" ]]
+                            if ! [[ -f "$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" ]] || ([[ "$CSCD_REPAIR" ]] && [[ -f "$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" ]] && ! [[ $(md5sum "$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" | cut -d ' ' -f 1) = $(echo $CSCD_FILENAME | cut -d '.' -f 1) ]])
                             then
                                 wget --quiet --tries=0 --retry-connrefused --output-document="$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" --user-agent="CSCD" "$CSCD_URLS" &> /dev/null
                                 if [[ -f "$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" ]]
