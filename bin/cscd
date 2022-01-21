@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# Copyright (C) 2021 Sarisan Sekoohaka
-# Copyright (C) 2021 Sakuyou Sekoohaka
+# Copyright (C) 2022 Sarisan Sekoohaka
+# Copyright (C) 2022 Sakuyou Sekoohaka
 #
 # Sankaku Channel downloader
 # Dependencies: curl, jq, sed, wget
@@ -9,7 +9,7 @@
 
 if command -v curl &> /dev/null && command -v jq &> /dev/null && command -v sed &> /dev/null && command -v wget &> /dev/null
 then
-    CSCD_VERSION="2.15"
+    CSCD_VERSION="2.16"
     CSCD_CONFIG=$HOME/.config/cscd
     CSCD_CACHE=$HOME/.cache/cscd
     CSCD_CPID_CACHE=$CSCD_CACHE/$$
@@ -184,8 +184,9 @@ then
         CSCD_PAGE=1
         CSCD_COUNT=0
         CSCD_ERRORS=0
+        CSCD_TOTAL=0
 
-        echo -n -e "\n\rDownloaded artworks: $CSCD_COUNT  \t\tErrors: $CSCD_ERRORS"
+        echo -n -e "\n\rDownloaded artworks: $CSCD_COUNT  \t\tErrors: $CSCD_ERRORS       \tTotal: $CSCD_TOTAL"
         while true
         do
             curl -s -A "CSCD" -G -H "Authorization: Bearer $(cat $CSCD_CONFIG/token)" -o $CSCD_CPID_CACHE/posts.json --data-urlencode "page=$CSCD_PAGE" --data-urlencode "tags=$CSCD_TAGS" "https://capi-v2.sankakucomplex.com/posts"
@@ -249,8 +250,9 @@ then
                         CSCD_ERRORS=$((CSCD_ERRORS+1))
                         echo $CSCD_FILENAME >> "$CSCD_DOWNLOAD_DIR/connection_errors.txt"
                     fi
-                    echo -n -e "\rDownloaded artworks: $CSCD_COUNT  \t\tErrors: $CSCD_ERRORS"
                 fi
+                CSCD_TOTAL=$((CSCD_TOTAL+1))
+                echo -n -e "\rDownloaded artworks: $CSCD_COUNT  \t\tErrors: $CSCD_ERRORS       \tTotal: $CSCD_TOTAL"
             done
             CSCD_PAGE=$((CSCD_PAGE+1))
         done
@@ -329,8 +331,9 @@ then
                     CSCD_POOL_PAGE=1
                     CSCD_POOL_COUNT=0
                     CSCD_POOL_ERRORS=0
+                    CSCD_POOL_TOTAL=0
 
-                    echo -n -e "\n\rDownloaded artworks: $CSCD_POOL_COUNT  \t\tErrors: $CSCD_POOL_ERRORS"
+                    echo -n -e "\n\rDownloaded artworks: $CSCD_POOL_COUNT  \t\tErrors: $CSCD_POOL_ERRORS       \tTotal: $CSCD_POOL_TOTAL"
                     while true
                     do
                         curl -s -A "CSCD" -G -H "Authorization: Bearer $(cat $CSCD_CONFIG/token)" -o $CSCD_CPID_CACHE/book_$CSCD_POOL.json --data-urlencode "page=$CSCD_POOL_PAGE" --data-urlencode "tags=pool:$CSCD_POOL" "https://capi-v2.sankakucomplex.com/posts"
@@ -390,8 +393,9 @@ then
                                     CSCD_POOL_ERRORS=$((CSCD_POOL_ERRORS+1))
                                     echo $CSCD_FILENAME >> "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt"
                                 fi
-                                echo -n -e "\rDownloaded artworks: $CSCD_POOL_COUNT  \t\tErrors: $CSCD_POOL_ERRORS"
                             fi
+                            CSCD_POOL_TOTAL=$((CSCD_POOL_TOTAL+1))
+                            echo -n -e "\rDownloaded artworks: $CSCD_POOL_COUNT  \t\tErrors: $CSCD_POOL_ERRORS       \tTotal: $CSCD_POOL_TOTAL"
                         done
                         CSCD_POOL_PAGE=$((CSCD_POOL_PAGE+1))
                     done
