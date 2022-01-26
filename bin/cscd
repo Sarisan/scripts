@@ -9,7 +9,7 @@
 
 if command -v curl &> /dev/null && command -v jq &> /dev/null && command -v sed &> /dev/null && command -v wget &> /dev/null
 then
-    CSCD_VERSION="2.16"
+    CSCD_VERSION="2.17"
     CSCD_CONFIG=$HOME/.config/cscd
     CSCD_CACHE=$HOME/.cache/cscd
     CSCD_CPID_CACHE=$CSCD_CACHE/$$
@@ -109,7 +109,7 @@ then
 
     if ([[ "$CSCD_POSTS" ]] || [[ "$CSCD_BOOKS" ]]) && [[ -f $CSCD_CONFIG/time ]]
     then
-        if [[ $(($(date +%s)-$(cat $CSCD_CONFIG/time))) > 72000 ]]
+        if [[ $(($(date +%s)-$(cat $CSCD_CONFIG/time))) -ge 72000 ]]
         then
             CSCD_AUTH=0
         fi
