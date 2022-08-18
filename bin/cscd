@@ -4,34 +4,59 @@
 # Copyright (C) 2022 Sakuyou Sekoohaka
 #
 # Sankaku Channel downloader
-# Dependencies: curl, jq, sed, wget
+# Dependencies: coreutils, curl, jq, sed, util-linux, wget
 # Sankaku Channel has some limits, for example you cant download more than 2000 artworks with the same tags without premium account.
 
-if ! command -v curl &> /dev/null || ! command -v jq &> /dev/null || ! command -v sed &> /dev/null || ! command -v wget &> /dev/null
+for CSCD_DEP in curl getopt jq mkdir sed wget
+do
+    if ! [[ -x /usr/bin/$CSCD_DEP ]]
+    then
+        if [[ $CSCD_DEP == getopt ]]
+        then
+            CSCD_MISSING="$CSCD_MISSING util-linux"
+        elif [[ $CSCD_DEP == mkdir ]]
+        then
+            CSCD_MISSING="$CSCD_MISSING coreutils"
+        else
+            CSCD_MISSING="$CSCD_MISSING $CSCD_DEP"
+        fi
+    fi
+done
+
+if [[ -n $CSCD_MISSING ]]
 then
-    echo "Missing dependencies, make sure you have all of them: curl, jq, sed, wget"
+    echo "Missing dependencies:$CSCD_MISSING"
     exit 1
 fi
 
-CSCD_VERSION="2.22"
-CSCD_CONFIG=$HOME/.config/cscd
-CSCD_CACHE=$HOME/.cache/cscd
-CSCD_CPID_CACHE=$CSCD_CACHE/$$
+CSCD_VERSION="3.0-pre1"
+CSCD_CONFIG="$HOME/.config/cscd"
+CSCD_CACHE="$HOME/.cache/cscd"
+CSCD_CPID_CACHE="$CSCD_CACHE/$$"
 
-mkdir -p $CSCD_CONFIG
-mkdir -p $CSCD_CPID_CACHE
+if ! mkdir -p ${CSCD_CONFIG}
+then
+    echo "Failed to create config directory '$CSCD_CONFIG'"
+    exit 1
+fi
+
+if ! mkdir -p ${CSCD_CPID_CACHE}
+then
+    echo "Failed to create cache directory '$CSCD_CPID_CACHE'"
+    exit 1
+fi
 
 CSCD_WGET_TIMEOUT=86400
 CSCD_SLEEP_TIME=0
 
-if [[ "$1" ]]
+if [[ -n $1 ]]
 then
     CSCD_OPTIONS=$(getopt --longoptions authorize,login:,password:,posts:,books:,help,skip,keep,tags:,number:,repair,wget-timeout:,encount,sleep: --name "$0" --options aL:P:p:b:hskt:n:rw:el: -- "$@")
     eval set -- "$CSCD_OPTIONS"
 
-    while [[ "$1" ]]
+    while [[ -n $1 ]]
     do
-        case "$1" in
+        case $1 in
             -a|--authorize)
                 CSCD_AUTH=0
                 ;;
@@ -101,69 +126,69 @@ else
     exit 1
 fi
 
-if [[ "$CSCD_HELP" ]]
+if [[ -v $CSCD_HELP ]]
 then
-    echo -e "CSCD $CSCD_VERSION\nUsage: $0 [options]"
-    echo -e "  -a, --authorize\t\tGet authorization token with login and password"
-    echo -e "  -L, --login <arg>\t\tYour Sankaku Channel login"
-    echo -e "  -P, --password <arg>\t\tYour Sankaku Channel password"
-    echo -e "  -p, --posts <path>\t\tStart downloading posts to the selected download directory"
-    echo -e "  -b, --books <path>\t\tStart downloading books to the selected download directory"
-    echo -e "  -h, --help\t\t\tShow help information"
-    echo -e "  -s, --skip\t\t\tSkip md5 checksums"
-    echo -e "  -k, --keep\t\t\tKeep files failed md5 checksums"
-    echo -e "  -t, --tags <arg>\t\tSearch tags"
-    echo -e "  -n, --number <num>\t\tNumber of posts/books to download. 0 - unlimited"
-    echo -e "  -r, --repair\t\t\tRedownload broken files"
-    echo -e "  -w, --wget-timeout <secs>\tWget timeout and connect-timeout, default: 24 hours"
-    echo -e "  -e, --encount\t\t\tStop downloading altogether if it encounters at least one already downloaded artwork"
-    echo -e "  -l, --sleep <secs>\t\tTime interval between curl requests, may help with throttled and busy errors"
+    echo -e "CSCD $CSCD_VERSION\nUsage: $0 [options]\n" \
+            "  -a, --authorize\t\tGet authorization token with login and password\n" \
+            "  -L, --login <arg>\t\tYour Sankaku Channel login\n" \
+            "  -P, --password <arg>\t\tYour Sankaku Channel password\n" \
+            "  -p, --posts <path>\t\tStart downloading posts to the selected download directory\n" \
+            "  -b, --books <path>\t\tStart downloading books to the selected download directory\n" \
+            "  -h, --help\t\t\tShow help information\n" \
+            "  -s, --skip\t\t\tSkip md5 checksums\n" \
+            "  -k, --keep\t\t\tKeep files failed md5 checksums\n" \
+            "  -t, --tags <arg>\t\tSearch tags\n" \
+            "  -n, --number <num>\t\tNumber of posts/books to download. 0 - unlimited\n" \
+            "  -r, --repair\t\t\tRedownload broken files\n" \
+            "  -w, --wget-timeout <secs>\tWget timeout and connect-timeout, default: 24 hours\n" \
+            "  -e, --encount\t\tDownload new artworks only\n" \
+            "  -l, --sleep <secs>\t\tTime interval between curl requests, may help with throttled and busy errors"
 fi
 
-if ([[ "$CSCD_POSTS" ]] || [[ "$CSCD_BOOKS" ]]) && [[ -f $CSCD_CONFIG/time ]]
+if ([[ -v $CSCD_POSTS ]] || [[ -v $CSCD_BOOKS ]]) && [[ -f ${CSCD_CONFIG}/time ]]
 then
-    if [[ $(($(date +%s)-$(cat $CSCD_CONFIG/time))) -ge 72000 ]]
+    if [[ $(($(date -u +%s)-$(cat ${CSCD_CONFIG}/time))) -ge 72000 ]]
     then
         CSCD_AUTH=0
     fi
 fi
 
-if [[ "$CSCD_AUTH" ]]
+if [[ -v $CSCD_AUTH ]]
 then
 
-    if [[ "$CSANKAKU_LOGIN" = "" ]] && [[ -f $CSCD_CONFIG/login ]]
+    if [[ -z $CSANKAKU_LOGIN ]] && [[ -f ${CSCD_CONFIG}/login ]]
     then
-        CSANKAKU_LOGIN="$(cat $CSCD_CONFIG/login)"
+        CSANKAKU_LOGIN="$(cat ${CSCD_CONFIG}/login)"
     fi
 
-    while [[ "$CSANKAKU_LOGIN" = "" ]]
+    while [[ -z $CSANKAKU_LOGIN ]]
     do
         read -e -p "Login: " CSANKAKU_LOGIN
     done
 
-    if [[ "$CSANKAKU_PASSWORD" = "" ]] && [[ -f $CSCD_CONFIG/password ]]
+    if [[ -z $CSANKAKU_PASSWORD ]] && [[ -f ${CSCD_CONFIG}/password ]]
     then
-        CSANKAKU_PASSWORD="$(cat $CSCD_CONFIG/password)"
+        CSANKAKU_PASSWORD="$(cat ${CSCD_CONFIG}/password)"
     fi
 
-    while [[ "$CSANKAKU_PASSWORD" = "" ]]
+    while [[ -z $CSANKAKU_PASSWORD ]]
     do
         read -e -p "Password: " CSANKAKU_PASSWORD
     done
 
-    curl -s -A "CSCD" -X POST -H "Content-Type: application/json" -d "{\"login\":\"$CSANKAKU_LOGIN\",\"password\":\"$CSANKAKU_PASSWORD\"}" "https://capi-v2.sankakucomplex.com/auth/token" -o $CSCD_CPID_CACHE/login.json
+    curl -s -A "CSCD" -X POST -H "Content-Type: application/json" -d "{\"login\":\"$CSANKAKU_LOGIN\",\"password\":\"$CSANKAKU_PASSWORD\"}" "https://capi-v2.sankakucomplex.com/auth/token" -o ${CSCD_CPID_CACHE}/login.json
 
-    if [[ $(jq -r 'map_values(tostring)|.success' $CSCD_CPID_CACHE/login.json) = "true" ]]
+    if [[ "$(jq -r 'map_values(tostring)|.success' ${CSCD_CPID_CACHE}/login.json)" == "true" ]]
     then
-        jq -r '.access_token' $CSCD_CPID_CACHE/login.json > $CSCD_CONFIG/token
-        echo $(date +%s) > $CSCD_CONFIG/time
-        echo "$CSANKAKU_LOGIN" > $CSCD_CONFIG/login
-        echo "$CSANKAKU_PASSWORD" > $CSCD_CONFIG/password
+        jq -r '.access_token' ${CSCD_CPID_CACHE}/login.json > ${CSCD_CONFIG}/token
+        echo $(date +%s) > ${CSCD_CONFIG}/time
+        echo "$CSANKAKU_LOGIN" > ${CSCD_CONFIG}/login
+        echo "$CSANKAKU_PASSWORD" > ${CSCD_CONFIG}/password
         echo -e "\nAuthorized successfully\n"
     else
-        if [[ -f $CSCD_CPID_CACHE/login.json ]]
+        if [[ -f ${CSCD_CPID_CACHE}/login.json ]]
         then
-            echo -e "\nError: $(jq -r '.error' $CSCD_CPID_CACHE/login.json)\n"
+            echo -e "\nError: $(jq -r '.error' ${CSCD_CPID_CACHE}/login.json)\n"
             exit 1
         else
             echo -e "\nError: failed to access https://capi-v2.sankakucomplex.com\n"
@@ -172,14 +197,23 @@ then
     fi
 fi
 
-if [[ "$CSCD_POSTS" ]] && [[ -f $CSCD_CONFIG/token ]] && [[ -d "$CSCD_DOWNLOAD_DIR" ]]
+if [[ -v $CSCD_POSTS ]] && [[ -f ${CSCD_CONFIG}/token ]]
 then
-    while [[ "$CSCD_TAGS" = "" ]]
+    if ! [[ -d ${CSCD_DOWNLOAD_DIR} ]]
+    then
+        if ! mkdir -p ${CSCD_DOWNLOAD_DIR} &> /dev/null
+        then
+            echo "Failed to create directory '$CSCD_DOWNLOAD_DIR'"
+            exit 1
+        fi
+    fi
+
+    while [[ -z $CSCD_TAGS ]]
     do
         read -e -p "Enter tags: " CSCD_TAGS
     done
 
-    while [[ "$CSCD_NUMBER" = "" ]]
+    while [[ -z $CSCD_NUMBER ]]
     do
         read -e -p "Enter number of artworks: " CSCD_NUMBER
     done
@@ -190,20 +224,23 @@ then
     fi
 
     CSCD_PAGE=1
-    CSCD_COUNT=0
-    CSCD_ERRORS=0
-    CSCD_TOTAL=0
+    CSCD_SUCCESS=0
+    CSCD_FAILED=0
+    CSCD_DONE=0
 
-    echo -n -e "\n\rDownloaded artworks: $CSCD_COUNT  \t\tErrors: $CSCD_ERRORS       \tTotal: $CSCD_TOTAL"
-    until [[ "$CSCD_ABSOLUTE_BREAK" ]]
+    echo "Downloading artworks"
+    echo "--------------------"
+    echo -e -n "\rSuccess: $CSCD_SUCCESS Failed: $CSCD_FAILED Done: $CSCD_DONE"
+
+    until [[ -v $CSCD_ABSOLUTE_BREAK ]]
     do
-        curl -s -A "CSCD" -G -H "Authorization: Bearer $(cat $CSCD_CONFIG/token)" -o $CSCD_CPID_CACHE/posts.json --data-urlencode "page=$CSCD_PAGE" --data-urlencode "tags=$CSCD_TAGS" "https://capi-v2.sankakucomplex.com/posts"
+        curl -s -A "CSCD" -G -H "Authorization: Bearer $(cat ${CSCD_CONFIG}/token)" --data-urlencode "page=$CSCD_PAGE" --data-urlencode "tags=$CSCD_TAGS" "https://capi-v2.sankakucomplex.com/posts" -o ${CSCD_CPID_CACHE}/posts.json
 
-        if [[ -f $CSCD_CPID_CACHE/posts.json ]]
+        if [[ -f ${CSCD_CPID_CACHE}/posts.json ]]
         then
-            if jq -r '.success' $CSCD_CPID_CACHE/posts.json &> /dev/null
+            if jq -r '.success' ${CSCD_CPID_CACHE}/posts.json &> /dev/null
             then
-                echo -e "\nError: $(jq -r '.code' $CSCD_CPID_CACHE/posts.json)\n"
+                echo -e "\nError: $(jq -r '.code' ${CSCD_CPID_CACHE}/posts.json)\n"
                 exit 1
             fi
         else
@@ -211,87 +248,92 @@ then
             exit 1
         fi
 
-        if [[ $(cat $CSCD_CPID_CACHE/posts.json) = "[]" ]]
+        if [[ "$(cat ${CSCD_CPID_CACHE}/posts.json)" == "[]" ]]
         then
             break
         fi
 
-        jq -r '.[].file_url' $CSCD_CPID_CACHE/posts.json > $CSCD_CPID_CACHE/urls.json
+        jq -r '.[].file_url' ${CSCD_CPID_CACHE}/posts.json > ${CSCD_CPID_CACHE}/urls.json
 
-        for CSCD_URLS in $(cat $CSCD_CPID_CACHE/urls.json)
+        for CSCD_URL in $(cat ${CSCD_CPID_CACHE}/urls.json)
         do
-            if [[ $CSCD_COUNT -eq $CSCD_NUMBER ]]
+            if [[ $CSCD_SUCCESS -eq $CSCD_NUMBER ]]
             then
                 CSCD_ABSOLUTE_BREAK=0
                 break
             fi
 
-            CSCD_FILENAME="$(echo $CSCD_URLS | cut -d '?' -f 1 | cut -d '/' -f 7)"
+            CSCD_FILENAME="$(echo ${CSCD_URL} | cut -d '?' -f 1 | cut -d '/' -f 7)"
 
-            if ! [[ -d "$CSCD_DOWNLOAD_DIR" ]]
+            if ! [[ -d ${CSCD_DOWNLOAD_DIR} ]]
             then
                 echo -e "\nDownload dir does not exist\n"
                 exit 1
             fi
 
-            if [[ "$CSCD_ENCOUNT" ]] && [[ -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" ]]
+            if [[ -v $CSCD_ENCOUNT ]] && [[ -f ${CSCD_DOWNLOAD_DIR}/${CSCD_FILENAME} ]]
             then
                 CSCD_ABSOLUTE_BREAK=0
                 break
             fi
 
-            if ! [[ -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" ]] || ([[ "$CSCD_REPAIR" ]] && [[ -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" ]] && ! [[ $(md5sum "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" | cut -d ' ' -f 1) = $(echo $CSCD_FILENAME | cut -d '.' -f 1) ]])
+            if ! [[ -f ${CSCD_DOWNLOAD_DIR}/${CSCD_FILENAME} ]] || ([[ -v $CSCD_REPAIR ]] && [[ -f ${CSCD_DOWNLOAD_DIR}/${CSCD_FILENAME} ]] && ! [[ "$(md5sum ${CSCD_DOWNLOAD_DIR}/${CSCD_FILENAME} | cut -d ' ' -f 1)" == "$(echo ${CSCD_FILENAME} | cut -d '.' -f 1)" ]])
             then
-                wget --quiet --tries=0 --retry-connrefused --output-document="$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" --timeout=$CSCD_WGET_TIMEOUT --connect-timeout=$CSCD_WGET_TIMEOUT --user-agent="CSCD" "$CSCD_URLS" &> /dev/null
-                if [[ -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" ]]
+                wget --quiet --tries=0 --retry-connrefused --output-document=${CSCD_DOWNLOAD_DIR}/${CSCD_FILENAME} --timeout=$CSCD_WGET_TIMEOUT --connect-timeout=$CSCD_WGET_TIMEOUT --user-agent="CSCD" "$CSCD_URL" &> /dev/null
+                if [[ -f ${CSCD_DOWNLOAD_DIR}/${CSCD_FILENAME} ]]
                 then
-                    if [[ "$CSCD_SKIP_MD5" ]]
+                    if [[ -v $CSCD_SKIP_MD5 ]]
                     then
-                        CSCD_COUNT=$((CSCD_COUNT+1))
+                        CSCD_SUCCESS=$((CSCD_SUCCESS+1))
                     else
-                        if [[ $(md5sum "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" | cut -d ' ' -f 1) = $(echo $CSCD_FILENAME | cut -d '.' -f 1) ]]
+                        if [[ "$(md5sum ${CSCD_DOWNLOAD_DIR}/${CSCD_FILENAME} | cut -d ' ' -f 1)" == "$(echo ${CSCD_FILENAME} | cut -d '.' -f 1)" ]]
                         then
-                            CSCD_COUNT=$((CSCD_COUNT+1))
+                            CSCD_SUCCESS=$((CSCD_SUCCESS+1))
                         else
-                            CSCD_ERRORS=$((CSCD_ERRORS+1))
-                            echo $CSCD_FILENAME >> "$CSCD_DOWNLOAD_DIR/md5_errors.txt"
-                            if ! [[ "$CSCD_KEEP_MD5" ]]
+                            CSCD_FAILED=$((CSCD_FAILED+1))
+                            echo ${CSCD_FILENAME} >> ${CSCD_DOWNLOAD_DIR}/md5_errors.txt
+                            if ! [[ -v $CSCD_KEEP_MD5 ]]
                             then
-                                rm -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME"
+                                rm -f ${CSCD_DOWNLOAD_DIR}/${CSCD_FILENAME}
                             fi
                         fi
                     fi
                 else
-                    CSCD_ERRORS=$((CSCD_ERRORS+1))
-                    echo $CSCD_FILENAME >> "$CSCD_DOWNLOAD_DIR/connection_errors.txt"
+                    CSCD_FAILED=$((CSCD_FAILED+1))
+                    echo ${CSCD_FILENAME} >> ${CSCD_DOWNLOAD_DIR}/connection_errors.txt
                 fi
             fi
-            CSCD_TOTAL=$((CSCD_TOTAL+1))
-            echo -n -e "\rDownloaded artworks: $CSCD_COUNT  \t\tErrors: $CSCD_ERRORS       \tTotal: $CSCD_TOTAL"
+            CSCD_DONE=$((CSCD_DONE+1))
+            echo -e -n "\rSuccess: $CSCD_SUCCESS Failed: $CSCD_FAILED Done: $CSCD_DONE"
         done
         CSCD_PAGE=$((CSCD_PAGE+1))
 
         sleep $CSCD_SLEEP_TIME
     done
     echo -e "\n"
-elif ! [[ -f $CSCD_CONFIG/token ]] && [[ "$CSCD_POSTS" ]]
+elif ! [[ -f ${CSCD_CONFIG}/token ]] && [[ -v $CSCD_POSTS ]]
 then
     echo "You are not authorized"
     exit 1
-elif ! [[ -d "$CSCD_DOWNLOAD_DIR" ]] && [[ "$CSCD_POSTS" ]]
-then
-    echo "You must specify the path to an exisiting directory"
-    exit 1
 fi
 
-if [[ "$CSCD_BOOKS" ]] && [[ -f $CSCD_CONFIG/token ]] && [[ -d "$CSCD_DOWNLOAD_DIR" ]]
+if [[ -v $CSCD_BOOKS ]] && [[ -f ${CSCD_CONFIG}/token ]]
 then
-    while [[ "$CSCD_TAGS" = "" ]]
+    if ! [[ -d ${CSCD_DOWNLOAD_DIR} ]]
+    then
+        if ! mkdir -p ${CSCD_DOWNLOAD_DIR} &> /dev/null
+        then
+            echo "Failed to create directory '$CSCD_DOWNLOAD_DIR'"
+            exit 1
+        fi
+    fi
+
+    while [[ -z $CSCD_TAGS ]]
     do
         read -e -p "Enter tags: " CSCD_TAGS
     done
 
-    while [[ "$CSCD_NUMBER" = "" ]]
+    while [[ -z $CSCD_NUMBER ]]
     do
         read -e -p "Enter number of books: " CSCD_NUMBER
     done
@@ -302,17 +344,20 @@ then
     fi
 
     CSCD_PAGE=1
-    CSCD_COUNT=0
+    CSCD_DONE=0
 
-    until [[ $CSCD_COUNT -eq $CSCD_NUMBER ]]
+    echo "Downloading books"
+    echo "-----------------"
+
+    until [[ $CSCD_DONE -eq $CSCD_NUMBER ]]
     do
-        curl -s -A "CSCD" -G -H "Authorization: Bearer $(cat $CSCD_CONFIG/token)" -o $CSCD_CPID_CACHE/books.json --data-urlencode "page=$CSCD_PAGE" --data-urlencode "tags=$CSCD_TAGS" "https://capi-v2.sankakucomplex.com/pools"
+        curl -s -A "CSCD" -G -H "Authorization: Bearer $(cat ${CSCD_CONFIG}/token)" --data-urlencode "page=$CSCD_PAGE" --data-urlencode "tags=$CSCD_TAGS" "https://capi-v2.sankakucomplex.com/pools" -o ${CSCD_CPID_CACHE}/books.json
 
-        if [[ -f $CSCD_CPID_CACHE/books.json ]]
+        if [[ -f ${CSCD_CPID_CACHE}/books.json ]]
         then
-            if jq -r '.success' $CSCD_CPID_CACHE/books.json &> /dev/null
+            if jq -r '.success' ${CSCD_CPID_CACHE}/books.json &> /dev/null
             then
-                echo -e "\nError: $(jq -r '.code' $CSCD_CPID_CACHE/books.json)\n"
+                echo -e "\nError: $(jq -r '.code' ${CSCD_CPID_CACHE}/books.json)\n"
                 exit 1
             fi
         else
@@ -320,41 +365,45 @@ then
             exit 1
         fi
 
-        if [[ $(cat $CSCD_CPID_CACHE/books.json) = "[]" ]]
+        if [[ "$(cat ${CSCD_CPID_CACHE}/books.json)" == "[]" ]]
         then
             break
         fi
 
-        jq -r '.[].id' $CSCD_CPID_CACHE/books.json > $CSCD_CPID_CACHE/pools.json
+        jq -r '.[].id' ${CSCD_CPID_CACHE}/books.json > ${CSCD_CPID_CACHE}/pools.json
 
-        for CSCD_POOL in $(cat $CSCD_CPID_CACHE/pools.json)
+        for CSCD_POOL in $(cat ${CSCD_CPID_CACHE}/pools.json)
         do
-            if [[ $CSCD_COUNT -eq $CSCD_NUMBER ]]
+            if [[ $CSCD_DONE -eq $CSCD_NUMBER ]]
             then
                 break
             fi
 
             CSCD_DOWNLOAD_DIR_POOL="$CSCD_DOWNLOAD_DIR/$CSCD_POOL"
 
-            if ! [[ -d "$CSCD_DOWNLOAD_DIR/$CSCD_POOL" ]] || [[ "$CSCD_REPAIR" ]]
+            if ! [[ -d ${CSCD_DOWNLOAD_DIR_POOL} ]] || [[ -v $CSCD_REPAIR ]]
             then
-                mkdir -p "$CSCD_DOWNLOAD_DIR_POOL"
+                if ! mkdir -p ${CSCD_DOWNLOAD_DIR_POOL}
+                then
+                    echo "Failed to create directory '$CSCD_DOWNLOAD_DIR_POOL'"
+                    break
+                fi
 
                 CSCD_POOL_PAGE=1
-                CSCD_POOL_COUNT=0
-                CSCD_POOL_ERRORS=0
-                CSCD_POOL_TOTAL=0
+                CSCD_POOL_SUCCESS=0
+                CSCD_POOL_FAILED=0
+                CSCD_POOL_DONE=0
 
-                echo -n -e "\n\rDownloaded artworks: $CSCD_POOL_COUNT  \t\tErrors: $CSCD_POOL_ERRORS       \tTotal: $CSCD_POOL_TOTAL"
-                until [[ "$CSCD_ABSOLUTE_BREAK" ]]
+                echo -e -n "\rSuccess: $CSCD_POOL_SUCCESS Failed: $CSCD_POOL_FAILED Done: $CSCD_POOL_DONE"
+                until [[ -v $CSCD_ABSOLUTE_BREAK ]]
                 do
-                    curl -s -A "CSCD" -G -H "Authorization: Bearer $(cat $CSCD_CONFIG/token)" -o $CSCD_CPID_CACHE/book_$CSCD_POOL.json --data-urlencode "page=$CSCD_POOL_PAGE" --data-urlencode "tags=pool:$CSCD_POOL" "https://capi-v2.sankakucomplex.com/posts"
+                    curl -s -A "CSCD" -G -H "Authorization: Bearer $(cat ${CSCD_CONFIG}/token)" --data-urlencode "page=$CSCD_POOL_PAGE" --data-urlencode "tags=pool:$CSCD_POOL" "https://capi-v2.sankakucomplex.com/posts" -o ${CSCD_CPID_CACHE}/book_${CSCD_POOL}.json
 
-                    if [[ -f $CSCD_CPID_CACHE/book_$CSCD_POOL.json ]]
+                    if [[ -f ${CSCD_CPID_CACHE}/book_${CSCD_POOL}.json ]]
                     then
-                        if jq -r '.success' $CSCD_CPID_CACHE/book_$CSCD_POOL.json &> /dev/null
+                        if jq -r '.success' ${CSCD_CPID_CACHE}/book_${CSCD_POOL}.json &> /dev/null
                         then
-                            echo -e "\nError: $(jq -r '.code' $CSCD_CPID_CACHE/book_$CSCD_POOL.json)\n"
+                            echo -e "\nError: $(jq -r '.code' ${CSCD_CPID_CACHE}/book_${CSCD_POOL}.json)\n"
                             exit 1
                         fi
                     else
@@ -362,58 +411,58 @@ then
                         exit 1
                     fi
 
-                    if [[ $(cat $CSCD_CPID_CACHE/book_$CSCD_POOL.json) = "[]" ]]
+                    if [[ "$(cat ${CSCD_CPID_CACHE}/book_${CSCD_POOL}.json)" == "[]" ]]
                     then
-                        CSCD_COUNT=$((CSCD_COUNT+1))
+                        CSCD_DONE=$((CSCD_DONE+1))
                         break
                     fi
 
-                    jq -r '.[].file_url' $CSCD_CPID_CACHE/book_$CSCD_POOL.json > $CSCD_CPID_CACHE/urls_$CSCD_POOL.json
+                    jq -r '.[].file_url' ${CSCD_CPID_CACHE}/book_${CSCD_POOL}.json > ${CSCD_CPID_CACHE}/urls_${CSCD_POOL}.json
 
-                    for CSCD_URLS in $(cat $CSCD_CPID_CACHE/urls_$CSCD_POOL.json)
+                    for CSCD_URL in $(cat ${CSCD_CPID_CACHE}/urls_${CSCD_POOL}.json)
                     do
-                        CSCD_FILENAME="$(echo $CSCD_URLS | cut -d '?' -f 1 | cut -d '/' -f 7)"
+                        CSCD_FILENAME="$(echo ${CSCD_URL} | cut -d '?' -f 1 | cut -d '/' -f 7)"
 
-                        if ! [[ -d "$CSCD_DOWNLOAD_DIR_POOL" ]]
+                        if ! [[ -d ${CSCD_DOWNLOAD_DIR_POOL} ]]
                         then
                             echo -e "\nDownload dir does not exist\n"
                             exit 1
                         fi
 
-                        if [[ "$CSCD_ENCOUNT" ]] && [[ -f "$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" ]]
+                        if [[ -v $CSCD_ENCOUNT ]] && [[ -f ${CSCD_DOWNLOAD_DIR_POOL}/${CSCD_FILENAME} ]]
                         then
                             CSCD_ABSOLUTE_BREAK=0
                             break
                         fi
 
-                        if ! [[ -f "$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" ]] || ([[ "$CSCD_REPAIR" ]] && [[ -f "$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" ]] && ! [[ $(md5sum "$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" | cut -d ' ' -f 1) = $(echo $CSCD_FILENAME | cut -d '.' -f 1) ]])
+                        if ! [[ -f ${CSCD_DOWNLOAD_DIR_POOL}/${CSCD_FILENAME} ]] || ([[ -v $CSCD_REPAIR ]] && [[ -f ${CSCD_DOWNLOAD_DIR_POOL}/${CSCD_FILENAME} ]] && ! [[ "$(md5sum ${CSCD_DOWNLOAD_DIR_POOL}/${CSCD_FILENAME} | cut -d ' ' -f 1)" == "$(echo ${CSCD_FILENAME} | cut -d '.' -f 1)" ]])
                         then
-                            wget --quiet --tries=0 --retry-connrefused --output-document="$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" --timeout=$CSCD_WGET_TIMEOUT --connect-timeout=$CSCD_WGET_TIMEOUT --user-agent="CSCD" "$CSCD_URLS" &> /dev/null
-                            if [[ -f "$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" ]]
+                            wget --quiet --tries=0 --retry-connrefused --output-document=${CSCD_DOWNLOAD_DIR_POOL}/${CSCD_FILENAME} --timeout=$CSCD_WGET_TIMEOUT --connect-timeout=$CSCD_WGET_TIMEOUT --user-agent="CSCD" "$CSCD_URL" &> /dev/null
+                            if [[ -f ${CSCD_DOWNLOAD_DIR_POOL}/${CSCD_FILENAME} ]]
                             then
-                                if [[ "$CSCD_SKIP_MD5" ]]
+                                if [[ -v ${CSCD_SKIP_MD5} ]]
                                 then
-                                    CSCD_POOL_COUNT=$((CSCD_POOL_COUNT+1))
+                                    CSCD_POOL_SUCCESS=$((CSCD_POOL_SUCCESS+1))
                                 else
-                                    if [[ $(md5sum "$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" | cut -d ' ' -f 1) = $(echo $CSCD_FILENAME | cut -d '.' -f 1) ]]
+                                    if [[ "$(md5sum ${CSCD_DOWNLOAD_DIR_POOL}/${CSCD_FILENAME} | cut -d ' ' -f 1)" == "$(echo ${CSCD_FILENAME} | cut -d '.' -f 1)" ]]
                                     then
-                                        CSCD_POOL_COUNT=$((CSCD_POOL_COUNT+1))
+                                        CSCD_POOL_SUCCESS=$((CSCD_POOL_SUCCESS+1))
                                     else
-                                        CSCD_POOL_ERRORS=$((CSCD_POOL_ERRORS+1))
-                                        echo $CSCD_FILENAME >> "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt"
-                                        if ! [[ "$CSCD_KEEP_MD5" ]]
+                                        CSCD_POOL_FAILED=$((CSCD_POOL_FAILED+1))
+                                        echo ${CSCD_FILENAME} >> ${CSCD_DOWNLOAD_DIR_POOL}/md5_errors.txt
+                                        if ! [[ -v $CSCD_KEEP_MD5 ]]
                                         then
-                                            rm -f "$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME"
+                                            rm -f ${CSCD_DOWNLOAD_DIR_POOL}/${CSCD_FILENAME}
                                         fi
                                     fi
                                 fi
                             else
-                                CSCD_POOL_ERRORS=$((CSCD_POOL_ERRORS+1))
-                                echo $CSCD_FILENAME >> "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt"
+                                CSCD_POOL_FAILED=$((CSCD_POOL_FAILED+1))
+                                echo ${CSCD_FILENAME} >> ${CSCD_DOWNLOAD_DIR_POOL}/connection_errors.txt
                             fi
                         fi
-                        CSCD_POOL_TOTAL=$((CSCD_POOL_TOTAL+1))
-                        echo -n -e "\rDownloaded artworks: $CSCD_POOL_COUNT  \t\tErrors: $CSCD_POOL_ERRORS       \tTotal: $CSCD_POOL_TOTAL"
+                        CSCD_POOL_DONE=$((CSCD_POOL_DONE+1))
+                        echo -e -n "\rSuccess: $CSCD_POOL_SUCCESS Failed: $CSCD_POOL_FAILED Done: $CSCD_POOL_DONE"
                     done
                     CSCD_POOL_PAGE=$((CSCD_POOL_PAGE+1))
 
@@ -426,12 +475,8 @@ then
         sleep $CSCD_SLEEP_TIME
     done
     echo -e "\n"
-elif ! [[ -f $CSCD_CONFIG/token ]] && [[ "$CSCD_BOOKS" ]]
+elif ! [[ -f ${CSCD_CONFIG}/token ]] && [[ -v $CSCD_BOOKS ]]
 then
     echo "You are not authorized"
-    exit 1
-elif ! [[ -d "$CSCD_DOWNLOAD_DIR" ]] && [[ "$CSCD_BOOKS" ]]
-then
-    echo "You must specify the path to an exisiting directory"
     exit 1
 fi
