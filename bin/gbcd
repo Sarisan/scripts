@@ -28,7 +28,7 @@ then
     exit 1
 fi
 
-GBCD_VERSION="1.1"
+GBCD_VERSION="1.2"
 GBCD_CACHE="$HOME/.cache/gbcd"
 GBCD_CPID_CACHE="$GBCD_CACHE/$$"
 
@@ -43,7 +43,7 @@ GBCD_SLEEP_TIME=0
 
 if [[ -n $1 ]]
 then
-    GBCD_OPTIONS=$(getopt --longoptions proxy:,path:,pools:,help,skip,keep,tags:,number:,repair,wget-timeout:,encount,sleep: --name "$0" --options P:p:hskt:n:rw:el: -- "$@")
+    GBCD_OPTIONS=$(getopt --longoptions proxy:,path:,exclude:,help,skip,keep,tags:,number:,repair,wget-timeout:,encount,sleep: --name "$0" --options P:p:x:hskt:n:rw:el: -- "$@")
     eval set -- "$GBCD_OPTIONS"
 
     while [[ -n $1 ]]
@@ -56,6 +56,11 @@ then
             -p|--path)
                 GBCD_POSTS=0
                 GBCD_DOWNLOAD_DIR="$2"
+                shift
+                ;;
+            -x|--exclude)
+                GBCD_EXCLUDE=0
+                GBCD_EXCLUDE_DIR="$2"
                 shift
                 ;;
             -h|--help)
@@ -109,6 +114,7 @@ then
     echo -e "GBCD $GBCD_VERSION\nUsage: $0 [options]\n" \
             "  -P, --proxy <address>\tUse proxy server\n" \
             "  -p, --path <path>\t\tSet download path, required option\n" \
+            "  -x, --exclude <path>\t\tExclude artworks from specified dir\n" \
             "  -h, --help\t\t\tShow help information\n" \
             "  -s, --skip\t\t\tSkip md5 checksums\n" \
             "  -k, --keep\t\t\tKeep files failed md5 checksums\n" \
@@ -204,7 +210,23 @@ then
                 break
             fi
 
-            if ! [[ -f ${GBCD_DOWNLOAD_DIR}/${GBCD_FILENAME} ]] || ([[ -v $GBCD_REPAIR ]] && [[ -f ${GBCD_DOWNLOAD_DIR}/${GBCD_FILENAME} ]] && ! [[ "$(md5sum ${GBCD_DOWNLOAD_DIR}/${GBCD_FILENAME} | cut -d ' ' -f 1)" == "$(echo ${GBCD_FILENAME} | cut -d '.' -f 1)" ]])
+            GBCD_CONTINUE=1
+
+            if [[ -f ${GBCD_DOWNLOAD_DIR}/${GBCD_FILENAME} ]]
+            then
+                GBCD_CONTINUE=0
+                if [[ -v $GBCD_REPAIR ]] && ! [[ "$(md5sum ${GBCD_DOWNLOAD_DIR}/${GBCD_FILENAME} | cut -d ' ' -f 1)" == "$(echo ${GBCD_FILENAME} | cut -d '.' -f 1)" ]]
+                then
+                    GBCD_CONTINUE=1
+                fi
+            fi
+
+            if [[ -v $GBCD_EXCLUDE ]] && [[ -f ${GBCD_EXCLUDE_DIR}/${GBCD_FILENAME} ]]
+            then
+                GBCD_CONTINUE=0
+            fi
+
+            if [[ $GBCD_CONTINUE -eq 1 ]]
             then
                 if [[ -n $GBCD_PROXY ]]
                 then
