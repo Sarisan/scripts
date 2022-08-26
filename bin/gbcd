@@ -28,7 +28,7 @@ then
     exit 1
 fi
 
-GBCD_VERSION="1.0"
+GBCD_VERSION="1.1"
 GBCD_CACHE="$HOME/.cache/gbcd"
 GBCD_CPID_CACHE="$GBCD_CACHE/$$"
 
@@ -147,6 +147,9 @@ then
         fi
     fi
 
+    rm -f ${GBCD_DOWNLOAD_DIR}/md5_errors.txt
+    rm -f ${GBCD_DOWNLOAD_DIR}/connection_errors.txt
+
     echo "Downloading artworks"
     echo "--------------------"
     echo -e -n "\rSuccess: $GBCD_SUCCESS Failed: $GBCD_FAILED Done: $GBCD_DONE"
@@ -178,9 +181,6 @@ then
         fi
 
         jq -r '.post|.[].file_url' ${GBCD_CPID_CACHE}/posts.json > ${GBCD_CPID_CACHE}/urls
-
-        rm -f ${GBCD_DOWNLOAD_DIR}/md5_errors.txt
-        rm -f ${GBCD_DOWNLOAD_DIR}/connection_errors.txt
 
         for GBCD_URL in $(cat ${GBCD_CPID_CACHE}/urls)
         do
