@@ -28,7 +28,7 @@ then
     exit 1
 fi
 
-GBCD_VERSION="1.2"
+GBCD_VERSION="1.3"
 GBCD_CACHE="$HOME/.cache/gbcd"
 GBCD_CPID_CACHE="$GBCD_CACHE/$$"
 
@@ -60,7 +60,7 @@ then
                 ;;
             -x|--exclude)
                 GBCD_EXCLUDE=0
-                GBCD_EXCLUDE_DIR="$2"
+                GBCD_EXCLUDE_LOOP="$2"
                 shift
                 ;;
             -h|--help)
@@ -221,9 +221,16 @@ then
                 fi
             fi
 
-            if [[ -v $GBCD_EXCLUDE ]] && [[ -f ${GBCD_EXCLUDE_DIR}/${GBCD_FILENAME} ]]
+            if [[ -v $GBCD_EXCLUDE ]]
             then
-                GBCD_CONTINUE=0
+                for GBCD_EXCLUDE_DIR in $GBCD_EXCLUDE_LOOP
+                do
+                    if [[ -f ${GBCD_EXCLUDE_DIR}/${GBCD_FILENAME} ]]
+                    then
+                        GBCD_CONTINUE=0
+                        break
+                    fi
+                done
             fi
 
             if [[ $GBCD_CONTINUE -eq 1 ]]
