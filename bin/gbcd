@@ -28,11 +28,11 @@ then
     exit 1
 fi
 
-GBCD_VERSION="1.4"
+GBCD_VERSION="1.5"
 GBCD_CACHE="$HOME/.cache/gbcd"
 GBCD_CPID_CACHE="$GBCD_CACHE/$$"
 
-if ! mkdir -p ${GBCD_CPID_CACHE} &> /dev/null
+if ! mkdir -p "$GBCD_CPID_CACHE" &> /dev/null
 then
     echo "Failed to create cache directory '$GBCD_CPID_CACHE'"
     exit 1
@@ -54,7 +54,6 @@ then
                 shift
                 ;;
             -p|--path)
-                GBCD_POSTS=0
                 GBCD_DOWNLOAD_DIR="$2"
                 shift
                 ;;
@@ -127,14 +126,14 @@ then
             "  -w, --wget-timeout <secs>\tSet wget timeout and connect-timeout, default: 24 hours\n" \
             "  -e, --encount\t\tDownload new artworks only\n" \
             "  -l, --sleep <secs>\t\tSet time interval between curl requests\n" \
-            "  -i, --reversive \t\tRemove artworks from excluded directories"
+            "  -i, --reversive\t\tRemove artworks from excluded directories"
 fi
 
-if [[ -v $GBCD_POSTS ]]
+if [[ -n $GBCD_DOWNLOAD_DIR ]]
 then
-    if ! [[ -d ${GBCD_DOWNLOAD_DIR} ]]
+    if ! [[ -d "$GBCD_DOWNLOAD_DIR" ]]
     then
-        if ! mkdir -p ${GBCD_DOWNLOAD_DIR} &> /dev/null
+        if ! mkdir -p "$GBCD_DOWNLOAD_DIR" &> /dev/null
         then
             echo "Failed to create directory '$GBCD_DOWNLOAD_DIR'"
             exit 1
@@ -157,8 +156,8 @@ then
         fi
     fi
 
-    rm -f ${GBCD_DOWNLOAD_DIR}/md5_errors.txt
-    rm -f ${GBCD_DOWNLOAD_DIR}/connection_errors.txt
+    rm -f "$GBCD_DOWNLOAD_DIR/md5_errors.txt"
+    rm -f "$GBCD_DOWNLOAD_DIR/connection_errors.txt"
 
     echo "Downloading artworks"
     echo "--------------------"
@@ -168,16 +167,16 @@ then
     do
         if [[ -n $GBCD_PROXY ]]
         then
-            curl --data-urlencode "page=dapi" --data-urlencode "s=post" --data-urlencode "q=index" --data-urlencode "limit=$GBCD_LIMIT" --data-urlencode "pid=$GBCD_PAGE" --data-urlencode "tags=$GBCD_TAGS" --data-urlencode "json=1" -G -o ${GBCD_CPID_CACHE}/posts.json --proxy "$GBCD_PROXY" -s -A "GBCD" "https://gelbooru.com/index.php"
+            curl --data-urlencode "page=dapi" --data-urlencode "s=post" --data-urlencode "q=index" --data-urlencode "limit=$GBCD_LIMIT" --data-urlencode "pid=$GBCD_PAGE" --data-urlencode "tags=$GBCD_TAGS" --data-urlencode "json=1" -G -o "$GBCD_CPID_CACHE/posts.json" --proxy "$GBCD_PROXY" -s -A "GBCD" "https://gelbooru.com/index.php"
         else
-            curl --data-urlencode "page=dapi" --data-urlencode "s=post" --data-urlencode "q=index" --data-urlencode "limit=$GBCD_LIMIT" --data-urlencode "pid=$GBCD_PAGE" --data-urlencode "tags=$GBCD_TAGS" --data-urlencode "json=1" -G -o ${GBCD_CPID_CACHE}/posts.json -s -A "GBCD" "https://gelbooru.com/index.php"
+            curl --data-urlencode "page=dapi" --data-urlencode "s=post" --data-urlencode "q=index" --data-urlencode "limit=$GBCD_LIMIT" --data-urlencode "pid=$GBCD_PAGE" --data-urlencode "tags=$GBCD_TAGS" --data-urlencode "json=1" -G -o "$GBCD_CPID_CACHE/posts.json" -s -A "GBCD" "https://gelbooru.com/index.php"
         fi
 
-        if [[ -f ${GBCD_CPID_CACHE}/posts.json ]]
+        if [[ -f "$GBCD_CPID_CACHE/posts.json" ]]
         then
-            if [[ "$(jq 'has("@attributes")' ${GBCD_CPID_CACHE}/posts.json)" == "false" ]]
+            if [[ "$(jq 'has("@attributes")' "$GBCD_CPID_CACHE/posts.json")" == "false" ]]
             then
-                echo -e "\nError: $(cat ${GBCD_CPID_CACHE}/posts.json)\n"
+                echo -e "\nError: $(cat "$GBCD_CPID_CACHE/posts.json")\n"
                 exit 1
             fi
         else
@@ -185,14 +184,14 @@ then
             exit 1
         fi
 
-        if [[ "$(jq 'has("post")' ${GBCD_CPID_CACHE}/posts.json)" == "false" ]]
+        if [[ "$(jq 'has("post")' "$GBCD_CPID_CACHE/posts.json")" == "false" ]]
         then
             break
         fi
 
-        jq -r '.post|.[].file_url' ${GBCD_CPID_CACHE}/posts.json > ${GBCD_CPID_CACHE}/urls
+        jq -r '.post|.[].file_url' "$GBCD_CPID_CACHE/posts.json" > "$GBCD_CPID_CACHE/urls"
 
-        for GBCD_URL in $(cat ${GBCD_CPID_CACHE}/urls)
+        for GBCD_URL in $(cat "$GBCD_CPID_CACHE/urls")
         do
             if [[ $GBCD_SUCCESS -eq $GBCD_NUMBER ]]
             then
@@ -200,15 +199,15 @@ then
                 break
             fi
 
-            GBCD_FILENAME="$(echo ${GBCD_URL} | cut -d '/' -f 7)"
+            GBCD_FILENAME="$(echo $GBCD_URL | cut -d '/' -f 7)"
 
-            if ! [[ -d ${GBCD_DOWNLOAD_DIR} ]]
+            if ! [[ -d "$GBCD_DOWNLOAD_DIR" ]]
             then
                 echo -e "\nDownload dir does not exist\n"
                 exit 1
             fi
 
-            if [[ -v $GBCD_ENCOUNT ]] && [[ -f ${GBCD_DOWNLOAD_DIR}/${GBCD_FILENAME} ]]
+            if [[ -v $GBCD_ENCOUNT ]] && [[ -f "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" ]]
             then
                 GBCD_ABSOLUTE_BREAK=0
                 break
@@ -216,10 +215,10 @@ then
 
             GBCD_CONTINUE=1
 
-            if [[ -f ${GBCD_DOWNLOAD_DIR}/${GBCD_FILENAME} ]]
+            if [[ -f "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" ]]
             then
                 GBCD_CONTINUE=0
-                if [[ -v $GBCD_REPAIR ]] && ! [[ "$(md5sum ${GBCD_DOWNLOAD_DIR}/${GBCD_FILENAME} | cut -d ' ' -f 1)" == "$(echo ${GBCD_FILENAME} | cut -d '.' -f 1)" ]]
+                if [[ -v $GBCD_REPAIR ]] && ! [[ "$(md5sum "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" | cut -d ' ' -f 1)" == "$(echo $GBCD_FILENAME | cut -d '.' -f 1)" ]]
                 then
                     GBCD_CONTINUE=1
                 fi
@@ -229,11 +228,11 @@ then
             then
                 for GBCD_EXCLUDE_DIR in $GBCD_EXCLUDE_LOOP
                 do
-                    if [[ -f ${GBCD_EXCLUDE_DIR}/${GBCD_FILENAME} ]]
+                    if [[ -f "$GBCD_EXCLUDE_DIR/$GBCD_FILENAME" ]]
                     then
                         if [[ -v $GBCD_REVERSIVE ]]
                         then
-                            rm -f ${GBCD_EXCLUDE_DIR}/${GBCD_FILENAME}
+                            rm -f "$GBCD_EXCLUDE_DIR/$GBCD_FILENAME"
                         else
                             GBCD_CONTINUE=0
                             break
@@ -246,33 +245,33 @@ then
             then
                 if [[ -n $GBCD_PROXY ]]
                 then
-                    wget -e use_proxy=yes -e https_proxy="$GBCD_PROXY" --quiet --tries=0 --retry-connrefused --output-document=${GBCD_DOWNLOAD_DIR}/${GBCD_FILENAME} --timeout=$GBCD_WGET_TIMEOUT --connect-timeout=$GBCD_WGET_TIMEOUT --user-agent="GBCD" --no-check-certificate "$GBCD_URL"
+                    wget -e use_proxy=yes -e https_proxy="$GBCD_PROXY" --quiet --tries=0 --retry-connrefused --output-document="$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" --timeout=$GBCD_WGET_TIMEOUT --connect-timeout=$GBCD_WGET_TIMEOUT --user-agent="GBCD" --no-check-certificate "$GBCD_URL"
                 else
-                    wget --quiet --tries=0 --retry-connrefused --output-document=${GBCD_DOWNLOAD_DIR}/${GBCD_FILENAME} --timeout=$GBCD_WGET_TIMEOUT --connect-timeout=$GBCD_WGET_TIMEOUT --user-agent="GBCD" --no-check-certificate "$GBCD_URL"
+                    wget --quiet --tries=0 --retry-connrefused --output-document="$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" --timeout=$GBCD_WGET_TIMEOUT --connect-timeout=$GBCD_WGET_TIMEOUT --user-agent="GBCD" --no-check-certificate "$GBCD_URL"
                 fi
 
-                if [[ -f ${GBCD_DOWNLOAD_DIR}/${GBCD_FILENAME} ]]
+                if [[ -f "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" ]]
                 then
                     if [[ -v $GBCD_SKIP_MD5 ]]
                     then
                         GBCD_SUCCESS=$((GBCD_SUCCESS+1))
                     else
-                        if [[ "$(md5sum ${GBCD_DOWNLOAD_DIR}/${GBCD_FILENAME} | cut -d ' ' -f 1)" == "$(echo ${GBCD_FILENAME} | cut -d '.' -f 1)" ]]
+                        if [[ "$(md5sum "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" | cut -d ' ' -f 1)" == "$(echo $GBCD_FILENAME | cut -d '.' -f 1)" ]]
                         then
                             GBCD_SUCCESS=$((GBCD_SUCCESS+1))
                         else
                             GBCD_FAILED=$((GBCD_FAILED+1))
-                            echo ${GBCD_FILENAME} >> ${GBCD_DOWNLOAD_DIR}/md5_errors.txt
+                            echo $GBCD_FILENAME >> "$GBCD_DOWNLOAD_DIR/md5_errors.txt"
 
                             if ! [[ -v $GBCD_KEEP_MD5 ]]
                             then
-                                rm -f ${GBCD_DOWNLOAD_DIR}/${GBCD_FILENAME}
+                                rm -f "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME"
                             fi
                         fi
                     fi
                 else
                     GBCD_FAILED=$((GBCD_FAILED+1))
-                    echo ${GBCD_FILENAME} >> ${GBCD_DOWNLOAD_DIR}/connection_errors.txt
+                    echo $GBCD_FILENAME >> "$GBCD_DOWNLOAD_DIR/connection_errors.txt"
                 fi
             fi
             GBCD_DONE=$((GBCD_DONE+1))
