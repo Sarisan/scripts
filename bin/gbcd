@@ -28,7 +28,7 @@ then
     exit 1
 fi
 
-GBCD_VERSION="1.5"
+GBCD_VERSION="1.6"
 GBCD_CACHE="$HOME/.cache/gbcd"
 GBCD_CPID_CACHE="$GBCD_CACHE/$$"
 
@@ -140,13 +140,13 @@ then
         fi
     fi
 
-    GBCD_PAGE=0
     GBCD_LIMIT=100
+    GBCD_PAGE=0
     GBCD_SUCCESS=0
     GBCD_FAILED=0
     GBCD_DONE=0
 
-    if ! [[ -v $GBCD_NUMBER ]]
+    if [[ -z $GBCD_NUMBER ]]
     then
         GBCD_NUMBER=-1
     else
