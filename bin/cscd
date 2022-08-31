@@ -29,7 +29,7 @@ then
     exit 1
 fi
 
-CSCD_VERSION="3.0-pre3"
+CSCD_VERSION="3.0-pre4"
 CSCD_CONFIG="$HOME/.config/cscd"
 CSCD_CACHE="$HOME/.cache/cscd"
 CSCD_CPID_CACHE="$CSCD_CACHE/$$"
@@ -46,12 +46,13 @@ then
     exit 1
 fi
 
+CSCD_RANGE=20
 CSCD_WGET_TIMEOUT=86400
 CSCD_SLEEP_TIME=0
 
 if [[ -n $1 ]]
 then
-    CSCD_OPTIONS=$(getopt --longoptions authorize,posts:,books:,exclude:,help,skip,keep,tags:,number:,repair,wget-timeout:,encount,sleep:,reversive --name "$0" --options ap:b:x:hskt:n:rw:el:i -- "$@")
+    CSCD_OPTIONS=$(getopt --longoptions authorize,range:,posts:,books:,exclude:,help,skip,keep,tags:,number:,repair,wget-timeout:,encount,sleep:,reversive --name "$0" --options ag:p:b:x:hskt:n:rw:el:i -- "$@")
     eval set -- "$CSCD_OPTIONS"
 
     while [[ -n $1 ]]
@@ -59,6 +60,10 @@ then
         case $1 in
             -a|--authorize)
                 CSCD_AUTH=0
+                ;;
+            -g|--range)
+                CSCD_RANGE=$2
+                shift
                 ;;
             -p|--posts)
                 CSCD_POSTS=0
@@ -128,6 +133,7 @@ if [[ -v $CSCD_HELP ]]
 then
     echo -e "CSCD $CSCD_VERSION\nUsage: $0 [options]\n" \
             "  -a, --authorize\t\tGet authorization token with login and password\n" \
+            "  -g, --range <num>\t\tSet range of artworks between curl requests, max: 100, default: 20\n" \
             "  -p, --posts <path>\t\tStart downloading posts to the selected download directory\n" \
             "  -b, --books <path>\t\tStart downloading books to the selected download directory\n" \
             "  -h, --help\t\t\tShow help information\n" \
@@ -205,15 +211,20 @@ then
         fi
     fi
 
-    if ! [[ -v $CSCD_NUMBER ]]
-    then
-        CSCD_NUMBER=-1
-    fi
-
     CSCD_PAGE=1
     CSCD_SUCCESS=0
     CSCD_FAILED=0
     CSCD_DONE=0
+
+    if ! [[ -v $CSCD_NUMBER ]]
+    then
+        CSCD_NUMBER=-1
+    else
+        if [[ $CSCD_NUMBER -lt $CSCD_RANGE ]]
+        then
+            CSCD_RANGE=$CSCD_NUMBER
+        fi
+    fi
 
     rm -f "$CSCD_DOWNLOAD_DIR/md5_errors.txt"
     rm -f "$CSCD_DOWNLOAD_DIR/connection_errors.txt"
@@ -224,7 +235,7 @@ then
 
     until [[ -v $CSCD_ABSOLUTE_BREAK ]]
     do
-        curl --data-urlencode "page=$CSCD_PAGE" --data-urlencode "tags=$CSCD_TAGS" -G -H "Authorization: Bearer $(cat "$CSCD_CONFIG/token")" -o "$CSCD_CPID_CACHE/posts.json" -s -A "CSCD" "https://capi-v2.sankakucomplex.com/posts"
+        curl --data-urlencode "limit=$CSCD_RANGE" --data-urlencode "page=$CSCD_PAGE" --data-urlencode "tags=$CSCD_TAGS" -G -H "Authorization: Bearer $(cat "$CSCD_CONFIG/token")" -o "$CSCD_CPID_CACHE/posts.json" -s -A "CSCD" "https://capi-v2.sankakucomplex.com/posts"
 
         if [[ -f "$CSCD_CPID_CACHE/posts.json" ]]
         then
@@ -347,20 +358,26 @@ then
         fi
     fi
 
+    CSCD_PAGE=1
+    CSCD_POOLS_RANGE=$CSCD_RANGE
+    CSCD_DONE=0
+
     if ! [[ -v $CSCD_NUMBER ]]
     then
         CSCD_NUMBER=-1
+    else
+        if [[ $CSCD_NUMBER -lt $CSCD_POOLS_RANGE ]]
+        then
+            CSCD_POOLS_RANGE=$CSCD_NUMBER
+        fi
     fi
-
-    CSCD_PAGE=1
-    CSCD_DONE=0
 
     echo "Downloading books"
     echo "-----------------"
 
     until [[ $CSCD_DONE -eq $CSCD_NUMBER ]]
     do
-        curl --data-urlencode "page=$CSCD_PAGE" --data-urlencode "tags=$CSCD_TAGS" -G -H "Authorization: Bearer $(cat "$CSCD_CONFIG/token")" -o "$CSCD_CPID_CACHE/books.json" -s -A "CSCD" "https://capi-v2.sankakucomplex.com/pools"
+        curl --data-urlencode "limit=$CSCD_POOLS_RANGE" --data-urlencode "page=$CSCD_PAGE" --data-urlencode "tags=$CSCD_TAGS" -G -H "Authorization: Bearer $(cat "$CSCD_CONFIG/token")" -o "$CSCD_CPID_CACHE/books.json" -s -A "CSCD" "https://capi-v2.sankakucomplex.com/pools"
 
         if [[ -f "$CSCD_CPID_CACHE/books.json" ]]
         then
@@ -409,7 +426,7 @@ then
                 echo -e -n "\rSuccess: $CSCD_POOL_SUCCESS Failed: $CSCD_POOL_FAILED Done: $CSCD_POOL_DONE"
                 until [[ -v $CSCD_ABSOLUTE_BREAK ]]
                 do
-                    curl --data-urlencode "page=$CSCD_POOL_PAGE" --data-urlencode "tags=pool:$CSCD_POOL" -G -H "Authorization: Bearer $(cat "$CSCD_CONFIG/token")" -o "$CSCD_CPID_CACHE/book_$CSCD_POOL.json" -s -A "CSCD" "https://capi-v2.sankakucomplex.com/posts"
+                    curl --data-urlencode "limit=$CSCD_RANGE" --data-urlencode "page=$CSCD_POOL_PAGE" --data-urlencode "tags=pool:$CSCD_POOL" -G -H "Authorization: Bearer $(cat "$CSCD_CONFIG/token")" -o "$CSCD_CPID_CACHE/book_$CSCD_POOL.json" -s -A "CSCD" "https://capi-v2.sankakucomplex.com/posts"
 
                     if [[ -f "$CSCD_CPID_CACHE/book_$CSCD_POOL.json" ]]
                     then
