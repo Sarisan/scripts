@@ -29,7 +29,7 @@ then
     exit 1
 fi
 
-CSCD_VERSION="3.0-pre4"
+CSCD_VERSION="3.0"
 CSCD_CONFIG="$HOME/.config/cscd"
 CSCD_CACHE="$HOME/.cache/cscd"
 CSCD_CPID_CACHE="$CSCD_CACHE/$$"
@@ -194,7 +194,7 @@ then
             echo -e "\nError: $(jq -r '.error' "$CSCD_CPID_CACHE/login.json")\n"
             exit 1
         else
-            echo -e "\nError: failed to access https://capi-v2.sankakucomplex.com\n"
+            echo -e "\nError: failed to access https://capi-v2.sankakucomplex.com/\n"
             exit 1
         fi
     fi
@@ -216,7 +216,7 @@ then
     CSCD_FAILED=0
     CSCD_DONE=0
 
-    if ! [[ -v $CSCD_NUMBER ]]
+    if [[ -z $CSCD_NUMBER ]]
     then
         CSCD_NUMBER=-1
     else
@@ -362,7 +362,7 @@ then
     CSCD_POOLS_RANGE=$CSCD_RANGE
     CSCD_DONE=0
 
-    if ! [[ -v $CSCD_NUMBER ]]
+    if [[ -z $CSCD_NUMBER ]]
     then
         CSCD_NUMBER=-1
     else
@@ -387,7 +387,7 @@ then
                 exit 1
             fi
         else
-            echo -e "\nError: failed to access https://capi-v2.sankakucomplex.com\n"
+            echo -e "\nError: failed to access https://capi-v2.sankakucomplex.com/\n"
             exit 1
         fi
 
@@ -436,7 +436,7 @@ then
                             exit 1
                         fi
                     else
-                        echo -e "\nError: failed to access https://capi-v2.sankakucomplex.com\n"
+                        echo -e "\nError: failed to access https://capi-v2.sankakucomplex.com/\n"
                         exit 1
                     fi
 
