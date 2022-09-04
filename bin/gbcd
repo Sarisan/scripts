@@ -131,7 +131,7 @@ then
             "  -t, --tags <arg>\t\tDownload artworks by tags\n" \
             "  -n, --number <num>\t\tLimit number of artworks to download\n" \
             "  -r, --repair\t\t\tRedownload failed files only (md5_errors.txt connection_errors.txt)\n" \
-            "  -f, --full-repair\t\tScan entire folder for broken files and download\n" \
+            "  -f, --full-repair\t\tScan entire directory for broken files and download\n" \
             "  -w, --wget-timeout <secs>\tSet wget timeout and connect-timeout, default: 24 hours\n" \
             "  -e, --encount\t\tDownload new artworks only\n" \
             "  -l, --sleep <secs>\t\tSet time interval between curl requests\n" \
