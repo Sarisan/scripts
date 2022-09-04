@@ -29,7 +29,7 @@ then
     exit 1
 fi
 
-CSCD_VERSION="3.4"
+CSCD_VERSION="3.5"
 CSCD_CONFIG="$HOME/.config/cscd"
 CSCD_CACHE="$HOME/.cache/cscd"
 CSCD_CPID_CACHE="$CSCD_CACHE/$$"
@@ -308,19 +308,21 @@ then
             then
                 if [[ -v $CSCD_REPAIR ]]
                 then
+                    CSCD_CONTINUE=0
+
                     if [[ -f "$CSCD_CPID_CACHE/md5_errors.txt" ]]
                     then
-                        if ! grep --quiet "$CSCD_FILENAME" "$CSCD_CPID_CACHE/md5_errors.txt"
+                        if grep --quiet "$CSCD_FILENAME" "$CSCD_CPID_CACHE/md5_errors.txt"
                         then
-                            CSCD_CONTINUE=0
+                            CSCD_CONTINUE=1
                         fi
                     fi
 
                     if [[ -f "$CSCD_CPID_CACHE/connection_errors.txt" ]]
                     then
-                        if ! grep --quiet "$CSCD_FILENAME" "$CSCD_CPID_CACHE/connection_errors.txt"
+                        if grep --quiet "$CSCD_FILENAME" "$CSCD_CPID_CACHE/connection_errors.txt"
                         then
-                            CSCD_CONTINUE=0
+                            CSCD_CONTINUE=1
                         fi
                     fi
                 elif [[ -v $CSCD_FULL_REPAIR ]]
