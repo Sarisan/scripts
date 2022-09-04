@@ -28,7 +28,7 @@ then
     exit 1
 fi
 
-GBCD_VERSION="1.8"
+GBCD_VERSION="1.9"
 GBCD_CACHE="$HOME/.cache/gbcd"
 GBCD_CPID_CACHE="$GBCD_CACHE/$$"
 
@@ -126,14 +126,19 @@ then
             "  -s, --skip\t\t\tSkip md5 checksums\n" \
             "  -k, --keep\t\t\tKeep files failed md5 checksums\n" \
             "  -t, --tags <arg>\t\tDownload artworks by tags\n" \
-            "  -n, --number <num>\t\tLimit number of artworks to download.\n" \
+            "  -n, --number <num>\t\tLimit number of artworks to download\n" \
             "  -r, --repair\t\t\tRedownload broken files\n" \
             "  -w, --wget-timeout <secs>\tSet wget timeout and connect-timeout, default: 24 hours\n" \
             "  -e, --encount\t\tDownload new artworks only\n" \
             "  -l, --sleep <secs>\t\tSet time interval between curl requests\n" \
             "  -i, --reversive\t\tRemove artworks from excluded directories\n" \
             "  -o, --exclude-download\tDownload failed files from excluded directories\n" \
-            "  -m, --exclude-remove\t\tDownload and remove failed files from excluded directories"
+            "  -m, --exclude-remove\t\tDownload and remove failed files from excluded directories\n" \
+            "\n" \
+            "\tR - Removed files\n" \
+            "\tS - Successfully downloaded\n" \
+            "\tF - Connection errors and md5 checksums fails\n" \
+            "\tD - Done in total"
 fi
 
 if [[ -n $GBCD_DOWNLOAD_DIR ]]
@@ -149,6 +154,7 @@ then
 
     GBCD_LIMIT=100
     GBCD_PAGE=0
+    GBCD_REMOVED=0
     GBCD_SUCCESS=0
     GBCD_FAILED=0
     GBCD_DONE=0
@@ -168,7 +174,7 @@ then
 
     echo "Downloading artworks"
     echo "--------------------"
-    echo -e -n "\rSuccess: $GBCD_SUCCESS Failed: $GBCD_FAILED Done: $GBCD_DONE"
+    echo -e -n "\rR: $GBCD_REMOVED S: $GBCD_SUCCESS F: $GBCD_FAILED D: $GBCD_DONE"
 
     until [[ -v $GBCD_ABSOLUTE_BREAK ]]
     do
@@ -244,6 +250,7 @@ then
                         if [[ -v $GBCD_REVERSIVE ]]
                         then
                             rm -f "$GBCD_EXCLUDE_DIR/$GBCD_FILENAME"
+                            GBCD_REMOVED=$((GBCD_REMOVED+1))
                         elif [[ -v $GBCD_XDOWNLOAD ]] || [[ -v $GBCD_XREMOVE ]]
                         then
                             if [[ "$(md5sum "$GBCD_EXCLUDE_DIR/$GBCD_FILENAME" | cut -d ' ' -f 1)" == "$(echo $GBCD_FILENAME | cut -d '.' -f 1)" ]]
@@ -255,6 +262,7 @@ then
                                 if [[ -v $GBCD_XREMOVE ]]
                                 then
                                     rm -f "$GBCD_EXCLUDE_DIR/$GBCD_FILENAME"
+                                    GBCD_REMOVED=$((GBCD_REMOVED+1))
                                 fi
                             fi
                         else
@@ -290,6 +298,7 @@ then
                             if ! [[ -v $GBCD_KEEP_MD5 ]]
                             then
                                 rm -f "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME"
+                                GBCD_REMOVED=$((GBCD_REMOVED+1))
                             fi
                         fi
                     fi
@@ -299,7 +308,7 @@ then
                 fi
             fi
             GBCD_DONE=$((GBCD_DONE+1))
-            echo -e -n "\rSuccess: $GBCD_SUCCESS Failed: $GBCD_FAILED Done: $GBCD_DONE"
+            echo -e -n "\rR: $GBCD_REMOVED S: $GBCD_SUCCESS F: $GBCD_FAILED D: $GBCD_DONE"
         done
         GBCD_PAGE=$((GBCD_PAGE+1))
 
