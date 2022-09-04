@@ -29,7 +29,7 @@ then
     exit 1
 fi
 
-CSCD_VERSION="3.5"
+CSCD_VERSION="3.6"
 CSCD_CONFIG="$HOME/.config/cscd"
 CSCD_CACHE="$HOME/.cache/cscd"
 CSCD_CPID_CACHE="$CSCD_CACHE/$$"
@@ -243,12 +243,12 @@ then
         fi
     fi
 
-    if [[ -f "$CSCD_DOWNLOAD_DIR/md5_errors.txt" ]]
+    if ([[ -v $CSCD_REPAIR ]] || [[ -v $CSCD_FULL_REPAIR ]]) && [[ -f "$CSCD_DOWNLOAD_DIR/md5_errors.txt" ]]
     then
         mv "$CSCD_DOWNLOAD_DIR/md5_errors.txt" "$CSCD_CPID_CACHE/md5_errors.txt"
     fi
 
-    if [[ -f "$CSCD_DOWNLOAD_DIR/connection_errors.txt" ]]
+    if ([[ -v $CSCD_REPAIR ]] || [[ -v $CSCD_FULL_REPAIR ]]) && [[ -f "$CSCD_DOWNLOAD_DIR/connection_errors.txt" ]]
     then
         mv "$CSCD_DOWNLOAD_DIR/connection_errors.txt" "$CSCD_CPID_CACHE/connection_errors.txt"
     fi
@@ -345,19 +345,49 @@ then
                         if [[ -v $CSCD_REVERSIVE ]]
                         then
                             rm -f "$CSCD_EXCLUDE_DIR/$CSCD_FILENAME"
+
+                            if [[ -f "$CSCD_EXCLUDE_DIR/md5_errors.txt" ]]
+                            then
+                                sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_EXCLUDE_DIR/md5_errors.txt"
+                            fi
+
+                            if [[ -f "$CSCD_EXCLUDE_DIR/connection_errors.txt" ]]
+                            then
+                                sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_EXCLUDE_DIR/connection_errors.txt"
+                            fi
+
                             CSCD_REMOVED=$((CSCD_REMOVED+1))
                         elif [[ -v $CSCD_XDOWNLOAD ]] || [[ -v $CSCD_XREMOVE ]]
                         then
-                            if [[ "$(md5sum "$CSCD_EXCLUDE_DIR/$CSCD_FILENAME" | cut -d ' ' -f 1)" == "$(echo $CSCD_FILENAME | cut -d '.' -f 1)" ]]
-                            then
-                                CSCD_CONTINUE=0
-                            else
-                                CSCD_CONTINUE=1
+                            CSCD_CONTINUE=0
 
-                                if [[ -v $CSCD_XREMOVE ]]
+                            if [[ -f "$CSCD_EXCLUDE_DIR/md5_errors.txt" ]]
+                            then
+                                if grep --quiet "$CSCD_FILENAME" "$CSCD_EXCLUDE_DIR/md5_errors.txt"
                                 then
-                                    rm -f "$CSCD_EXCLUDE_DIR/$CSCD_FILENAME"
-                                    CSCD_REMOVED=$((CSCD_REMOVED+1))
+                                    CSCD_CONTINUE=1
+
+                                    if [[ -v $CSCD_XREMOVE ]]
+                                    then
+                                        rm -f "$CSCD_EXCLUDE_DIR/$CSCD_FILENAME"
+                                        sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_EXCLUDE_DIR/md5_errors.txt"
+                                        CSCD_REMOVED=$((CSCD_REMOVED+1))
+                                    fi
+                                fi
+                            fi
+
+                            if [[ -f "$CSCD_EXCLUDE_DIR/connection_errors.txt" ]]
+                            then
+                                if grep --quiet "$CSCD_FILENAME" "$CSCD_EXCLUDE_DIR/connection_errors.txt"
+                                then
+                                    CSCD_CONTINUE=1
+
+                                    if [[ -v $CSCD_XREMOVE ]]
+                                    then
+                                        rm -f "$CSCD_EXCLUDE_DIR/$CSCD_FILENAME"
+                                        sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_EXCLUDE_DIR/connection_errors.txt"
+                                        CSCD_REMOVED=$((CSCD_REMOVED+1))
+                                    fi
                                 fi
                             fi
                         else
@@ -484,12 +514,12 @@ then
                 CSCD_POOL_FAILED=0
                 CSCD_POOL_DONE=0
 
-                if [[ -f "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt" ]]
+                if ([[ -v $CSCD_REPAIR ]] || [[ -v $CSCD_FULL_REPAIR ]]) && [[ -f "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt" ]]
                 then
                     mv "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt" "$CSCD_CPID_CACHE/md5_errors_$CSCD_POOL.txt"
                 fi
 
-                if [[ -f "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt" ]]
+                if ([[ -v $CSCD_REPAIR ]] || [[ -v $CSCD_FULL_REPAIR ]]) && [[ -f "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt" ]]
                 then
                     mv "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt" "$CSCD_CPID_CACHE/connection_errors_$CSCD_POOL.txt"
                 fi
