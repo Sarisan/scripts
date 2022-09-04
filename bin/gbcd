@@ -28,7 +28,7 @@ then
     exit 1
 fi
 
-GBCD_VERSION="1.9"
+GBCD_VERSION="1.10"
 GBCD_CACHE="$HOME/.cache/gbcd"
 GBCD_CPID_CACHE="$GBCD_CACHE/$$"
 
@@ -43,7 +43,7 @@ GBCD_SLEEP_TIME=0
 
 if [[ -n $1 ]]
 then
-    GBCD_OPTIONS=$(getopt --longoptions proxy:,path:,exclude:,help,skip,keep,tags:,number:,repair,wget-timeout:,encount,sleep:,reversive,exclude-download,exclude-remove --name "$0" --options P:p:x:hskt:n:rw:el:iom -- "$@")
+    GBCD_OPTIONS=$(getopt --longoptions proxy:,path:,exclude:,help,skip,keep,tags:,number:,repair,full-repair,wget-timeout:,encount,sleep:,reversive,exclude-download,exclude-remove --name "$0" --options P:p:x:hskt:n:rfw:el:iom -- "$@")
     eval set -- "$GBCD_OPTIONS"
 
     while [[ -n $1 ]]
@@ -80,6 +80,9 @@ then
                 ;;
             -r|--repair)
                 GBCD_REPAIR=0
+                ;;
+            -f|--full-repair)
+                GBCD_FULL_REPAIR=0
                 ;;
             -w|--wget-timeout)
                 GBCD_WGET_TIMEOUT=$2
@@ -127,7 +130,8 @@ then
             "  -k, --keep\t\t\tKeep files failed md5 checksums\n" \
             "  -t, --tags <arg>\t\tDownload artworks by tags\n" \
             "  -n, --number <num>\t\tLimit number of artworks to download\n" \
-            "  -r, --repair\t\t\tRedownload broken files\n" \
+            "  -r, --repair\t\t\tRedownload failed files only (md5_errors.txt connection_errors.txt)\n" \
+            "  -f, --full-repair\t\tScan entire folder for broken files and download\n" \
             "  -w, --wget-timeout <secs>\tSet wget timeout and connect-timeout, default: 24 hours\n" \
             "  -e, --encount\t\tDownload new artworks only\n" \
             "  -l, --sleep <secs>\t\tSet time interval between curl requests\n" \
@@ -169,8 +173,15 @@ then
         fi
     fi
 
-    rm -f "$GBCD_DOWNLOAD_DIR/md5_errors.txt"
-    rm -f "$GBCD_DOWNLOAD_DIR/connection_errors.txt"
+    if [[ -f "$GBCD_DOWNLOAD_DIR/md5_errors.txt" ]]
+    then
+        mv "$GBCD_DOWNLOAD_DIR/md5_errors.txt" "$GBCD_CPID_CACHE/md5_errors.txt"
+    fi
+
+    if [[ -f "$GBCD_DOWNLOAD_DIR/connection_errors.txt" ]]
+    then
+        mv "$GBCD_DOWNLOAD_DIR/connection_errors.txt" "$GBCD_CPID_CACHE/connection_errors.txt"
+    fi
 
     echo "Downloading artworks"
     echo "--------------------"
@@ -231,6 +242,23 @@ then
             if [[ -f "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" ]]
             then
                 if [[ -v $GBCD_REPAIR ]]
+                then
+                    if [[ -f "$GBCD_CPID_CACHE/md5_errors.txt" ]]
+                    then
+                        if ! grep --quiet "$GBCD_FILENAME" "$GBCD_CPID_CACHE/md5_errors.txt"
+                        then
+                            GBCD_CONTINUE=0
+                        fi
+                    fi
+
+                    if [[ -f "$GBCD_CPID_CACHE/connection_errors.txt" ]]
+                    then
+                        if ! grep --quiet "$GBCD_FILENAME" "$GBCD_CPID_CACHE/connection_errors.txt"
+                        then
+                            GBCD_CONTINUE=0
+                        fi
+                    fi
+                elif [[ -v $GBCD_FULL_REPAIR ]]
                 then
                     if [[ "$(md5sum "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" | cut -d ' ' -f 1)" == "$(echo $GBCD_FILENAME | cut -d '.' -f 1)" ]]
                     then
