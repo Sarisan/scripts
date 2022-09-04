@@ -28,7 +28,7 @@ then
     exit 1
 fi
 
-GBCD_VERSION="1.7"
+GBCD_VERSION="1.8"
 GBCD_CACHE="$HOME/.cache/gbcd"
 GBCD_CPID_CACHE="$GBCD_CACHE/$$"
 
@@ -43,7 +43,7 @@ GBCD_SLEEP_TIME=0
 
 if [[ -n $1 ]]
 then
-    GBCD_OPTIONS=$(getopt --longoptions proxy:,path:,exclude:,help,skip,keep,tags:,number:,repair,wget-timeout:,encount,sleep:,reversive --name "$0" --options P:p:x:hskt:n:rw:el:i -- "$@")
+    GBCD_OPTIONS=$(getopt --longoptions proxy:,path:,exclude:,help,skip,keep,tags:,number:,repair,wget-timeout:,encount,sleep:,reversive,exclude-download,exclude-remove --name "$0" --options P:p:x:hskt:n:rw:el:iom -- "$@")
     eval set -- "$GBCD_OPTIONS"
 
     while [[ -n $1 ]]
@@ -95,6 +95,12 @@ then
             -i|--reversive)
                 GBCD_REVERSIVE=0
                 ;;
+            -o|--exclude-download)
+                GBCD_XDOWNLOAD=0
+                ;;
+            -m|--exclude-remove)
+                GBCD_XREMOVE=0
+                ;;
             --)
                 break
                 ;;
@@ -125,7 +131,9 @@ then
             "  -w, --wget-timeout <secs>\tSet wget timeout and connect-timeout, default: 24 hours\n" \
             "  -e, --encount\t\tDownload new artworks only\n" \
             "  -l, --sleep <secs>\t\tSet time interval between curl requests\n" \
-            "  -i, --reversive\t\tRemove artworks from excluded directories"
+            "  -i, --reversive\t\tRemove artworks from excluded directories\n" \
+            "  -o, --exclude-download\tDownload failed files from excluded directories\n" \
+            "  -m, --exclude-remove\t\tDownload and remove failed files from excluded directories"
 fi
 
 if [[ -n $GBCD_DOWNLOAD_DIR ]]
@@ -236,6 +244,19 @@ then
                         if [[ -v $GBCD_REVERSIVE ]]
                         then
                             rm -f "$GBCD_EXCLUDE_DIR/$GBCD_FILENAME"
+                        elif [[ -v $GBCD_XDOWNLOAD ]] || [[ -v $GBCD_XREMOVE ]]
+                        then
+                            if [[ "$(md5sum "$GBCD_EXCLUDE_DIR/$GBCD_FILENAME" | cut -d ' ' -f 1)" == "$(echo $GBCD_FILENAME | cut -d '.' -f 1)" ]]
+                            then
+                                GBCD_CONTINUE=0
+                            else
+                                GBCD_CONTINUE=1
+
+                                if [[ -v $GBCD_XREMOVE ]]
+                                then
+                                    rm -f "$GBCD_EXCLUDE_DIR/$GBCD_FILENAME"
+                                fi
+                            fi
                         else
                             GBCD_CONTINUE=0
                             break
