@@ -5,7 +5,7 @@
 #
 # Sankaku Channel downloader
 # Dependencies: coreutils, curl, jq, sed, util-linux, wget
-# There are some limits on Sankaku Channel, for example, you cannot download more than 2000 artworks with the same tags without premium account.
+# There are some limits on Sankaku Channel, for example, you cannot download more than 10000 artworks with the same tags without premium account.
 
 for CSCD_DEP in curl getopt jq mkdir sed wget
 do
@@ -29,7 +29,7 @@ then
     exit 1
 fi
 
-CSCD_VERSION="3.0"
+CSCD_VERSION="3.1"
 CSCD_CONFIG="$HOME/.config/cscd"
 CSCD_CACHE="$HOME/.cache/cscd"
 CSCD_CPID_CACHE="$CSCD_CACHE/$$"
@@ -76,7 +76,6 @@ then
                 shift
                 ;;
             -x|--exclude)
-                CSCD_EXCLUDE=0
                 CSCD_EXCLUDE_LOOP="$2"
                 shift
                 ;;
@@ -136,6 +135,7 @@ then
             "  -g, --range <num>\t\tSet range of artworks between curl requests, max: 100, default: 20\n" \
             "  -p, --posts <path>\t\tStart downloading posts to the selected download directory\n" \
             "  -b, --books <path>\t\tStart downloading books to the selected download directory\n" \
+            "  -x, --exclude <path>\t\tExclude artworks from specified directories\n" \
             "  -h, --help\t\t\tShow help information\n" \
             "  -s, --skip\t\t\tSkip md5 checksums\n" \
             "  -k, --keep\t\t\tKeep files failed md5 checksums\n" \
@@ -158,7 +158,6 @@ fi
 
 if [[ -v $CSCD_AUTH ]]
 then
-
     if [[ -z $CSANKAKU_LOGIN ]] && [[ -f "$CSCD_CONFIG/login" ]] && [[ $CSCD_AUTH -eq 1 ]]
     then
         CSANKAKU_LOGIN="$(cat "$CSCD_CONFIG/login")"
@@ -254,9 +253,9 @@ then
             break
         fi
 
-        jq -r '.[].file_url' "$CSCD_CPID_CACHE/posts.json" > "$CSCD_CPID_CACHE/urls.json"
+        jq -r '.[].file_url' "$CSCD_CPID_CACHE/posts.json" > "$CSCD_CPID_CACHE/urls"
 
-        for CSCD_URL in $(cat "$CSCD_CPID_CACHE/urls.json")
+        for CSCD_URL in $(cat "$CSCD_CPID_CACHE/urls")
         do
             if [[ $CSCD_SUCCESS -eq $CSCD_NUMBER ]]
             then
@@ -282,14 +281,18 @@ then
 
             if [[ -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" ]]
             then
-                CSCD_CONTINUE=0
-                if [[ -v $CSCD_REPAIR ]] && ! [[ "$(md5sum "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" | cut -d ' ' -f 1)" == "$(echo $CSCD_FILENAME | cut -d '.' -f 1)" ]]
+                if [[ -v $CSCD_REPAIR ]]
                 then
-                    CSCD_CONTINUE=1
+                    if [[ "$(md5sum "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" | cut -d ' ' -f 1)" == "$(echo $CSCD_FILENAME | cut -d '.' -f 1)" ]]
+                    then
+                        CSCD_CONTINUE=0
+                    fi
+                else
+                    CSCD_CONTINUE=0
                 fi
             fi
 
-            if [[ -v $CSCD_EXCLUDE ]]
+            if [[ -n $CSCD_EXCLUDE_LOOP ]]
             then
                 for CSCD_EXCLUDE_DIR in $CSCD_EXCLUDE_LOOP
                 do
@@ -446,9 +449,9 @@ then
                         break
                     fi
 
-                    jq -r '.[].file_url' "$CSCD_CPID_CACHE/book_$CSCD_POOL.json" > "$CSCD_CPID_CACHE/urls_$CSCD_POOL.json"
+                    jq -r '.[].file_url' "$CSCD_CPID_CACHE/book_$CSCD_POOL.json" > "$CSCD_CPID_CACHE/urls_$CSCD_POOL"
 
-                    for CSCD_URL in $(cat "$CSCD_CPID_CACHE/urls_$CSCD_POOL.json")
+                    for CSCD_URL in $(cat "$CSCD_CPID_CACHE/urls_$CSCD_POOL")
                     do
                         CSCD_FILENAME="$(echo $CSCD_URL | cut -d '?' -f 1 | cut -d '/' -f 7)"
 
