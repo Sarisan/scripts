@@ -29,7 +29,7 @@ then
     exit 1
 fi
 
-CSCD_VERSION="3.3"
+CSCD_VERSION="3.4"
 CSCD_CONFIG="$HOME/.config/cscd"
 CSCD_CACHE="$HOME/.cache/cscd"
 CSCD_CPID_CACHE="$CSCD_CACHE/$$"
@@ -52,7 +52,7 @@ CSCD_SLEEP_TIME=0
 
 if [[ -n $1 ]]
 then
-    CSCD_OPTIONS=$(getopt --longoptions authorize,range:,posts:,books:,exclude:,help,skip,keep,tags:,number:,repair,wget-timeout:,encount,sleep:,reversive,exclude-download,exclude-remove --name "$0" --options ag:p:b:x:hskt:n:rw:el:iom -- "$@")
+    CSCD_OPTIONS=$(getopt --longoptions authorize,range:,posts:,books:,exclude:,help,skip,keep,tags:,number:,repair,full-repair,wget-timeout:,encount,sleep:,reversive,exclude-download,exclude-remove --name "$0" --options ag:p:b:x:hskt:n:rfw:el:iom -- "$@")
     eval set -- "$CSCD_OPTIONS"
 
     while [[ -n $1 ]]
@@ -98,6 +98,9 @@ then
                 ;;
             -r|--repair)
                 CSCD_REPAIR=0
+                ;;
+            -f|--full-repair)
+                CSCD_FULL_REPAIR=0
                 ;;
             -w|--wget-timeout)
                 CSCD_WGET_TIMEOUT=$2
@@ -147,7 +150,8 @@ then
             "  -k, --keep\t\t\tKeep files failed md5 checksums\n" \
             "  -t, --tags <arg>\t\tDownload posts/books by tags\n" \
             "  -n, --number <num>\t\tLimit number of artworks to download\n" \
-            "  -r, --repair\t\t\tRedownload broken files\n" \
+            "  -r, --repair\t\t\tRedownload failed files only (md5_errors.txt connection_errors.txt)\n" \
+            "  -f, --full-repair\t\tScan entire directory for broken files and download\n" \
             "  -w, --wget-timeout <secs>\tSet wget timeout and connect-timeout, default: 24 hours\n" \
             "  -e, --encount\t\tDownload new artworks only\n" \
             "  -l, --sleep <secs>\t\tSet time interval between curl requests, may help with throttled and busy errors\n" \
@@ -239,8 +243,15 @@ then
         fi
     fi
 
-    rm -f "$CSCD_DOWNLOAD_DIR/md5_errors.txt"
-    rm -f "$CSCD_DOWNLOAD_DIR/connection_errors.txt"
+    if [[ -f "$CSCD_DOWNLOAD_DIR/md5_errors.txt" ]]
+    then
+        mv "$CSCD_DOWNLOAD_DIR/md5_errors.txt" "$CSCD_CPID_CACHE/md5_errors.txt"
+    fi
+
+    if [[ -f "$CSCD_DOWNLOAD_DIR/connection_errors.txt" ]]
+    then
+        mv "$CSCD_DOWNLOAD_DIR/connection_errors.txt" "$CSCD_CPID_CACHE/connection_errors.txt"
+    fi
 
     echo "Downloading artworks"
     echo "--------------------"
@@ -296,6 +307,23 @@ then
             if [[ -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" ]]
             then
                 if [[ -v $CSCD_REPAIR ]]
+                then
+                    if [[ -f "$CSCD_CPID_CACHE/md5_errors.txt" ]]
+                    then
+                        if ! grep --quiet "$CSCD_FILENAME" "$CSCD_CPID_CACHE/md5_errors.txt"
+                        then
+                            CSCD_CONTINUE=0
+                        fi
+                    fi
+
+                    if [[ -f "$CSCD_CPID_CACHE/connection_errors.txt" ]]
+                    then
+                        if ! grep --quiet "$CSCD_FILENAME" "$CSCD_CPID_CACHE/connection_errors.txt"
+                        then
+                            CSCD_CONTINUE=0
+                        fi
+                    fi
+                elif [[ -v $CSCD_FULL_REPAIR ]]
                 then
                     if [[ "$(md5sum "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" | cut -d ' ' -f 1)" == "$(echo $CSCD_FILENAME | cut -d '.' -f 1)" ]]
                     then
@@ -454,8 +482,15 @@ then
                 CSCD_POOL_FAILED=0
                 CSCD_POOL_DONE=0
 
-                rm -f "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt"
-                rm -f "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt"
+                if [[ -f "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt" ]]
+                then
+                    mv "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt" "$CSCD_CPID_CACHE/md5_errors_$CSCD_POOL.txt"
+                fi
+
+                if [[ -f "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt" ]]
+                then
+                    mv "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt" "$CSCD_CPID_CACHE/connection_errors_$CSCD_POOL.txt"
+                fi
 
                 echo -e -n "\rR: $CSCD_POOL_REMOVED S: $CSCD_POOL_SUCCESS F: $CSCD_POOL_FAILED D: $CSCD_POOL_DONE"
                 until [[ -v $CSCD_ABSOLUTE_BREAK ]]
@@ -502,10 +537,31 @@ then
 
                         if [[ -f "$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" ]]
                         then
-                            CSCD_CONTINUE=0
-                            if [[ -v $CSCD_REPAIR ]] && ! [[ "$(md5sum "$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" | cut -d ' ' -f 1)" == "$(echo $CSCD_FILENAME | cut -d '.' -f 1)" ]]
+                            if [[ -v $CSCD_REPAIR ]]
                             then
-                                CSCD_CONTINUE=1
+                                if [[ -f "$CSCD_CPID_CACHE/md5_errors_$CSCD_POOL.txt" ]]
+                                then
+                                    if ! grep --quiet "$CSCD_FILENAME" "$CSCD_CPID_CACHE/md5_errors_$CSCD_POOL.txt"
+                                    then
+                                        CSCD_CONTINUE=0
+                                    fi
+                                fi
+
+                                if [[ -f "$CSCD_CPID_CACHE/connection_errors_$CSCD_POOL.txt" ]]
+                                then
+                                    if ! grep --quiet "$CSCD_FILENAME" "$CSCD_CPID_CACHE/connection_errors_$CSCD_POOL.txt"
+                                    then
+                                        CSCD_CONTINUE=0
+                                    fi
+                                fi
+                            elif [[ -v $CSCD_FULL_REPAIR ]]
+                            then
+                                if [[ "$(md5sum "$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" | cut -d ' ' -f 1)" == "$(echo $CSCD_FILENAME | cut -d '.' -f 1)" ]]
+                                then
+                                    CSCD_CONTINUE=0
+                                fi
+                            else
+                                CSCD_CONTINUE=0
                             fi
                         fi
 
