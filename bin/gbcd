@@ -28,7 +28,7 @@ then
     exit 1
 fi
 
-GBCD_VERSION="1.10"
+GBCD_VERSION="1.11"
 GBCD_CACHE="$HOME/.cache/gbcd"
 GBCD_CPID_CACHE="$GBCD_CACHE/$$"
 
@@ -243,19 +243,21 @@ then
             then
                 if [[ -v $GBCD_REPAIR ]]
                 then
+                    GBCD_CONTINUE=0
+
                     if [[ -f "$GBCD_CPID_CACHE/md5_errors.txt" ]]
                     then
-                        if ! grep --quiet "$GBCD_FILENAME" "$GBCD_CPID_CACHE/md5_errors.txt"
+                        if grep --quiet "$GBCD_FILENAME" "$GBCD_CPID_CACHE/md5_errors.txt"
                         then
-                            GBCD_CONTINUE=0
+                            GBCD_CONTINUE=1
                         fi
                     fi
 
                     if [[ -f "$GBCD_CPID_CACHE/connection_errors.txt" ]]
                     then
-                        if ! grep --quiet "$GBCD_FILENAME" "$GBCD_CPID_CACHE/connection_errors.txt"
+                        if grep --quiet "$GBCD_FILENAME" "$GBCD_CPID_CACHE/connection_errors.txt"
                         then
-                            GBCD_CONTINUE=0
+                            GBCD_CONTINUE=1
                         fi
                     fi
                 elif [[ -v $GBCD_FULL_REPAIR ]]
