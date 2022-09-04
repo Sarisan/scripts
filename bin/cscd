@@ -29,7 +29,7 @@ then
     exit 1
 fi
 
-CSCD_VERSION="3.2"
+CSCD_VERSION="3.3"
 CSCD_CONFIG="$HOME/.config/cscd"
 CSCD_CACHE="$HOME/.cache/cscd"
 CSCD_CPID_CACHE="$CSCD_CACHE/$$"
@@ -146,14 +146,19 @@ then
             "  -s, --skip\t\t\tSkip md5 checksums\n" \
             "  -k, --keep\t\t\tKeep files failed md5 checksums\n" \
             "  -t, --tags <arg>\t\tDownload posts/books by tags\n" \
-            "  -n, --number <num>\t\tLimit number of artworks to download.\n" \
+            "  -n, --number <num>\t\tLimit number of artworks to download\n" \
             "  -r, --repair\t\t\tRedownload broken files\n" \
             "  -w, --wget-timeout <secs>\tSet wget timeout and connect-timeout, default: 24 hours\n" \
             "  -e, --encount\t\tDownload new artworks only\n" \
             "  -l, --sleep <secs>\t\tSet time interval between curl requests, may help with throttled and busy errors\n" \
             "  -i, --reversive\t\tRemove artworks from excluded directories\n" \
             "  -o, --exclude-download\tDownload failed files from excluded directories\n" \
-            "  -m, --exclude-remove\t\tDownload and remove failed files from excluded directories"
+            "  -m, --exclude-remove\t\tDownload and remove failed files from excluded directories\n" \
+            "\n" \
+            "\tR - Removed files\n" \
+            "\tS - Successfully downloaded\n" \
+            "\tF - Connection errors and md5 checksums fails\n" \
+            "\tD - Done in total"
 fi
 
 if ([[ -v $CSCD_POSTS ]] || [[ -v $CSCD_BOOKS ]]) && [[ -f "$CSCD_CONFIG/time" ]] && ! [[ -v $CSCD_AUTH ]]
@@ -219,6 +224,7 @@ then
     fi
 
     CSCD_PAGE=1
+    CSCD_REMOVED=0
     CSCD_SUCCESS=0
     CSCD_FAILED=0
     CSCD_DONE=0
@@ -238,7 +244,7 @@ then
 
     echo "Downloading artworks"
     echo "--------------------"
-    echo -e -n "\rSuccess: $CSCD_SUCCESS Failed: $CSCD_FAILED Done: $CSCD_DONE"
+    echo -e -n "\rR: $CSCD_REMOVED S: $CSCD_SUCCESS F: $CSCD_FAILED D: $CSCD_DONE"
 
     until [[ -v $CSCD_ABSOLUTE_BREAK ]]
     do
@@ -309,6 +315,7 @@ then
                         if [[ -v $CSCD_REVERSIVE ]]
                         then
                             rm -f "$CSCD_EXCLUDE_DIR/$CSCD_FILENAME"
+                            CSCD_REMOVED=$((CSCD_REMOVED+1))
                         elif [[ -v $CSCD_XDOWNLOAD ]] || [[ -v $CSCD_XREMOVE ]]
                         then
                             if [[ "$(md5sum "$CSCD_EXCLUDE_DIR/$CSCD_FILENAME" | cut -d ' ' -f 1)" == "$(echo $CSCD_FILENAME | cut -d '.' -f 1)" ]]
@@ -320,6 +327,7 @@ then
                                 if [[ -v $CSCD_XREMOVE ]]
                                 then
                                     rm -f "$CSCD_EXCLUDE_DIR/$CSCD_FILENAME"
+                                    CSCD_REMOVED=$((CSCD_REMOVED+1))
                                 fi
                             fi
                         else
@@ -349,6 +357,7 @@ then
                             if ! [[ -v $CSCD_KEEP_MD5 ]]
                             then
                                 rm -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME"
+                                CSCD_REMOVED=$((CSCD_REMOVED+1))
                             fi
                         fi
                     fi
@@ -358,7 +367,7 @@ then
                 fi
             fi
             CSCD_DONE=$((CSCD_DONE+1))
-            echo -e -n "\rSuccess: $CSCD_SUCCESS Failed: $CSCD_FAILED Done: $CSCD_DONE"
+            echo -e -n "\rR: $CSCD_REMOVED S: $CSCD_SUCCESS F: $CSCD_FAILED D: $CSCD_DONE"
         done
         CSCD_PAGE=$((CSCD_PAGE+1))
 
@@ -440,6 +449,7 @@ then
                 fi
 
                 CSCD_POOL_PAGE=1
+                CSCD_POOL_REMOVED=0
                 CSCD_POOL_SUCCESS=0
                 CSCD_POOL_FAILED=0
                 CSCD_POOL_DONE=0
@@ -447,7 +457,7 @@ then
                 rm -f "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt"
                 rm -f "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt"
 
-                echo -e -n "\rSuccess: $CSCD_POOL_SUCCESS Failed: $CSCD_POOL_FAILED Done: $CSCD_POOL_DONE"
+                echo -e -n "\rR: $CSCD_POOL_REMOVED S: $CSCD_POOL_SUCCESS F: $CSCD_POOL_FAILED D: $CSCD_POOL_DONE"
                 until [[ -v $CSCD_ABSOLUTE_BREAK ]]
                 do
                     curl --data-urlencode "limit=$CSCD_RANGE" --data-urlencode "page=$CSCD_POOL_PAGE" --data-urlencode "tags=pool:$CSCD_POOL" -G -H "Authorization: Bearer $(cat "$CSCD_CONFIG/token")" -o "$CSCD_CPID_CACHE/book_$CSCD_POOL.json" -s -A "CSCD" "https://capi-v2.sankakucomplex.com/posts"
@@ -518,6 +528,7 @@ then
                                         if ! [[ -v $CSCD_KEEP_MD5 ]]
                                         then
                                             rm -f "$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME"
+                                            CSCD_POOL_REMOVED=$((CSCD_POOL_REMOVED+1))
                                         fi
                                     fi
                                 fi
@@ -527,7 +538,7 @@ then
                             fi
                         fi
                         CSCD_POOL_DONE=$((CSCD_POOL_DONE+1))
-                        echo -e -n "\rSuccess: $CSCD_POOL_SUCCESS Failed: $CSCD_POOL_FAILED Done: $CSCD_POOL_DONE"
+                        echo -e -n "\rR: $CSCD_POOL_REMOVED S: $CSCD_POOL_SUCCESS F: $CSCD_POOL_FAILED D: $CSCD_POOL_DONE"
                     done
                     CSCD_POOL_PAGE=$((CSCD_POOL_PAGE+1))
 
