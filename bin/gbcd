@@ -28,7 +28,7 @@ then
     exit 1
 fi
 
-GBCD_VERSION="1.6"
+GBCD_VERSION="1.7"
 GBCD_CACHE="$HOME/.cache/gbcd"
 GBCD_CPID_CACHE="$GBCD_CACHE/$$"
 
@@ -58,7 +58,6 @@ then
                 shift
                 ;;
             -x|--exclude)
-                GBCD_EXCLUDE=0
                 GBCD_EXCLUDE_LOOP="$2"
                 shift
                 ;;
@@ -217,14 +216,18 @@ then
 
             if [[ -f "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" ]]
             then
-                GBCD_CONTINUE=0
-                if [[ -v $GBCD_REPAIR ]] && ! [[ "$(md5sum "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" | cut -d ' ' -f 1)" == "$(echo $GBCD_FILENAME | cut -d '.' -f 1)" ]]
+                if [[ -v $GBCD_REPAIR ]]
                 then
-                    GBCD_CONTINUE=1
+                    if [[ "$(md5sum "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" | cut -d ' ' -f 1)" == "$(echo $GBCD_FILENAME | cut -d '.' -f 1)" ]]
+                    then
+                        GBCD_CONTINUE=0
+                    fi
+                else
+                    GBCD_CONTINUE=0
                 fi
             fi
 
-            if [[ -v $GBCD_EXCLUDE ]]
+            if [[ -n $GBCD_EXCLUDE_LOOP ]]
             then
                 for GBCD_EXCLUDE_DIR in $GBCD_EXCLUDE_LOOP
                 do
