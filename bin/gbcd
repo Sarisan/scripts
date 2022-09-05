@@ -28,7 +28,7 @@ then
     exit 1
 fi
 
-GBCD_VERSION="1.13"
+GBCD_VERSION="1.14"
 GBCD_CACHE="$HOME/.cache/gbcd"
 GBCD_CPID_CACHE="$GBCD_CACHE/$$"
 
@@ -331,6 +331,8 @@ then
                             fi
                         elif [[ -v $GBCD_XSELFREMOVE ]]
                         then
+                            GBCD_CONTINUE=0
+
                             if [[ -f "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" ]]
                             then
                                 rm -f "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME"
