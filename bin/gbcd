@@ -28,7 +28,7 @@ then
     exit 1
 fi
 
-GBCD_VERSION="1.12"
+GBCD_VERSION="1.13"
 GBCD_CACHE="$HOME/.cache/gbcd"
 GBCD_CPID_CACHE="$GBCD_CACHE/$$"
 
@@ -43,7 +43,7 @@ GBCD_SLEEP_TIME=0
 
 if [[ -n $1 ]]
 then
-    GBCD_OPTIONS=$(getopt --longoptions proxy:,path:,exclude:,help,skip,keep,tags:,number:,repair,full-repair,wget-timeout:,encount,sleep:,reversive,exclude-download,exclude-remove --name "$0" --options P:p:x:hskt:n:rfw:el:iom -- "$@")
+    GBCD_OPTIONS=$(getopt --longoptions proxy:,path:,exclude:,help,skip,keep,tags:,number:,repair,full-repair,wget-timeout:,encount,sleep:,reversive,exclude-download,exclude-remove,exclude-selfremove --name "$0" --options P:p:x:hskt:n:rfw:el:iomv -- "$@")
     eval set -- "$GBCD_OPTIONS"
 
     while [[ -n $1 ]]
@@ -104,6 +104,9 @@ then
             -m|--exclude-remove)
                 GBCD_XREMOVE=0
                 ;;
+            -v|--exclude-selfremove)
+                GBCD_XSELFREMOVE=0
+                ;;
             --)
                 break
                 ;;
@@ -138,6 +141,7 @@ then
             "  -i, --reversive\t\tRemove artworks from excluded directories\n" \
             "  -o, --exclude-download\tDownload failed files from excluded directories\n" \
             "  -m, --exclude-remove\t\tDownload and remove failed files from excluded directories\n" \
+            "  -v, --exclude-selfremove\tRemove files that are in excluded directories\n" \
             "\n" \
             "\tR - Removed files\n" \
             "\tS - Successfully downloaded\n" \
@@ -324,6 +328,24 @@ then
                                         GBCD_REMOVED=$((GBCD_REMOVED+1))
                                     fi
                                 fi
+                            fi
+                        elif [[ -v $GBCD_XSELFREMOVE ]]
+                        then
+                            if [[ -f "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" ]]
+                            then
+                                rm -f "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME"
+
+                                if [[ -f "$GBCD_DOWNLOAD_DIR/md5_errors.txt" ]]
+                                then
+                                    sed -e "s/$GBCD_FILENAME//" -e '/^$/d' -i "$GBCD_DOWNLOAD_DIR/md5_errors.txt"
+                                fi
+
+                                if [[ -f "$GBCD_DOWNLOAD_DIR/connection_errors.txt" ]]
+                                then
+                                    sed -e "s/$GBCD_FILENAME//" -e '/^$/d' -i "$GBCD_DOWNLOAD_DIR/connection_errors.txt"
+                                fi
+
+                                GBCD_REMOVED=$((GBCD_REMOVED+1))
                             fi
                         else
                             GBCD_CONTINUE=0
