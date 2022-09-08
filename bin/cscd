@@ -29,7 +29,7 @@ then
     exit 1
 fi
 
-CSCD_VERSION="3.8"
+CSCD_VERSION="3.9"
 CSCD_CONFIG="$HOME/.config/cscd"
 CSCD_CACHE="$HOME/.cache/cscd"
 CSCD_CPID_CACHE="$CSCD_CACHE/$$"
@@ -247,16 +247,6 @@ then
         fi
     fi
 
-    if ([[ -v $CSCD_REPAIR ]] || [[ -v $CSCD_FULL_REPAIR ]]) && [[ -f "$CSCD_DOWNLOAD_DIR/md5_errors.txt" ]]
-    then
-        mv "$CSCD_DOWNLOAD_DIR/md5_errors.txt" "$CSCD_CPID_CACHE/md5_errors.txt"
-    fi
-
-    if ([[ -v $CSCD_REPAIR ]] || [[ -v $CSCD_FULL_REPAIR ]]) && [[ -f "$CSCD_DOWNLOAD_DIR/connection_errors.txt" ]]
-    then
-        mv "$CSCD_DOWNLOAD_DIR/connection_errors.txt" "$CSCD_CPID_CACHE/connection_errors.txt"
-    fi
-
     echo "Downloading artworks"
     echo "--------------------"
     echo -e -n "\rR: $CSCD_REMOVED S: $CSCD_SUCCESS F: $CSCD_FAILED D: $CSCD_DONE"
@@ -314,17 +304,17 @@ then
                 then
                     CSCD_CONTINUE=0
 
-                    if [[ -f "$CSCD_CPID_CACHE/md5_errors.txt" ]]
+                    if [[ -f "$CSCD_DOWNLOAD_DIR/md5_errors.txt" ]]
                     then
-                        if grep --quiet "$CSCD_FILENAME" "$CSCD_CPID_CACHE/md5_errors.txt"
+                        if grep --quiet "$CSCD_FILENAME" "$CSCD_DOWNLOAD_DIR/md5_errors.txt"
                         then
                             CSCD_CONTINUE=1
                         fi
                     fi
 
-                    if [[ -f "$CSCD_CPID_CACHE/connection_errors.txt" ]]
+                    if [[ -f "$CSCD_DOWNLOAD_DIR/connection_errors.txt" ]]
                     then
-                        if grep --quiet "$CSCD_FILENAME" "$CSCD_CPID_CACHE/connection_errors.txt"
+                        if grep --quiet "$CSCD_FILENAME" "$CSCD_DOWNLOAD_DIR/connection_errors.txt"
                         then
                             CSCD_CONTINUE=1
                         fi
@@ -398,21 +388,21 @@ then
                         then
                             CSCD_CONTINUE=0
 
-                            if [[ -f "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" ]]
+                            if [[ -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" ]]
                             then
-                                rm -f "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME"
+                                rm -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME"
 
-                                if [[ -f "$GBCD_DOWNLOAD_DIR/md5_errors.txt" ]]
+                                if [[ -f "$CSCD_DOWNLOAD_DIR/md5_errors.txt" ]]
                                 then
-                                    sed -e "s/$GBCD_FILENAME//" -e '/^$/d' -i "$GBCD_DOWNLOAD_DIR/md5_errors.txt"
+                                    sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_DOWNLOAD_DIR/md5_errors.txt"
                                 fi
 
-                                if [[ -f "$GBCD_DOWNLOAD_DIR/connection_errors.txt" ]]
+                                if [[ -f "$CSCD_DOWNLOAD_DIR/connection_errors.txt" ]]
                                 then
-                                    sed -e "s/$GBCD_FILENAME//" -e '/^$/d' -i "$GBCD_DOWNLOAD_DIR/connection_errors.txt"
+                                    sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_DOWNLOAD_DIR/connection_errors.txt"
                                 fi
 
-                                GBCD_REMOVED=$((GBCD_REMOVED+1))
+                                CSCD_REMOVED=$((CSCD_REMOVED+1))
                             fi
                         else
                             CSCD_CONTINUE=0
@@ -425,6 +415,17 @@ then
             if [[ $CSCD_CONTINUE -eq 1 ]]
             then
                 wget --quiet --tries=0 --retry-connrefused --output-document="$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" --timeout=$CSCD_WGET_TIMEOUT --connect-timeout=$CSCD_WGET_TIMEOUT --user-agent="CSCD" "$CSCD_URL"
+
+                if [[ -f "$CSCD_DOWNLOAD_DIR/md5_errors.txt" ]]
+                then
+                    sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_DOWNLOAD_DIR/md5_errors.txt"
+                fi
+
+                if [[ -f "$CSCD_DOWNLOAD_DIR/connection_errors.txt" ]]
+                then
+                    sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_DOWNLOAD_DIR/connection_errors.txt"
+                fi
+
                 if [[ -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" ]]
                 then
                     if [[ -v $CSCD_SKIP_MD5 ]]
@@ -457,6 +458,45 @@ then
 
         sleep $CSCD_SLEEP_TIME
     done
+
+    if [[ -f "$CSCD_DOWNLOAD_DIR/md5_errors.txt" ]]
+    then
+        if ! grep --quiet "" "$CSCD_DOWNLOAD_DIR/md5_errors.txt"
+        then
+            rm -f "$CSCD_DOWNLOAD_DIR/md5_errors.txt"
+        fi
+    fi
+
+    if [[ -f "$CSCD_DOWNLOAD_DIR/connection_errors.txt" ]]
+    then
+        if ! grep --quiet "" "$CSCD_DOWNLOAD_DIR/connection_errors.txt"
+        then
+            rm -f "$CSCD_DOWNLOAD_DIR/connection_errors.txt"
+        fi
+    fi
+
+    if [[ -n $CSCD_EXCLUDE_LOOP ]]
+    then
+        for CSCD_EXCLUDE_DIR in $CSCD_EXCLUDE_LOOP
+        do
+            if [[ -f "$CSCD_EXCLUDE_DIR/md5_errors.txt" ]]
+            then
+                if ! grep --quiet "" "$CSCD_EXCLUDE_DIR/md5_errors.txt"
+                then
+                    rm -f "$CSCD_EXCLUDE_DIR/md5_errors.txt"
+                fi
+            fi
+
+            if [[ -f "$CSCD_EXCLUDE_DIR/connection_errors.txt" ]]
+            then
+                if ! grep --quiet "" "$CSCD_EXCLUDE_DIR/connection_errors.txt"
+                then
+                    rm -f "$CSCD_EXCLUDE_DIR/connection_errors.txt"
+                fi
+            fi
+        done
+    fi
+
     echo -e "\n"
 elif ! [[ -f "$CSCD_CONFIG/token" ]] && [[ -v $CSCD_POSTS ]]
 then
@@ -524,7 +564,7 @@ then
 
             CSCD_DOWNLOAD_DIR_POOL="$CSCD_DOWNLOAD_DIR/$CSCD_POOL"
 
-            if ! [[ -d "$CSCD_DOWNLOAD_DIR_POOL" ]] || [[ -v $CSCD_REPAIR ]]
+            if ! [[ -d "$CSCD_DOWNLOAD_DIR_POOL" ]] || [[ -v $CSCD_REPAIR ]] || [[ -v $CSCD_FULL_REPAIR ]]
             then
                 if ! mkdir -p "$CSCD_DOWNLOAD_DIR_POOL"
                 then
@@ -537,16 +577,6 @@ then
                 CSCD_POOL_SUCCESS=0
                 CSCD_POOL_FAILED=0
                 CSCD_POOL_DONE=0
-
-                if ([[ -v $CSCD_REPAIR ]] || [[ -v $CSCD_FULL_REPAIR ]]) && [[ -f "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt" ]]
-                then
-                    mv "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt" "$CSCD_CPID_CACHE/md5_errors_$CSCD_POOL.txt"
-                fi
-
-                if ([[ -v $CSCD_REPAIR ]] || [[ -v $CSCD_FULL_REPAIR ]]) && [[ -f "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt" ]]
-                then
-                    mv "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt" "$CSCD_CPID_CACHE/connection_errors_$CSCD_POOL.txt"
-                fi
 
                 echo -e -n "\rR: $CSCD_POOL_REMOVED S: $CSCD_POOL_SUCCESS F: $CSCD_POOL_FAILED D: $CSCD_POOL_DONE"
                 until [[ -v $CSCD_ABSOLUTE_BREAK ]]
@@ -595,19 +625,21 @@ then
                         then
                             if [[ -v $CSCD_REPAIR ]]
                             then
-                                if [[ -f "$CSCD_CPID_CACHE/md5_errors_$CSCD_POOL.txt" ]]
+                                CSCD_CONTINUE=0
+
+                                if [[ -f "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt" ]]
                                 then
-                                    if ! grep --quiet "$CSCD_FILENAME" "$CSCD_CPID_CACHE/md5_errors_$CSCD_POOL.txt"
+                                    if grep --quiet "$CSCD_FILENAME" "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt"
                                     then
-                                        CSCD_CONTINUE=0
+                                        CSCD_CONTINUE=1
                                     fi
                                 fi
 
-                                if [[ -f "$CSCD_CPID_CACHE/connection_errors_$CSCD_POOL.txt" ]]
+                                if [[ -f "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt" ]]
                                 then
-                                    if ! grep --quiet "$CSCD_FILENAME" "$CSCD_CPID_CACHE/connection_errors_$CSCD_POOL.txt"
+                                    if grep --quiet "$CSCD_FILENAME" "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt"
                                     then
-                                        CSCD_CONTINUE=0
+                                        CSCD_CONTINUE=1
                                     fi
                                 fi
                             elif [[ -v $CSCD_FULL_REPAIR ]]
@@ -624,6 +656,17 @@ then
                         if [[ $CSCD_CONTINUE -eq 1 ]]
                         then
                             wget --quiet --tries=0 --retry-connrefused --output-document="$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" --timeout=$CSCD_WGET_TIMEOUT --connect-timeout=$CSCD_WGET_TIMEOUT --user-agent="CSCD" "$CSCD_URL"
+
+                            if [[ -f "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt" ]]
+                            then
+                                sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt"
+                            fi
+
+                            if [[ -f "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt" ]]
+                            then
+                                sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt"
+                            fi
+
                             if [[ -f "$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" ]]
                             then
                                 if [[ -v $CSCD_SKIP_MD5 ]]
@@ -656,6 +699,22 @@ then
 
                     sleep $CSCD_SLEEP_TIME
                 done
+            fi
+
+            if [[ -f "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt" ]]
+            then
+                if ! grep --quiet "" "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt"
+                then
+                    rm -f "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt"
+                fi
+            fi
+
+            if [[ -f "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt" ]]
+            then
+                if ! grep --quiet "" "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt"
+                then
+                    rm -f "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt"
+                fi
             fi
         done
         CSCD_PAGE=$((CSCD_PAGE+1))
