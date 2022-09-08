@@ -28,7 +28,7 @@ then
     exit 1
 fi
 
-GBCD_VERSION="1.14"
+GBCD_VERSION="1.15"
 GBCD_CACHE="$HOME/.cache/gbcd"
 GBCD_CPID_CACHE="$GBCD_CACHE/$$"
 
@@ -177,16 +177,6 @@ then
         fi
     fi
 
-    if ([[ -v $GBCD_REPAIR ]] || [[ -v $GBCD_FULL_REPAIR ]]) && [[ -f "$GBCD_DOWNLOAD_DIR/md5_errors.txt" ]]
-    then
-        mv "$GBCD_DOWNLOAD_DIR/md5_errors.txt" "$GBCD_CPID_CACHE/md5_errors.txt"
-    fi
-
-    if ([[ -v $GBCD_REPAIR ]] || [[ -v $GBCD_FULL_REPAIR ]]) && [[ -f "$GBCD_DOWNLOAD_DIR/connection_errors.txt" ]]
-    then
-        mv "$GBCD_DOWNLOAD_DIR/connection_errors.txt" "$GBCD_CPID_CACHE/connection_errors.txt"
-    fi
-
     echo "Downloading artworks"
     echo "--------------------"
     echo -e -n "\rR: $GBCD_REMOVED S: $GBCD_SUCCESS F: $GBCD_FAILED D: $GBCD_DONE"
@@ -249,17 +239,17 @@ then
                 then
                     GBCD_CONTINUE=0
 
-                    if [[ -f "$GBCD_CPID_CACHE/md5_errors.txt" ]]
+                    if [[ -f "$GBCD_DOWNLOAD_DIR/md5_errors.txt" ]]
                     then
-                        if grep --quiet "$GBCD_FILENAME" "$GBCD_CPID_CACHE/md5_errors.txt"
+                        if grep --quiet "$GBCD_FILENAME" "$GBCD_DOWNLOAD_DIR/md5_errors.txt"
                         then
                             GBCD_CONTINUE=1
                         fi
                     fi
 
-                    if [[ -f "$GBCD_CPID_CACHE/connection_errors.txt" ]]
+                    if [[ -f "$GBCD_DOWNLOAD_DIR/connection_errors.txt" ]]
                     then
-                        if grep --quiet "$GBCD_FILENAME" "$GBCD_CPID_CACHE/connection_errors.txt"
+                        if grep --quiet "$GBCD_FILENAME" "$GBCD_DOWNLOAD_DIR/connection_errors.txt"
                         then
                             GBCD_CONTINUE=1
                         fi
@@ -366,6 +356,16 @@ then
                     wget --quiet --tries=0 --retry-connrefused --output-document="$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" --timeout=$GBCD_WGET_TIMEOUT --connect-timeout=$GBCD_WGET_TIMEOUT --user-agent="GBCD" --no-check-certificate "$GBCD_URL"
                 fi
 
+                if [[ -f "$GBCD_DOWNLOAD_DIR/md5_errors.txt" ]]
+                then
+                    sed -e "s/$GBCD_FILENAME//" -e '/^$/d' -i "$GBCD_DOWNLOAD_DIR/md5_errors.txt"
+                fi
+
+                if [[ -f "$GBCD_DOWNLOAD_DIR/connection_errors.txt" ]]
+                then
+                    sed -e "s/$GBCD_FILENAME//" -e '/^$/d' -i "$GBCD_DOWNLOAD_DIR/connection_errors.txt"
+                fi
+
                 if [[ -f "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" ]]
                 then
                     if [[ -v $GBCD_SKIP_MD5 ]]
@@ -398,5 +398,44 @@ then
 
         sleep $GBCD_SLEEP_TIME
     done
+
+    if [[ -f "$GBCD_DOWNLOAD_DIR/md5_errors.txt" ]]
+    then
+        if ! grep --quiet "" "$GBCD_DOWNLOAD_DIR/md5_errors.txt"
+        then
+            rm -f "$GBCD_DOWNLOAD_DIR/md5_errors.txt"
+        fi
+    fi
+
+    if [[ -f "$GBCD_DOWNLOAD_DIR/connection_errors.txt" ]]
+    then
+        if ! grep --quiet "" "$GBCD_DOWNLOAD_DIR/connection_errors.txt"
+        then
+            rm -f "$GBCD_DOWNLOAD_DIR/connection_errors.txt"
+        fi
+    fi
+
+    if [[ -n $GBCD_EXCLUDE_LOOP ]]
+    then
+        for GBCD_EXCLUDE_DIR in $GBCD_EXCLUDE_LOOP
+        do
+            if [[ -f "$GBCD_EXCLUDE_DIR/md5_errors.txt" ]]
+            then
+                if ! grep --quiet "" "$GBCD_EXCLUDE_DIR/md5_errors.txt"
+                then
+                    rm -f "$GBCD_EXCLUDE_DIR/md5_errors.txt"
+                fi
+            fi
+
+            if [[ -f "$GBCD_EXCLUDE_DIR/connection_errors.txt" ]]
+            then
+                if ! grep --quiet "" "$GBCD_EXCLUDE_DIR/connection_errors.txt"
+                then
+                    rm -f "$GBCD_EXCLUDE_DIR/connection_errors.txt"
+                fi
+            fi
+        done
+    fi
+
     echo -e "\n"
 fi
