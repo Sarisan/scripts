@@ -29,7 +29,7 @@ then
     exit 1
 fi
 
-CSCD_VERSION="3.10"
+CSCD_VERSION="3.11"
 CSCD_CONFIG="$HOME/.config/cscd"
 CSCD_CACHE="$HOME/.cache/cscd"
 CSCD_CPID_CACHE="$CSCD_CACHE/$$"
@@ -282,18 +282,22 @@ then
                 break
             fi
 
-            CSCD_FILENAME="$(echo $CSCD_URL | cut -d '?' -f 1 | cut -d '/' -f 7)"
-
             if ! [[ -d "$CSCD_DOWNLOAD_DIR" ]]
             then
                 echo -e "\nDownload dir does not exist\n"
                 exit 1
             fi
 
-            if [[ -v $CSCD_ENCOUNT ]] && [[ -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" ]]
+            CSCD_FILENAME="$(echo $CSCD_URL | cut -d '/' -f 7)"
+
+            if [[ -f "$CSCD_DOWNLOAD_DIR/md5_errors.txt" ]]
             then
-                CSCD_ABSOLUTE_BREAK=0
-                break
+                sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_DOWNLOAD_DIR/md5_errors.txt"
+            fi
+
+            if [[ -f "$CSCD_DOWNLOAD_DIR/connection_errors.txt" ]]
+            then
+                sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_DOWNLOAD_DIR/connection_errors.txt"
             fi
 
             CSCD_CONTINUE=1
@@ -325,6 +329,10 @@ then
                     then
                         CSCD_CONTINUE=0
                     fi
+                elif [[ -v $CSCD_ENCOUNT ]]
+                then
+                    CSCD_ABSOLUTE_BREAK=0
+                    break
                 else
                     CSCD_CONTINUE=0
                 fi
@@ -391,17 +399,6 @@ then
                             if [[ -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" ]]
                             then
                                 rm -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME"
-
-                                if [[ -f "$CSCD_DOWNLOAD_DIR/md5_errors.txt" ]]
-                                then
-                                    sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_DOWNLOAD_DIR/md5_errors.txt"
-                                fi
-
-                                if [[ -f "$CSCD_DOWNLOAD_DIR/connection_errors.txt" ]]
-                                then
-                                    sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_DOWNLOAD_DIR/connection_errors.txt"
-                                fi
-
                                 CSCD_REMOVED=$((CSCD_REMOVED+1))
                             fi
                         else
@@ -415,16 +412,6 @@ then
             if [[ $CSCD_CONTINUE -eq 1 ]]
             then
                 wget --quiet --tries=0 --retry-connrefused --output-document="$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" --timeout=$CSCD_WGET_TIMEOUT --connect-timeout=$CSCD_WGET_TIMEOUT --user-agent="CSCD" "$CSCD_URL"
-
-                if [[ -f "$CSCD_DOWNLOAD_DIR/md5_errors.txt" ]]
-                then
-                    sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_DOWNLOAD_DIR/md5_errors.txt"
-                fi
-
-                if [[ -f "$CSCD_DOWNLOAD_DIR/connection_errors.txt" ]]
-                then
-                    sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_DOWNLOAD_DIR/connection_errors.txt"
-                fi
 
                 if [[ -f "$CSCD_DOWNLOAD_DIR/$CSCD_FILENAME" ]]
                 then
@@ -563,7 +550,6 @@ then
             fi
 
             CSCD_DOWNLOAD_DIR_POOL="$CSCD_DOWNLOAD_DIR/$CSCD_POOL"
-
             CSCD_CONTINUE=1
 
             if [[ -d "$CSCD_DOWNLOAD_DIR_POOL" ]]
@@ -617,18 +603,22 @@ then
 
                     for CSCD_URL in $(cat "$CSCD_CPID_CACHE/urls_$CSCD_POOL")
                     do
-                        CSCD_FILENAME="$(echo $CSCD_URL | cut -d '?' -f 1 | cut -d '/' -f 7)"
-
                         if ! [[ -d "$CSCD_DOWNLOAD_DIR_POOL" ]]
                         then
                             echo -e "\nDownload dir does not exist\n"
                             exit 1
                         fi
 
-                        if [[ -v $CSCD_ENCOUNT ]] && [[ -f "$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" ]]
+                        CSCD_FILENAME="$(echo $CSCD_URL | cut -d '?' -f 1 | cut -d '/' -f 7)"
+
+                        if [[ -f "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt" ]]
                         then
-                            CSCD_ABSOLUTE_BREAK=0
-                            break
+                            sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt"
+                        fi
+
+                        if [[ -f "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt" ]]
+                        then
+                            sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt"
                         fi
 
                         CSCD_CONTINUE_POOL=1
@@ -660,6 +650,10 @@ then
                                 then
                                     CSCD_CONTINUE_POOL=0
                                 fi
+                            elif [[ -v $CSCD_ENCOUNT ]]
+                            then
+                                CSCD_ABSOLUTE_BREAK=0
+                                break
                             else
                                 CSCD_CONTINUE_POOL=0
                             fi
@@ -668,16 +662,6 @@ then
                         if [[ $CSCD_CONTINUE_POOL -eq 1 ]]
                         then
                             wget --quiet --tries=0 --retry-connrefused --output-document="$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" --timeout=$CSCD_WGET_TIMEOUT --connect-timeout=$CSCD_WGET_TIMEOUT --user-agent="CSCD" "$CSCD_URL"
-
-                            if [[ -f "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt" ]]
-                            then
-                                sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_DOWNLOAD_DIR_POOL/md5_errors.txt"
-                            fi
-
-                            if [[ -f "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt" ]]
-                            then
-                                sed -e "s/$CSCD_FILENAME//" -e '/^$/d' -i "$CSCD_DOWNLOAD_DIR_POOL/connection_errors.txt"
-                            fi
 
                             if [[ -f "$CSCD_DOWNLOAD_DIR_POOL/$CSCD_FILENAME" ]]
                             then
