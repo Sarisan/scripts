@@ -28,7 +28,7 @@ then
     exit 1
 fi
 
-GBCD_VERSION="1.15"
+GBCD_VERSION="1.16"
 GBCD_CACHE="$HOME/.cache/gbcd"
 GBCD_CPID_CACHE="$GBCD_CACHE/$$"
 
@@ -161,7 +161,7 @@ then
     fi
 
     GBCD_LIMIT=100
-    GBCD_PAGE=0
+    GBCD_PID=0
     GBCD_REMOVED=0
     GBCD_SUCCESS=0
     GBCD_FAILED=0
@@ -185,9 +185,9 @@ then
     do
         if [[ -n $GBCD_PROXY ]]
         then
-            curl --data-urlencode "page=dapi" --data-urlencode "s=post" --data-urlencode "q=index" --data-urlencode "limit=$GBCD_LIMIT" --data-urlencode "pid=$GBCD_PAGE" --data-urlencode "tags=$GBCD_TAGS" --data-urlencode "json=1" -G -o "$GBCD_CPID_CACHE/posts.json" --proxy "$GBCD_PROXY" -s -A "GBCD" "https://gelbooru.com/index.php"
+            curl --data-urlencode "page=dapi" --data-urlencode "s=post" --data-urlencode "q=index" --data-urlencode "limit=$GBCD_LIMIT" --data-urlencode "pid=$GBCD_PID" --data-urlencode "tags=$GBCD_TAGS" --data-urlencode "json=1" -G -o "$GBCD_CPID_CACHE/posts.json" --proxy "$GBCD_PROXY" -s -A "GBCD" "https://gelbooru.com/index.php"
         else
-            curl --data-urlencode "page=dapi" --data-urlencode "s=post" --data-urlencode "q=index" --data-urlencode "limit=$GBCD_LIMIT" --data-urlencode "pid=$GBCD_PAGE" --data-urlencode "tags=$GBCD_TAGS" --data-urlencode "json=1" -G -o "$GBCD_CPID_CACHE/posts.json" -s -A "GBCD" "https://gelbooru.com/index.php"
+            curl --data-urlencode "page=dapi" --data-urlencode "s=post" --data-urlencode "q=index" --data-urlencode "limit=$GBCD_LIMIT" --data-urlencode "pid=$GBCD_PID" --data-urlencode "tags=$GBCD_TAGS" --data-urlencode "json=1" -G -o "$GBCD_CPID_CACHE/posts.json" -s -A "GBCD" "https://gelbooru.com/index.php"
         fi
 
         if [[ -f "$GBCD_CPID_CACHE/posts.json" ]]
@@ -217,18 +217,22 @@ then
                 break
             fi
 
-            GBCD_FILENAME="$(echo $GBCD_URL | cut -d '/' -f 7)"
-
             if ! [[ -d "$GBCD_DOWNLOAD_DIR" ]]
             then
                 echo -e "\nDownload dir does not exist\n"
                 exit 1
             fi
 
-            if [[ -v $GBCD_ENCOUNT ]] && [[ -f "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" ]]
+            GBCD_FILENAME="$(echo $GBCD_URL | cut -d '/' -f 7)"
+
+            if [[ -f "$GBCD_DOWNLOAD_DIR/md5_errors.txt" ]]
             then
-                GBCD_ABSOLUTE_BREAK=0
-                break
+                sed -e "s/$GBCD_FILENAME//" -e '/^$/d' -i "$GBCD_DOWNLOAD_DIR/md5_errors.txt"
+            fi
+
+            if [[ -f "$GBCD_DOWNLOAD_DIR/connection_errors.txt" ]]
+            then
+                sed -e "s/$GBCD_FILENAME//" -e '/^$/d' -i "$GBCD_DOWNLOAD_DIR/connection_errors.txt"
             fi
 
             GBCD_CONTINUE=1
@@ -260,6 +264,10 @@ then
                     then
                         GBCD_CONTINUE=0
                     fi
+                elif [[ -v $GBCD_ENCOUNT ]]
+                then
+                    GBCD_ABSOLUTE_BREAK=0
+                    break
                 else
                     GBCD_CONTINUE=0
                 fi
@@ -326,17 +334,6 @@ then
                             if [[ -f "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" ]]
                             then
                                 rm -f "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME"
-
-                                if [[ -f "$GBCD_DOWNLOAD_DIR/md5_errors.txt" ]]
-                                then
-                                    sed -e "s/$GBCD_FILENAME//" -e '/^$/d' -i "$GBCD_DOWNLOAD_DIR/md5_errors.txt"
-                                fi
-
-                                if [[ -f "$GBCD_DOWNLOAD_DIR/connection_errors.txt" ]]
-                                then
-                                    sed -e "s/$GBCD_FILENAME//" -e '/^$/d' -i "$GBCD_DOWNLOAD_DIR/connection_errors.txt"
-                                fi
-
                                 GBCD_REMOVED=$((GBCD_REMOVED+1))
                             fi
                         else
@@ -354,16 +351,6 @@ then
                     wget -e use_proxy=yes -e https_proxy="$GBCD_PROXY" --quiet --tries=0 --retry-connrefused --output-document="$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" --timeout=$GBCD_WGET_TIMEOUT --connect-timeout=$GBCD_WGET_TIMEOUT --user-agent="GBCD" --no-check-certificate "$GBCD_URL"
                 else
                     wget --quiet --tries=0 --retry-connrefused --output-document="$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" --timeout=$GBCD_WGET_TIMEOUT --connect-timeout=$GBCD_WGET_TIMEOUT --user-agent="GBCD" --no-check-certificate "$GBCD_URL"
-                fi
-
-                if [[ -f "$GBCD_DOWNLOAD_DIR/md5_errors.txt" ]]
-                then
-                    sed -e "s/$GBCD_FILENAME//" -e '/^$/d' -i "$GBCD_DOWNLOAD_DIR/md5_errors.txt"
-                fi
-
-                if [[ -f "$GBCD_DOWNLOAD_DIR/connection_errors.txt" ]]
-                then
-                    sed -e "s/$GBCD_FILENAME//" -e '/^$/d' -i "$GBCD_DOWNLOAD_DIR/connection_errors.txt"
                 fi
 
                 if [[ -f "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" ]]
@@ -394,7 +381,7 @@ then
             GBCD_DONE=$((GBCD_DONE+1))
             echo -e -n "\rR: $GBCD_REMOVED S: $GBCD_SUCCESS F: $GBCD_FAILED D: $GBCD_DONE"
         done
-        GBCD_PAGE=$((GBCD_PAGE+1))
+        GBCD_PID=$((GBCD_PID+1))
 
         sleep $GBCD_SLEEP_TIME
     done
