@@ -28,7 +28,7 @@ then
     exit 1
 fi
 
-GBCD_VERSION="1.17"
+GBCD_VERSION="1.18"
 GBCD_CACHE="$HOME/.cache/gbcd"
 GBCD_CPID_CACHE="$GBCD_CACHE/$$"
 
@@ -224,17 +224,6 @@ then
             fi
 
             GBCD_FILENAME="$(echo $GBCD_URL | cut -d '/' -f 7)"
-
-            if [[ -f "$GBCD_DOWNLOAD_DIR/md5_errors.txt" ]]
-            then
-                sed -e "s/$GBCD_FILENAME//" -e '/^$/d' -i "$GBCD_DOWNLOAD_DIR/md5_errors.txt"
-            fi
-
-            if [[ -f "$GBCD_DOWNLOAD_DIR/connection_errors.txt" ]]
-            then
-                sed -e "s/$GBCD_FILENAME//" -e '/^$/d' -i "$GBCD_DOWNLOAD_DIR/connection_errors.txt"
-            fi
-
             GBCD_CONTINUE=1
 
             if [[ -f "$GBCD_DOWNLOAD_DIR/$GBCD_FILENAME" ]]
@@ -271,6 +260,16 @@ then
                 else
                     GBCD_CONTINUE=0
                 fi
+            fi
+
+            if [[ -f "$GBCD_DOWNLOAD_DIR/md5_errors.txt" ]]
+            then
+                sed -e "s/$GBCD_FILENAME//" -e '/^$/d' -i "$GBCD_DOWNLOAD_DIR/md5_errors.txt"
+            fi
+
+            if [[ -f "$GBCD_DOWNLOAD_DIR/connection_errors.txt" ]]
+            then
+                sed -e "s/$GBCD_FILENAME//" -e '/^$/d' -i "$GBCD_DOWNLOAD_DIR/connection_errors.txt"
             fi
 
             if [[ -n $GBCD_EXCLUDE_LOOP ]]
@@ -411,40 +410,28 @@ then
         sleep $GBCD_SLEEP_TIME
     done
 
-    if [[ -f "$GBCD_DOWNLOAD_DIR/md5_errors.txt" ]]
+    if ! [[ -s "$GBCD_DOWNLOAD_DIR/md5_errors.txt" ]]
     then
-        if ! grep --quiet "" "$GBCD_DOWNLOAD_DIR/md5_errors.txt"
-        then
-            rm -f "$GBCD_DOWNLOAD_DIR/md5_errors.txt"
-        fi
+        rm -f "$GBCD_DOWNLOAD_DIR/md5_errors.txt"
     fi
 
-    if [[ -f "$GBCD_DOWNLOAD_DIR/connection_errors.txt" ]]
+    if ! [[ -s "$GBCD_DOWNLOAD_DIR/connection_errors.txt" ]]
     then
-        if ! grep --quiet "" "$GBCD_DOWNLOAD_DIR/connection_errors.txt"
-        then
-            rm -f "$GBCD_DOWNLOAD_DIR/connection_errors.txt"
-        fi
+        rm -f "$GBCD_DOWNLOAD_DIR/connection_errors.txt"
     fi
 
     if [[ -n $GBCD_EXCLUDE_LOOP ]]
     then
         for GBCD_EXCLUDE_DIR in $GBCD_EXCLUDE_LOOP
         do
-            if [[ -f "$GBCD_EXCLUDE_DIR/md5_errors.txt" ]]
+            if ! [[ -s "$GBCD_EXCLUDE_DIR/md5_errors.txt" ]]
             then
-                if ! grep --quiet "" "$GBCD_EXCLUDE_DIR/md5_errors.txt"
-                then
-                    rm -f "$GBCD_EXCLUDE_DIR/md5_errors.txt"
-                fi
+                rm -f "$GBCD_EXCLUDE_DIR/md5_errors.txt"
             fi
 
-            if [[ -f "$GBCD_EXCLUDE_DIR/connection_errors.txt" ]]
+            if ! [[ -s "$GBCD_EXCLUDE_DIR/connection_errors.txt" ]]
             then
-                if ! grep --quiet "" "$GBCD_EXCLUDE_DIR/connection_errors.txt"
-                then
-                    rm -f "$GBCD_EXCLUDE_DIR/connection_errors.txt"
-                fi
+                rm -f "$GBCD_EXCLUDE_DIR/connection_errors.txt"
             fi
         done
     fi
