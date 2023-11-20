@@ -1,10 +1,13 @@
 #!/bin/bash
-if [ -f $HOME/.tgbot ]; then
-. $HOME/.tgbot
+
+if [[ -f "${HOME}/.tgbot" ]]
+then
+    . "${HOME}/.tgbot"
 else
-echo -e "TG_BOTTOKEN=\"\"\nTG_JSONS=\"\"" > $HOME/.tgbot
+    echo -e "TOKEN=\"\"\nJSON=\"\"" > "${HOME}/.tgbot"
 fi
 
-if [ "$1" ] && [ "$2" ]; then
-curl -s -X POST -H "Content-Type: application/json" -d @$TG_JSONS/$2.json https://api.telegram.org/bot$TG_BOTTOKEN/$1
+if [[ -n "${1}" ]] && [[ -n "${2}" ]]
+then
+    curl -s -X POST -H "Content-Type: application/json" -d "@${JSON}/${2}.json" "https://api.telegram.org/bot${TOKEN}/${1}"
 fi
