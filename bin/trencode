@@ -1,0 +1,36 @@
+#!/bin/sh -e
+#
+# Copyright (C) 2023 Maria Lisina
+#
+# Optimize video for Telegram playback
+
+. ${0%/*}/../utils/utils
+
+deps ffmpeg
+
+if [[ -z "${1}" ]]
+then
+    echo "${0}: No input file specified"
+    exit 1
+fi
+
+if ! [[ -f "${1}" ]]
+then
+    echo "${0}: No input file found"
+    exit 1
+fi
+
+output_file="${1%.*}_t.mp4"
+
+if ffmpeg -i "${1}" \
+    -acodec aac \
+    -vcodec libx264 \
+    -profile:v high \
+    -pix_fmt yuv420p \
+    -movflags +faststart \
+    "${output_file}" -y
+then
+    echo "Reencoded succesfully: '${output_file}'"
+else
+    echo "Failed to reencode the video"
+fi

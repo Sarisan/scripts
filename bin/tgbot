@@ -1,13 +1,53 @@
-#!/bin/bash
+#!/bin/sh -e
+#
+# Copyright (C) 2023 Maria Lisina
+#
+# Send JSON formatted data to Telegram bot
 
-if [[ -f "${HOME}/.tgbot" ]]
+. ${0%/*}/../utils/utils
+
+deps curl
+
+config_file="${HOME}/.tgbot"
+
+if [[ -f "${config_file}" ]]
 then
-    . "${HOME}/.tgbot"
+    . "${config_file}"
 else
-    echo -e "TOKEN=\"\"\nJSON=\"\"" > "${HOME}/.tgbot"
+    echo -e "token=\"\"\njson=\"\"" > "${config_file}"
+    echo "Empty configuration file has been written to '${config_file}'"
+    exit 0
+fi
+
+if [[ -z "${token}" ]]
+then
+    echo "No access token specified. See '${config_file}'"
+    exit 1
+fi
+
+if [[ -n "${json}" ]]
+then
+    if ! [[ -d "${json}" ]]
+    then
+        echo "No json directory found. See '${config_file}'"
+        exit 1
+    fi
+else
+    echo "No json directory specified. See '${config_file}'"
+    exit 1
 fi
 
 if [[ -n "${1}" ]] && [[ -n "${2}" ]]
 then
-    curl -s -X POST -H "Content-Type: application/json" -d "@${JSON}/${2}.json" "https://api.telegram.org/bot${TOKEN}/${1}"
+    curl -s \
+        -X POST \
+        -H "Content-Type: application/json" \
+        -d "@${JSON}/${2}.json" \
+        "https://api.telegram.org/bot${TOKEN}/${1}"
+else
+    echo -e "You must specify both arguments: post method and file name\n" \
+            "Example: ${0} sendPhoto postQuark\n" \
+            "Where postQuark is postQuark.json file located in directory you" \
+            "specified with json variable"
+    exit 1
 fi

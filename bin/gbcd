@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# Copyright (C) 2022 Sarisan Sekoohaka
-# Copyright (C) 2022 Sakuyou Sekoohaka
+# Copyright (C) 2022 Maria Lisina
+# Copyright (C) 2022 Danil Lisin
 #
 # Gelbooru downloader
 # Dependencies: coreutils, curl, jq, sed, util-linux, wget

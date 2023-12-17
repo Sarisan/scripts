@@ -1,0 +1,24 @@
+#!/bin/sh -e
+#
+# Copyright (C) 2023 Maria Lisina
+#
+# Dependencies check utility
+
+. ${0%/*}/utils
+
+missing=""
+
+for required in ${@}
+do
+    if ! command -v "${required}" &> /dev/null
+    then
+        missing="${missing} ${required}"
+    fi
+done
+
+if [[ -n "${missing}" ]]
+then
+    echo -e "Missing dependencies:${missing}\n" \
+            "For more information follow: https://command-not-found.com/"
+    exit 1
+fi
