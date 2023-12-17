@@ -33,4 +33,5 @@ then
     echo "Reencoded succesfully: '${output_file}'"
 else
     echo "Failed to reencode the video"
+    exit 1
 fi
