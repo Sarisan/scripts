@@ -10,13 +10,13 @@ deps ffmpeg
 
 if [[ -z "${1}" ]]
 then
-    echo "${0}: No input file specified"
+    echo "No input file specified"
     exit 1
 fi
 
 if ! [[ -f "${1}" ]]
 then
-    echo "${0}: No input file found"
+    echo "No input file found"
     exit 1
 fi
 
