@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/busybox sh
 #
 # Copyright (C) 2023 Maria Lisina
 #
