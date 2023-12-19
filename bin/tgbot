@@ -4,7 +4,7 @@
 #
 # Send JSON formatted data to Telegram bot
 
-. ${0%/*}/../utils/utils
+. ${0%/*}/../iutils
 
 deps curl
 

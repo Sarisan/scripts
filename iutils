@@ -4,9 +4,7 @@
 
 set -e
 
-utils_list="deps"
-
-for util in ${utils_list}
+for util in ${0%/*}/../utils/*
 do
-    alias "${util}"="${0%/*}/../utils/${util}"
+    alias "${util##*/}"="${util}"
 done
