@@ -4,6 +4,11 @@
 
 set -e
 
+for function in $(busybox --list)
+do
+    alias "${function}"="busybox ${function}"
+done
+
 for util in ${0%/*}/../utils/*
 do
     alias "${util##*/}"="${util}"
