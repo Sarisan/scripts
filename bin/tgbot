@@ -46,8 +46,8 @@ then
         "https://api.telegram.org/bot${TOKEN}/${1}"
 else
     echo -e "You must specify both arguments: post method and file name\n" \
-            "Example: ${0} sendPhoto postQuark\n" \
-            "Where postQuark is postQuark.json file located in directory you" \
-            "specified with json variable"
+            "Example: '${0} sendPhoto postQuark\n'" \
+            "Where 'postQuark' is 'postQuark.json' file located in directory you" \
+            "specified with 'json' variable"
     exit 1
 fi
