@@ -6,7 +6,7 @@
 
 . ${0%/*}/../iutils
 
-deps ffmpeg
+depends ffmpeg
 
 if [[ -z "${1}" ]]
 then

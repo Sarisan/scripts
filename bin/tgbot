@@ -6,7 +6,7 @@
 
 . ${0%/*}/../iutils
 
-deps curl
+depends curl
 
 config_file="${HOME}/.tgbot"
 
