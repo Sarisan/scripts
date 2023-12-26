@@ -42,8 +42,8 @@ then
     curl -s \
         -X POST \
         -H "Content-Type: application/json" \
-        -d "@${JSON}/${2}.json" \
-        "https://api.telegram.org/bot${TOKEN}/${1}"
+        -d "@${json}/${2}.json" \
+        "https://api.telegram.org/bot${token}/${1}"
 else
     echo -e "You must specify both arguments: post method and file name\n" \
             "Example: '${0} sendPhoto postQuark\n'" \
