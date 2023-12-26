@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2023 Maria Lisina
 #
-# Optimize video for Telegram playback
+# Reencode media to optimize playback in Telegram
 
 . ${0%/*}/../iutils
 
