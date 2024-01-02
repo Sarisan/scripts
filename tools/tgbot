@@ -8,7 +8,14 @@
 
 depends curl
 
-config_file="${HOME}/.tgbot"
+tgbot_config="${HOME}/.config/tgbot"
+config_file="${tgbot_config}/config"
+
+if ! mkdir -p "${tgbot_config}"
+then
+    echo "Failed to create config directory"
+    exit 1
+fi
 
 if [[ -f "${config_file}" ]]
 then
@@ -46,7 +53,7 @@ then
         "https://api.telegram.org/bot${token}/${1}"
 else
     echo -e "You must specify both arguments: post method and file name\n" \
-            "Example: '${0} sendPhoto postQuark\n'" \
+            "Example: '${0} sendPhoto postQuark'\n" \
             "Where 'postQuark' is 'postQuark.json' file located in directory you" \
             "specified with 'json' variable"
     exit 1
