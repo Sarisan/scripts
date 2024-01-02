@@ -1,0 +1,20 @@
+#!/bin/busybox sh
+#
+# Copyright (C) 2024 Maria Lisina
+#
+# Safe directory creation utility
+
+if [[ -n "${1}" ]]
+then
+    if ! mkdir -p "${1}"
+    then
+        if [[ -n "${2}" ]]
+        then
+            echo "Failed to create ${2} directory"
+        else
+            echo "Failed to create directory"
+        fi
+
+        exit 1
+    fi
+fi
