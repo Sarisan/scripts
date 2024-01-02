@@ -12,23 +12,14 @@ tgbot_config="${HOME}/.config/tgbot"
 default_json="${tgbot_config}/json"
 config_file="${tgbot_config}/config"
 
-if ! mkdir -p "${tgbot_config}"
-then
-    echo "Failed to create config directory"
-    exit 1
-fi
-
-if ! mkdir -p "${default_json}"
-then
-    echo "Failed to create json directory"
-    exit 1
-fi
+dcreate "${tgbot_config}" "config"
+dcreate "${default_json}" "json"
 
 if [[ -f "${config_file}" ]]
 then
     . "${config_file}"
 else
-    echo -e "token=\"\"\njson=\"\"" > "${config_file}"
+    fwrite "token=\"\"\njson=\"\"" "${config_file}" "config"
     echo "Empty configuration file has been written to '${config_file}'"
     exit 0
 fi
