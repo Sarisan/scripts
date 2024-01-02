@@ -9,11 +9,18 @@
 depends curl
 
 tgbot_config="${HOME}/.config/tgbot"
+default_json="${tgbot_config}/json"
 config_file="${tgbot_config}/config"
 
 if ! mkdir -p "${tgbot_config}"
 then
     echo "Failed to create config directory"
+    exit 1
+fi
+
+if ! mkdir -p "${default_json}"
+then
+    echo "Failed to create json directory"
     exit 1
 fi
 
@@ -32,16 +39,15 @@ then
     exit 1
 fi
 
-if [[ -n "${json}" ]]
+if [[ -z "${json}" ]]
 then
+    json="${default_json}"
+
     if ! [[ -d "${json}" ]]
     then
         echo "No json directory found. See '${config_file}'"
         exit 1
     fi
-else
-    echo "No json directory specified. See '${config_file}'"
-    exit 1
 fi
 
 if [[ -n "${1}" ]] && [[ -n "${2}" ]]
