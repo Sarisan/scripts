@@ -10,7 +10,7 @@ missing=""
 
 for required in ${@}
 do
-    if ! command -v "${required}" &> /dev/null
+    if ! command -v ${required} &> /dev/null
     then
         missing="${missing} ${required}"
     fi
