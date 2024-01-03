@@ -4,6 +4,8 @@
 #
 # Safe directory creation utility
 
+. ${0%/*}/../iutils
+
 if [[ -n "${1}" ]]
 then
     if ! mkdir -p "${1}"
