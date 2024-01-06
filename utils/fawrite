@@ -1,0 +1,22 @@
+#!/bin/busybox sh
+#
+# Copyright (C) 2024 Maria Lisina
+#
+# Safe file append writing utility
+
+. ${0%/*}/../iutils
+
+if [[ -n "${1}" ]] && [[ -n "${2}" ]]
+then
+    if ! echo -e "${1}" >> "${2}"
+    then
+        if [[ -n "${3}" ]]
+        then
+            echo "Failed to write ${3} file"
+        else
+            echo "Failed to write file"
+        fi
+
+        exit 1
+    fi
+fi
