@@ -10,7 +10,7 @@
 
 depends curl jq
 
-ibd_version="1.0"
+ibd_version="1.1"
 ibd_cache="${HOME}/.cache/ibd/$$"
 ibd_config="${HOME}/.config/ibd"
 ibd_erase="\033[K"
@@ -19,7 +19,7 @@ dcreate "${ibd_cache}" "cache"
 
 if [[ -n "${1}" ]]
 then
-    ibd_options="$(getopt -l help,path:,tags:,number:,encount,skip,keep,repair,full-repair,exclude:,reversive,exclude-download,exclude-remove,exclude-selfremove,sleep:,quiet,cn-timeout:,dl-timeout:,proxy:,authorize,range: -- hp:t:n:eskrfx:iomvl:qc:d:P:ag: "${@}")"
+    ibd_options="$(getopt -l help,authorize,path:,tags:,range:,number:,encount,skip,keep,repair,full-repair,exclude:,reversive,exclude-download,exclude-remove,exclude-selfremove,sleep:,quiet,cn-timeout:,dl-timeout:,proxy: -- hap:t:g:n:eskrfx:iomvl:qc:d:P:a "${@}")"
     eval set -- "${ibd_options}"
 
     while [[ -n "${1}" ]]
@@ -218,12 +218,13 @@ then
 
         echo "Refreshing access token..."
 
-        curl --connect-timeout ${ibd_connect_timeout} \
+        curl --connect-timeout 10 \
             --data "{\"login\":\"${sankaku_login}\",\"password\":\"${sankaku_password}\"}" \
             --header "Content-Type: application/json" \
             --output "${ibd_cache}/login.json" \
             --proxy "${ibd_proxy}" \
             --request POST \
+            --show-error \
             --silent \
             --user-agent "IBD" \
             "${ibd_api}/auth/token"
@@ -347,7 +348,7 @@ ibd_done=0
 ibd_absolute_break=1
 
 echo "Downloading artworks..."
-echo -e -n "\rRemoved: ${ibd_removed} Success: ${ibd_success} Failed: ${ibd_failed} Done: ${ibd_done}"
+echo -e -n "\r[Removed: ${ibd_removed}] [Success: ${ibd_success}] [Failed: ${ibd_failed}] [Done: ${ibd_done}] "
 
 until [[ ${ibd_absolute_break} -eq 0 ]]
 do
@@ -363,6 +364,7 @@ do
         --header "${ibd_header}" \
         --output "${ibd_cache}/${ibd_page}_posts.json" \
         --proxy "${ibd_proxy}" \
+        --show-error \
         --silent \
         --user-agent "IBD" \
         "${ibd_posts_url}"
@@ -388,6 +390,12 @@ do
 
     for ibd_url in $(cat "${ibd_cache}/${ibd_page}_urls")
     do
+        if ! [[ -d "${ibd_dir}" ]]
+        then
+            echo -e "\rNo download directory found${ibd_erase}"
+            exit 1
+        fi
+
         if [[ ${ibd_done} -eq ${ibd_number} ]]
         then
             ibd_absolute_break=0
@@ -398,14 +406,8 @@ do
         then
             ibd_done=$((ibd_done + 1))
             echo -e "\rIgnored empty URL${ibd_erase}"
-            echo -e -n "\rRemoved: ${ibd_removed} Success: ${ibd_success} Failed: ${ibd_failed} Done: ${ibd_done}"
+            echo -e -n "\r[Removed: ${ibd_removed}] [Success: ${ibd_success}] [Failed: ${ibd_failed}] [Done: ${ibd_done}] "
             break
-        fi
-
-        if ! [[ -d "${ibd_dir}" ]]
-        then
-            echo -e "\rNo download directory found${ibd_erase}"
-            exit 1
         fi
 
         ibd_filename="$(echo "${ibd_url}" | ibd_icut)"
@@ -537,6 +539,7 @@ do
             --remote-time \
             --proxy "${ibd_proxy}" \
             --retry-connrefused \
+            --show-error \
             --silent \
             --user-agent "IBD" \
             "${ibd_url}"
@@ -574,7 +577,7 @@ do
             echo -e "\r${ibd_filename}${ibd_erase}"
         fi
 
-        echo -e -n "\rRemoved: ${ibd_removed} Success: ${ibd_success} Failed: ${ibd_failed} Done: ${ibd_done}"
+        echo -e -n "\r[Removed: ${ibd_removed}] [Success: ${ibd_success}] [Failed: ${ibd_failed}] [Done: ${ibd_done}] "
     done
 
     ibd_page=$((ibd_page + 1))
