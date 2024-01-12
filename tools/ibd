@@ -10,11 +10,12 @@
 
 depends curl jq
 
-ibd_version="1.1"
+ibd_version="1.2"
 ibd_cache="${HOME}/.cache/ibd/$$"
 ibd_config="${HOME}/.config/ibd"
 ibd_erase="\033[K"
 
+rm -rf "${ibd_cache}"
 dcreate "${ibd_cache}" "cache"
 
 if [[ -n "${1}" ]]
