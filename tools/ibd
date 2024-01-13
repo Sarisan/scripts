@@ -10,7 +10,7 @@
 
 depends curl jq
 
-ibd_version="1.5"
+ibd_version="1.6"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 ibd_erase="\033[K"
@@ -398,11 +398,11 @@ do
     then
         if ! jq -e '.' "${ibd_cache}/${ibd_page}_posts.json" &> /dev/null
         then
-            echo -e "\rInvalid json detected${ibd_erase}"
+            echo "Invalid json detected"
             exit 1
         fi
     else
-        echo -e "\rFailed to access '${ibd_api}'${ibd_erase}"
+        echo -e "Failed to access '${ibd_api}'"
         exit 1
     fi
 
@@ -417,7 +417,7 @@ do
     do
         if ! [[ -d "${ibd_dir}" ]]
         then
-            echo -e "\rNo download directory found${ibd_erase}"
+            echo "No download directory found"
             exit 1
         fi
 
