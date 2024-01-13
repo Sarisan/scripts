@@ -10,7 +10,7 @@
 
 depends curl jq
 
-ibd_version="1.7"
+ibd_version="1.8"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 ibd_erase="\033[K"
@@ -154,6 +154,47 @@ then
             "\tsankaku\t\t\t\tSankaku Channel <https://chan.sankakucomplex.com/>\n" \
             "\tyandere\t\t\t\tyande.re <https://yande.re/>"
     exit 0
+fi
+
+if [[ -z "${ibd_dir}" ]]
+then
+    echo "No download directory specified. See '${0} --help'"
+    exit 1
+fi
+
+if [[ -n "${ibd_range}" ]]
+then
+    if [[ ${ibd_range} -gt 100 ]]
+    then
+        ibd_range=100
+    fi
+else
+    ibd_range=20
+fi
+
+if [[ -n "${ibd_number}" ]]
+then
+    if [[ ${ibd_number} -lt ${ibd_range} ]]
+    then
+        ibd_range=${ibd_number}
+    fi
+else
+    ibd_number=-1
+fi
+
+if [[ -z "${ibd_connect_timeout}" ]]
+then
+    ibd_connect_timeout=15
+fi
+
+if [[ -z "${ibd_download_timeout}" ]]
+then
+    ibd_download_timeout=86400
+fi
+
+if [[ -z "${ibd_sleep_time}" ]]
+then
+    ibd_sleep_time=0
 fi
 
 if [[ -n "${ibd_image_board}" ]]
@@ -318,47 +359,6 @@ then
     ibd_condition=".[0]|has(\"id\")"
     ibd_iurl=".[].file_url"
     ibd_ifilename="sed 's/\/yande.re.*\./\./' | cut -d '/' -f 5"
-fi
-
-if [[ -z "${ibd_dir}" ]]
-then
-    echo "No download directory specified. See '${0} --help'"
-    exit 1
-fi
-
-if [[ -n "${ibd_range}" ]]
-then
-    if [[ ${ibd_range} -gt 100 ]]
-    then
-        ibd_range=100
-    fi
-else
-    ibd_range=20
-fi
-
-if [[ -n "${ibd_number}" ]]
-then
-    if [[ ${ibd_number} -lt ${ibd_range} ]]
-    then
-        ibd_range=${ibd_number}
-    fi
-else
-    ibd_number=-1
-fi
-
-if [[ -z "${ibd_connect_timeout}" ]]
-then
-    ibd_connect_timeout=15
-fi
-
-if [[ -z "${ibd_download_timeout}" ]]
-then
-    ibd_download_timeout=86400
-fi
-
-if [[ -z "${ibd_sleep_time}" ]]
-then
-    ibd_sleep_time=0
 fi
 
 alias ibd_icut="${ibd_ifilename}"
