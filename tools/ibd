@@ -1,4 +1,4 @@
-#!/bin/busybox sh
+#!/usr/bin/env dash
 #
 # Copyright (C) 2024 Maria Lisina
 # Copyright (C) 2024 Danil Lisin
