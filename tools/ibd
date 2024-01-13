@@ -10,7 +10,7 @@
 
 depends curl jq
 
-ibd_version="1.6"
+ibd_version="1.7"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 ibd_erase="\033[K"
@@ -560,14 +560,14 @@ do
         if [[ ${ibd_continue} -eq 1 ]]
         then
             curl --connect-timeout ${ibd_download_timeout} \
-            --output "${ibd_dir}/${ibd_filename}" \
-            --remote-time \
-            --proxy "${ibd_proxy}" \
-            --retry-connrefused \
-            --show-error \
-            --silent \
-            --user-agent "IBD" \
-            "${ibd_url}"
+                --output "${ibd_dir}/${ibd_filename}" \
+                --remote-time \
+                --proxy "${ibd_proxy}" \
+                --retry-connrefused \
+                --show-error \
+                --silent \
+                --user-agent "IBD" \
+                "${ibd_url}"
 
             if ls "${ibd_dir}/${ibd_md5}."* &> /dev/null
             then
