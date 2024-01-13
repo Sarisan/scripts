@@ -301,7 +301,7 @@ then
 
         if [[ -f "${ibd_cache}/login.json" ]]
         then
-            if jq -e '.' "${ibd_cache}/login.json" &> /dev/null
+            if jq -e '.' "${ibd_cache}/login.json" > /dev/null
             then
                 if [[ "$(jq -r '.success' "${ibd_cache}/login.json")" == "true" ]]
                 then
@@ -396,7 +396,7 @@ do
 
     if [[ -f "${ibd_cache}/${ibd_page}_posts.json" ]]
     then
-        if ! jq -e '.' "${ibd_cache}/${ibd_page}_posts.json" &> /dev/null
+        if ! jq -e '.' "${ibd_cache}/${ibd_page}_posts.json" > /dev/null
         then
             echo "Invalid json detected"
             exit 1
@@ -439,7 +439,7 @@ do
         ibd_md5="$(echo "${ibd_filename}" | cut -d '.' -f 1)"
         ibd_continue=1
 
-        if ls "${ibd_dir}/${ibd_md5}."* &> /dev/null
+        if ls "${ibd_dir}/${ibd_md5}."* > /dev/null 2>&1
         then
             if [[ -n "${ibd_repair}" ]]
             then
@@ -484,7 +484,7 @@ do
         then
             for ibd_exclude_dir in ${ibd_exclude_loop}
             do
-                if ls "${ibd_exclude_dir}/${ibd_md5}."* &> /dev/null
+                if ls "${ibd_exclude_dir}/${ibd_md5}."* > /dev/null 2>&1
                 then
                     if [[ -n "${ibd_reversive}" ]]
                     then
@@ -538,7 +538,7 @@ do
                     then
                         ibd_continue=0
 
-                        if ls "${ibd_dir}/${ibd_md5}."* &> /dev/null
+                        if ls "${ibd_dir}/${ibd_md5}."* > /dev/null 2>&1
                         then
                             rm -f "${ibd_dir}/${ibd_md5}."*
 
@@ -569,7 +569,7 @@ do
                 --user-agent "IBD" \
                 "${ibd_url}"
 
-            if ls "${ibd_dir}/${ibd_md5}."* &> /dev/null
+            if ls "${ibd_dir}/${ibd_md5}."* > /dev/null 2>&1
             then
                 if [[ -n "${ibd_skip_md5}" ]]
                 then
