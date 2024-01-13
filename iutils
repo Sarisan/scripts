@@ -4,6 +4,12 @@
 
 set -e
 
+if ! command -v busybox > /dev/null
+then
+    echo "BusyBox is required to work!"
+    exit 1
+fi
+
 for function in $(busybox --list)
 do
     alias "${function}"="busybox ${function}"
