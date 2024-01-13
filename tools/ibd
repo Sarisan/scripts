@@ -10,7 +10,7 @@
 
 depends curl jq
 
-ibd_version="1.4"
+ibd_version="1.5"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 ibd_erase="\033[K"
@@ -150,9 +150,9 @@ then
             "\t-d, --dl-timeout <seconds>\tDownload timeout, default: 24 hours\n" \
             "\t-P, --proxy <address>\t\tUse proxy server\n" \
             "\nSupported image boards:\n" \
-            "\tgelbooru\t\t\tGelbooru\n" \
-            "\tsankaku\t\t\t\tSankaku Channel\n" \
-            "\tyandere\t\t\t\tyande.re"
+            "\tgelbooru\t\t\tGelbooru <https://gelbooru.com/>\n" \
+            "\tsankaku\t\t\t\tSankaku Channel <https://chan.sankakucomplex.com/>\n" \
+            "\tyandere\t\t\t\tyande.re <https://yande.re/>"
     exit 0
 fi
 
