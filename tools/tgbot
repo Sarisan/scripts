@@ -3,23 +3,23 @@
 # Copyright (C) 2024 Maria Lisina
 #
 # Send JSON formatted data to Telegram bot
+#
+# Prerequisites: curl
 
-. ${0%/*}/../iutils
-
-depends curl
+set -e
 
 tgbot_config="${HOME}/.config/tgbot"
 default_json="${tgbot_config}/json"
 config_file="${tgbot_config}/config"
 
-dcreate "${tgbot_config}" "config"
-dcreate "${default_json}" "json"
+mkdir -p "${tgbot_config}"
+mkdir -p "${default_json}"
 
 if [[ -f "${config_file}" ]]
 then
     . "${config_file}"
 else
-    fwrite "token=\"\"\njson=\"\"" "${config_file}" "config"
+    echo "token=\"\"\njson=\"\"" > "${config_file}"
     echo "Empty configuration file has been written to '${config_file}'"
     exit 0
 fi
@@ -45,7 +45,7 @@ if [[ -n "${1}" ]] && [[ -n "${2}" ]]
 then
     if ! [[ -f "${json}/${2}.json" ]]
     then
-        echo -e "No json file '${2}.json' found. See '${json}'"
+        echo "No json file '${2}.json' found. See '${json}'"
         exit 1
     fi
 
@@ -55,9 +55,9 @@ then
         -d "@${json}/${2}.json" \
         "https://api.telegram.org/bot${token}/${1}"
 else
-    echo -e "You must specify both arguments: post method and file name\n" \
-            "Example: '${0} sendPhoto postQuark'\n" \
-            "Where 'postQuark' is 'postQuark.json' file located in directory you" \
-            "specified with 'json' variable"
+    echo "You must specify both arguments: post method and file name\n" \
+        "Example: '${0} sendPhoto postQuark'\n" \
+        "Where 'postQuark' is 'postQuark.json' file located in directory you" \
+        "specified with 'json' variable"
     exit 1
 fi

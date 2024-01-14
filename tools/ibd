@@ -5,10 +5,10 @@
 #
 # Image Board Downloader
 # Supported image boards: Gelbooru, Sankaku Channel, yande.re
+#
+# Prerequisites: curl, jq
 
-. ${0%/*}/../iutils
-
-depends curl jq
+set -e
 
 ibd_version="1.10"
 ibd_cache="${HOME}/.cache/ibd/${$}"
@@ -16,11 +16,11 @@ ibd_config="${HOME}/.config/ibd"
 ibd_erase="\033[K"
 
 rm -rf "${ibd_cache}"
-dcreate "${ibd_cache}" "cache"
+mkdir -p "${ibd_cache}"
 
 if [[ -n "${1}" ]]
 then
-    ibd_options="$(getopt -l help,authorize,path:,tags:,range:,number:,encount,skip,keep,repair,full-repair,exclude:,reversive,exclude-download,exclude-remove,exclude-selfremove,sleep:,quiet,cn-timeout:,dl-timeout:,proxy: -- hap:t:g:n:eskrfx:iomvl:qc:d:P: "${@}")"
+    ibd_options="$(getopt -l help,authorize,path:,tags:,range:,number:,encount,skip,keep,repair,full-repair,exclude:,reversive,exclude-download,exclude-remove,exclude-selfremove,sleep:,quiet,cn-timeout:,dl-timeout:,proxy: -n "${0}" -- hap:t:g:n:eskrfx:iomvl:qc:d:P: "${@}")"
     eval set -- "${ibd_options}"
 
     while [[ -n "${1}" ]]
@@ -126,33 +126,33 @@ fi
 
 if [[ -n "${ibd_help}" ]]
 then
-    echo -e "Image Board Downloader v${ibd_version}\n\nUsage: ${0} [OPTIONS] [IMAGE BOARD]\n" \
-            "\nGlobal options:\n" \
-            "\t-h, --help\t\t\tShow help information\n" \
-            "\t-a, --authorize\t\t\tAuthorize to image board\n" \
-            "\t-p, --path <directory>\t\tDownload artworks to directory\n" \
-            "\t-t, --tags <tags>\t\tDownload artworks by tags\n" \
-            "\t-g, --range <number>\t\tRange of artworks between curl requests, max: 100, default: 20\n" \
-            "\t-n, --number <number>\t\tLimit number of artworks to download\n" \
-            "\t-e, --encount\t\t\tDownload new artworks only\n" \
-            "\t-s, --skip\t\t\tSkip md5 checksums\n" \
-            "\t-k, --keep\t\t\tKeep artworks failed md5 checksums\n" \
-            "\t-r, --repair\t\t\tRedownload detected failed artworks only\n" \
-            "\t-f, --full-repair\t\tRedownload undetected failed artworks\n" \
-            "\t-x, --exclude <directories>\tExclude artworks found in directories\n" \
-            "\t-i, --reversive\t\t\tRemove artworks from excluded directories\n" \
-            "\t-o, --exclude-download\t\tDownload failed artworks found in excluded directories\n" \
-            "\t-m, --exclude-remove\t\tDownload and remove failed artworks from excluded directories\n" \
-            "\t-v, --exclude-selfremove\tRemove artworks found in excluded directories\n" \
-            "\t-l, --sleep <seconds>\t\tTime interval between curl requests\n" \
-            "\t-q, --quiet\t\t\tDo not print file names\n" \
-            "\t-c, --cn-timeout <seconds>\tAPI connetion timeout, default: 15 seconds\n" \
-            "\t-d, --dl-timeout <seconds>\tDownload timeout, default: 24 hours\n" \
-            "\t-P, --proxy <address>\t\tUse proxy server\n" \
-            "\nSupported image boards:\n" \
-            "\tgelbooru\t\t\tGelbooru <https://gelbooru.com/>\n" \
-            "\tsankaku\t\t\t\tSankaku Channel <https://chan.sankakucomplex.com/>\n" \
-            "\tyandere\t\t\t\tyande.re <https://yande.re/>"
+    echo "Image Board Downloader v${ibd_version}\n\nUsage: ${0} [OPTIONS] [IMAGE BOARD]\n" \
+        "\nGlobal options:\n" \
+        "\t-h, --help\t\t\tShow help information\n" \
+        "\t-a, --authorize\t\t\tAuthorize to image board\n" \
+        "\t-p, --path <directory>\t\tDownload artworks to directory\n" \
+        "\t-t, --tags <tags>\t\tDownload artworks by tags\n" \
+        "\t-g, --range <number>\t\tRange of artworks between curl requests, max: 100, default: 20\n" \
+        "\t-n, --number <number>\t\tLimit number of artworks to download\n" \
+        "\t-e, --encount\t\t\tDownload new artworks only\n" \
+        "\t-s, --skip\t\t\tSkip md5 checksums\n" \
+        "\t-k, --keep\t\t\tKeep artworks failed md5 checksums\n" \
+        "\t-r, --repair\t\t\tRedownload detected failed artworks only\n" \
+        "\t-f, --full-repair\t\tRedownload undetected failed artworks\n" \
+        "\t-x, --exclude <directories>\tExclude artworks found in directories\n" \
+        "\t-i, --reversive\t\t\tRemove artworks from excluded directories\n" \
+        "\t-o, --exclude-download\t\tDownload failed artworks found in excluded directories\n" \
+        "\t-m, --exclude-remove\t\tDownload and remove failed artworks from excluded directories\n" \
+        "\t-v, --exclude-selfremove\tRemove artworks found in excluded directories\n" \
+        "\t-l, --sleep <seconds>\t\tTime interval between curl requests\n" \
+        "\t-q, --quiet\t\t\tDo not print file names\n" \
+        "\t-c, --cn-timeout <seconds>\tAPI connetion timeout, default: 15 seconds\n" \
+        "\t-d, --dl-timeout <seconds>\tDownload timeout, default: 24 hours\n" \
+        "\t-P, --proxy <address>\t\tUse proxy server\n" \
+        "\nSupported image boards:\n" \
+        "\tgelbooru\t\t\tGelbooru <https://gelbooru.com/>\n" \
+        "\tsankaku\t\t\t\tSankaku Channel <https://chan.sankakucomplex.com/>\n" \
+        "\tyandere\t\t\t\tyande.re <https://yande.re/>"
     exit 0
 fi
 
@@ -248,7 +248,7 @@ then
     ibd_config="${ibd_config}/sankaku"
     ibd_api="https://capi-v2.sankakucomplex.com"
 
-    dcreate "${ibd_config}" "Sankaku Channel config"
+    mkdir -p "${ibd_config}"
 
     if [[ -f "${ibd_config}/time" ]]
     then
@@ -305,10 +305,10 @@ then
             then
                 if [[ "$(jq -r '.success' "${ibd_cache}/login.json")" == "true" ]]
                 then
-                    fwrite "$(jq -r '.access_token' "${ibd_cache}/login.json")" "${ibd_config}/token" "token"
-                    fwrite "$(date -u +%s)" "${ibd_config}/time" "time"
-                    fwrite "${sankaku_login}" "${ibd_config}/login" "login"
-                    fwrite "${sankaku_password}" "${ibd_config}/password" "password"
+                    echo "$(jq -r '.access_token' "${ibd_cache}/login.json")" > "${ibd_config}/token"
+                    echo "$(date -u +%s)" > "${ibd_config}/time"
+                    echo "${sankaku_login}" > "${ibd_config}/login"
+                    echo "${sankaku_password}" > "${ibd_config}/password"
                     echo "Authorized successfully"
                 else
                     echo "Error: $(jq -r '.error' "${ibd_cache}/login.json")"
@@ -363,7 +363,7 @@ fi
 
 alias ibd_icut="${ibd_ifilename}"
 
-dcreate "${ibd_dir}" "download"
+mkdir -p "${ibd_dir}"
 
 ibd_removed=0
 ibd_success=0
@@ -371,7 +371,7 @@ ibd_failed=0
 ibd_done=0
 
 echo "Downloading artworks..."
-echo -e -n "\r[Removed: ${ibd_removed}] [Success: ${ibd_success}] [Failed: ${ibd_failed}] [Done: ${ibd_done}] "
+echo -n "\r[Removed: ${ibd_removed}] [Success: ${ibd_success}] [Failed: ${ibd_failed}] [Done: ${ibd_done}] "
 
 while [[ -d "${ibd_dir}" ]]
 do
@@ -400,7 +400,7 @@ do
             exit 1
         fi
     else
-        echo -e "Failed to access '${ibd_api}'"
+        echo "Failed to access '${ibd_api}'"
         exit 1
     fi
 
@@ -409,7 +409,7 @@ do
         break
     fi
 
-    fwrite "$(jq -r "${ibd_iurl}" "${ibd_cache}/${ibd_page}_posts.json")" "${ibd_cache}/${ibd_page}_urls" "urls"
+    echo "$(jq -r "${ibd_iurl}" "${ibd_cache}/${ibd_page}_posts.json")" > "${ibd_cache}/${ibd_page}_urls"
 
     for ibd_url in $(cat "${ibd_cache}/${ibd_page}_urls")
     do
@@ -427,8 +427,8 @@ do
         if [[ "${ibd_url}" == "null" ]]
         then
             ibd_done=$((ibd_done + 1))
-            echo -e "\rIgnored empty URL${ibd_erase}"
-            echo -e -n "\r[Removed: ${ibd_removed}] [Success: ${ibd_success}] [Failed: ${ibd_failed}] [Done: ${ibd_done}] "
+            echo "\rIgnored empty URL${ibd_erase}"
+            echo -n "\r[Removed: ${ibd_removed}] [Success: ${ibd_success}] [Failed: ${ibd_failed}] [Done: ${ibd_done}] "
             break
         fi
 
@@ -576,7 +576,7 @@ do
                         ibd_success=$((ibd_success + 1))
                     else
                         ibd_failed=$((ibd_failed + 1))
-                        fawrite "${ibd_md5}" "${ibd_dir}/failed.txt" "errors"
+                        echo "${ibd_md5}" >> "${ibd_dir}/failed.txt"
 
                         if [[ -z "${ibd_keep_md5}" ]]
                         then
@@ -587,7 +587,7 @@ do
                 fi
             else
                 ibd_failed=$((ibd_failed + 1))
-                fawrite "${ibd_md5}" "${ibd_dir}/failed.txt" "errors"
+                echo "${ibd_md5}" >> "${ibd_dir}/failed.txt"
             fi
         fi
 
@@ -595,10 +595,10 @@ do
 
         if [[ -z "${ibd_quiet}" ]]
         then
-            echo -e "\r${ibd_filename}${ibd_erase}"
+            echo "\r${ibd_filename}${ibd_erase}"
         fi
 
-        echo -e -n "\r[Removed: ${ibd_removed}] [Success: ${ibd_success}] [Failed: ${ibd_failed}] [Done: ${ibd_done}] "
+        echo -n "\r[Removed: ${ibd_removed}] [Success: ${ibd_success}] [Failed: ${ibd_failed}] [Done: ${ibd_done}] "
     done
 
     ibd_page=$((ibd_page + 1))

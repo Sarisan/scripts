@@ -3,10 +3,10 @@
 # Copyright (C) 2024 Maria Lisina
 #
 # Reencode media to optimize playback in Telegram
+#
+# Prerequisites: ffmpeg
 
-. ${0%/*}/../iutils
-
-depends ffmpeg
+set -e
 
 if [[ -z "${1}" ]]
 then
