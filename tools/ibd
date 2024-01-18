@@ -5,12 +5,25 @@
 #
 # Image Board Downloader
 # Supported image boards: Gelbooru, Sankaku Channel, yande.re
-#
-# Prerequisites: curl, jq
 
 set -e
 
-ibd_version="2.2"
+for required in cat curl cut date grep jq md5sum mkdir rm sed sleep
+do
+    if ! command -v ${required} > /dev/null
+    then
+        missing="${missing} ${required}"
+    fi
+done
+
+if [ -n "${missing}" ]
+then
+    echo "Missing dependencies:${missing}\n" \
+        "For more information follow: https://command-not-found.com/"
+    exit 1
+fi
+
+ibd_version="2.3"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 ibd_erase="\033[K"
