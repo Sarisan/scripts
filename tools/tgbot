@@ -3,10 +3,23 @@
 # Copyright (C) 2024 Maria Lisina
 #
 # Send JSON formatted data to Telegram bot
-#
-# Prerequisites: curl
 
 set -e
+
+for required in curl mkdir
+do
+    if ! command -v ${required} > /dev/null
+    then
+        missing="${missing} ${required}"
+    fi
+done
+
+if [ -n "${missing}" ]
+then
+    echo "Missing dependencies:${missing}\n" \
+        "For more information follow: https://command-not-found.com/"
+    exit 1
+fi
 
 tgbot_config="${HOME}/.config/tgbot"
 default_json="${tgbot_config}/json"
