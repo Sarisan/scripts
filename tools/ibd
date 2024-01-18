@@ -10,7 +10,7 @@
 
 set -e
 
-ibd_version="2.0"
+ibd_version="2.1"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 ibd_erase="\033[K"
@@ -154,25 +154,32 @@ then
         do
             ibd_filename="${ibd_filepath##*/}"
 
-            if [ -f "${ibd_filepath}" ] && ! grep -q "${ibd_filename}" "${ibd_dir}/list.txt"
+            if ! [ -f "${ibd_filepath}" ]
             then
-                case "${ibd_filename}" in
-                    (failed.txt)
-                        continue
-                    ;;
-                    (list.txt)
-                        continue
-                    ;;
-                    (*)
-                        rm -f "${ibd_filepath}"
-
-                        if [ -z "${ibd_quiet}" ]
-                        then
-                            echo "${ibd_filename}"
-                        fi
-                    ;;
-                esac
+                continue
             fi
+
+            if grep -q "${ibd_filename}" "${ibd_dir}/list.txt"
+            then
+                continue
+            fi
+
+            case "${ibd_filename}" in
+                (failed.txt)
+                    continue
+                ;;
+                (list.txt)
+                    continue
+                ;;
+                (*)
+                    rm -f "${ibd_filepath}"
+
+                    if [ -z "${ibd_quiet}" ]
+                    then
+                        echo "${ibd_filename}"
+                    fi
+                ;;
+            esac
         done
     fi
 fi
@@ -383,24 +390,24 @@ then
 
         if [ -f "${ibd_cache}/login.json" ]
         then
-            if jq -e '.' "${ibd_cache}/login.json" > /dev/null
-            then
-                if [ "$(jq -r '.success' "${ibd_cache}/login.json")" = "true" ]
-                then
-                    echo "$(jq -r '.access_token' "${ibd_cache}/login.json")" > "${ibd_config}/token"
-                    echo "$(date -u +%s)" > "${ibd_config}/time"
-                    echo "${sankaku_login}" > "${ibd_config}/login"
-                    echo "${sankaku_password}" > "${ibd_config}/password"
-                else
-                    echo "Error: $(jq -r '.error' "${ibd_cache}/login.json")"
-                    exit 1
-                fi
-            else
-                echo "Failed to parse json"
-                exit 1
-            fi
-        else
             echo "Failed to access '${ibd_api}'"
+            exit 1
+        fi
+
+        if ! jq -e '.' "${ibd_cache}/login.json" > /dev/null
+        then
+            echo "Failed to parse json"
+            exit 1
+        fi
+
+        if [ "$(jq -r '.success' "${ibd_cache}/login.json")" = "true" ]
+        then
+            echo "$(jq -r '.access_token' "${ibd_cache}/login.json")" > "${ibd_config}/token"
+            echo "$(date -u +%s)" > "${ibd_config}/time"
+            echo "${sankaku_login}" > "${ibd_config}/login"
+            echo "${sankaku_password}" > "${ibd_config}/password"
+        else
+            echo "Error: $(jq -r '.error' "${ibd_cache}/login.json")"
             exit 1
         fi
     fi
@@ -443,7 +450,6 @@ then
 fi
 
 alias ibd_icut="${ibd_ifilename}"
-
 mkdir -p "${ibd_dir}"
 rm -f "${ibd_dir}/list.txt"
 
@@ -476,15 +482,15 @@ do
         --user-agent "IBD" \
         "${ibd_posts_url}"
 
-    if [ -f "${ibd_cache}/${ibd_page}_posts.json" ]
+    if ! [ -f "${ibd_cache}/${ibd_page}_posts.json" ]
     then
-        if ! jq -e '.' "${ibd_cache}/${ibd_page}_posts.json" > /dev/null
-        then
-            echo "Failed to parse json"
-            exit 1
-        fi
-    else
         echo "Failed to access '${ibd_api}'"
+        exit 1
+    fi
+
+    if ! jq -e '.' "${ibd_cache}/${ibd_page}_posts.json" > /dev/null
+    then
+        echo "Failed to parse json"
         exit 1
     fi
 
