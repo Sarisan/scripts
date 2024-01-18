@@ -10,7 +10,7 @@
 
 set -e
 
-ibd_version="1.10"
+ibd_version="2.0"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 ibd_erase="\033[K"
@@ -18,153 +18,168 @@ ibd_erase="\033[K"
 rm -rf "${ibd_cache}"
 mkdir -p "${ibd_cache}"
 
-if [[ -n "${1}" ]]
+if [ -n "${1}" ]
 then
-    ibd_options="$(getopt -l help,authorize,path:,tags:,range:,number:,encount,skip,keep,repair,full-repair,exclude:,reversive,exclude-download,exclude-remove,exclude-selfremove,sleep:,quiet,cn-timeout:,dl-timeout:,proxy: -n "${0}" -- hap:t:g:n:eskrfx:iomvl:qc:d:P: "${@}")"
-    eval set -- "${ibd_options}"
-
-    while [[ -n "${1}" ]]
+    while getopts hap:rt:g:n:m:s:x:i:l:qc:d:y:e: ibd_options
     do
-        case "${1}" in
-        -h | --help)
-            ibd_help=0
-        ;;
-        -a | --authorize)
-            ibd_auth=0
-        ;;
-        -p | --path)
-            ibd_dir="${2}"
-            shift
-        ;;
-        -t | --tags)
-            ibd_tags="${2}"
-            shift
-        ;;
-        -g | --range)
-            ibd_range=${2}
-            shift
-        ;;
-        -n | --number)
-            ibd_number=${2}
-            shift
-        ;;
-        -e | --encount)
-            ibd_encount=0
-        ;;
-        -s | --skip)
-            ibd_skip_md5=0
-        ;;
-        -k | --keep)
-            ibd_keep_md5=0
-        ;;
-        -r | --repair)
-            ibd_repair=0
-        ;;
-        -f | --full-repair)
-            ibd_full_repair=0
-        ;;
-        -x | --exclude)
-            ibd_exclude_loop="${2}"
-            shift
-        ;;
-        -i | --reversive)
-            ibd_reversive=0
-        ;;
-        -o | --exclude-download)
-            ibd_xdownload=0
-        ;;
-        -m | --exclude-remove)
-            ibd_xremove=0
-        ;;
-        -v | --exclude-selfremove)
-            ibd_xselfremove=0
-        ;;
-        -l | --sleep)
-            ibd_sleep_time=${2}
-            shift
-        ;;
-        -q | --quiet)
-            ibd_quiet=0
-        ;;
-        -c | --cn-timeout)
-            ibd_connect_timeout=${2}
-            shift
-        ;;
-        -d | --dl-timeout)
-            ibd_download_timeout=${2}
-            shift
-        ;;
-        -P | --proxy)
-            ibd_proxy="${2}"
-            shift
-        ;;
-        --)
-            shift
-            break
-        ;;
-        *)
-            exit 1
-        ;;
+        case "${ibd_options}" in
+            (h)
+                ibd_help=0
+            ;;
+            (a)
+                ibd_authorize=0
+            ;;
+            (p)
+                ibd_dir="${OPTARG}"
+            ;;
+            (r)
+                ibd_prune=0
+            ;;
+            (t)
+                ibd_tags="${OPTARG}"
+            ;;
+            (g)
+                ibd_range=${OPTARG}
+            ;;
+            (n)
+                ibd_number=${OPTARG}
+            ;;
+            (m)
+                ibd_download_mode="${OPTARG}"
+            ;;
+            (s)
+                ibd_md5_mode="${OPTARG}"
+            ;;
+            (x)
+                ibd_exclude_dirs="${OPTARG}"
+            ;;
+            (i)
+                ibd_exclude_mode="${OPTARG}"
+            ;;
+            (l)
+                ibd_sleep_time=${OPTARG}
+            ;;
+            (q)
+                ibd_quiet=0
+            ;;
+            (c)
+                ibd_connect_timeout=${OPTARG}
+            ;;
+            (d)
+                ibd_download_timeout=${OPTARG}
+            ;;
+            (y)
+                ibd_proxy="${OPTARG}"
+            ;;
+            (e)
+                ibd_tries=${OPTARG}
+            ;;
+            (*)
+                echo "See '${0} -h'"
+                exit 1
+            ;;
         esac
-        shift
     done
 
-    if [[ -n "${1}" ]]
-    then
-        ibd_image_board="${1}"
-        shift
-    fi
-
-    if [[ -n "${1}" ]]
-    then
-        echo "Unrecognized action: '${1}'. See '${0} --help'"
-        exit 1
-    fi
+    shift $((OPTIND - 1))
 else
     ibd_help=0
 fi
 
-if [[ -n "${ibd_help}" ]]
+if [ -n "${1}" ]
 then
-    echo "Image Board Downloader v${ibd_version}\n\nUsage: ${0} [OPTIONS] [IMAGE BOARD]\n" \
-        "\nGlobal options:\n" \
-        "\t-h, --help\t\t\tShow help information\n" \
-        "\t-a, --authorize\t\t\tAuthorize to image board\n" \
-        "\t-p, --path <directory>\t\tDownload artworks to directory\n" \
-        "\t-t, --tags <tags>\t\tDownload artworks by tags\n" \
-        "\t-g, --range <number>\t\tRange of artworks between curl requests, max: 100, default: 20\n" \
-        "\t-n, --number <number>\t\tLimit number of artworks to download\n" \
-        "\t-e, --encount\t\t\tDownload new artworks only\n" \
-        "\t-s, --skip\t\t\tSkip md5 checksums\n" \
-        "\t-k, --keep\t\t\tKeep artworks failed md5 checksums\n" \
-        "\t-r, --repair\t\t\tRedownload detected failed artworks only\n" \
-        "\t-f, --full-repair\t\tRedownload undetected failed artworks\n" \
-        "\t-x, --exclude <directories>\tExclude artworks found in directories\n" \
-        "\t-i, --reversive\t\t\tRemove artworks from excluded directories\n" \
-        "\t-o, --exclude-download\t\tDownload failed artworks found in excluded directories\n" \
-        "\t-m, --exclude-remove\t\tDownload and remove failed artworks from excluded directories\n" \
-        "\t-v, --exclude-selfremove\tRemove artworks found in excluded directories\n" \
-        "\t-l, --sleep <seconds>\t\tTime interval between curl requests\n" \
-        "\t-q, --quiet\t\t\tDo not print file names\n" \
-        "\t-c, --cn-timeout <seconds>\tAPI connetion timeout, default: 15 seconds\n" \
-        "\t-d, --dl-timeout <seconds>\tDownload timeout, default: 24 hours\n" \
-        "\t-P, --proxy <address>\t\tUse proxy server\n" \
-        "\nSupported image boards:\n" \
-        "\tgelbooru\t\t\tGelbooru <https://gelbooru.com/>\n" \
-        "\tsankaku\t\t\t\tSankaku Channel <https://chan.sankakucomplex.com/>\n" \
-        "\tyandere\t\t\t\tyande.re <https://yande.re/>"
-    exit 0
+    ibd_image_board="${1}"
+    shift
 fi
 
-if [[ -z "${ibd_dir}" ]]
+if [ -n "${1}" ]
 then
-    echo "No download directory specified. See '${0} --help'"
+    echo "Unrecognized action ${1}"
     exit 1
 fi
 
-if [[ -n "${ibd_range}" ]]
+if [ -n "${ibd_help}" ]
 then
-    if [[ ${ibd_range} -gt 100 ]]
+    echo "Image Board Downloader v${ibd_version}\n\nUsage: ${0} [options] [image board]" \
+        "\n\nOptions:" \
+        "\n  -h\t\tShow help information" \
+        "\n  -a\t\tAuthorize to image board" \
+        "\n  -p <dir>\tDownload artworks to directory" \
+        "\n  -r\t\tRemove unwanted files according to list" \
+        "\n  -t <tags>\tDownload artworks by tags" \
+        "\n  -g <number>\tRange of artworks between curl requests, max: 100, default: 20" \
+        "\n  -n <number>\tLimit number of artworks to download" \
+        "\n  -m <mode>\tDownload mode" \
+        "\n  -s <mode>\tMD5 checksums mode" \
+        "\n  -x <dirs>\tExclude artworks found in directories" \
+        "\n  -i <mode>\tExclude mode" \
+        "\n  -l <seconds>\tTime interval between curl requests" \
+        "\n  -q\t\tDo not print file names" \
+        "\n  -c <seconds>\tAPI connetion timeout, default: 15 seconds" \
+        "\n  -d <seconds>\tDownload timeout, default: 10 minutes" \
+        "\n  -y <address>\tUse proxy server" \
+        "\n  -e <number>\tLimit number of curl request tries, default: 5" \
+        "\n\nDownload modes:" \
+        "\n  encount\tDownload new artworks only" \
+        "\n  full\t\tRedownload undetected failed artworks" \
+        "\n  repair\tRedownload detected failed artworks only" \
+        "\n\nMD5 checksum modes:" \
+        "\n  keep\t\tKeep artworks failed md5 checksums" \
+        "\n  skip\t\tSkip MD5 checksums" \
+        "\n\nExclude modes:" \
+        "\n  download\tDownload artworks found failed in excluded directories" \
+        "\n  remove\tDownload and remove artworks found failied in excluded directories" \
+        "\n  reversive\tRemove artworks from excluded directories" \
+        "\n  selfremove\tRemove artworks found in excluded directories" \
+        "\n\nSupported image boards:" \
+        "\n  gelbooru\tGelbooru <https://gelbooru.com/>" \
+        "\n  sankaku\tSankaku Channel <https://chan.sankakucomplex.com/>" \
+        "\n  yandere\tyande.re <https://yande.re/>"
+    exit 0
+fi
+
+if [ -z "${ibd_dir}" ]
+then
+    echo "No download directory specified. See '${0} -h'"
+    exit 1
+fi
+
+if [ -n "${ibd_prune}" ]
+then
+    echo "Pruning files..."
+
+    if [ -f "${ibd_dir}/list.txt" ]
+    then
+        for ibd_filepath in "${ibd_dir}"/*
+        do
+            ibd_filename="${ibd_filepath##*/}"
+
+            if [ -f "${ibd_filepath}" ] && ! grep -q "${ibd_filename}" "${ibd_dir}/list.txt"
+            then
+                case "${ibd_filename}" in
+                    (failed.txt)
+                        continue
+                    ;;
+                    (list.txt)
+                        continue
+                    ;;
+                    (*)
+                        rm -f "${ibd_filepath}"
+
+                        if [ -z "${ibd_quiet}" ]
+                        then
+                            echo "${ibd_filename}"
+                        fi
+                    ;;
+                esac
+            fi
+        done
+    fi
+fi
+
+if [ -n "${ibd_range}" ]
+then
+    if [ ${ibd_range} -gt 100 ]
     then
         ibd_range=100
     fi
@@ -172,9 +187,9 @@ else
     ibd_range=20
 fi
 
-if [[ -n "${ibd_number}" ]]
+if [ -n "${ibd_number}" ]
 then
-    if [[ ${ibd_number} -lt ${ibd_range} ]]
+    if [ ${ibd_number} -lt ${ibd_range} ]
     then
         ibd_range=${ibd_number}
     fi
@@ -182,48 +197,110 @@ else
     ibd_number=-1
 fi
 
-if [[ -z "${ibd_connect_timeout}" ]]
+if [ -n "${ibd_download_mode}" ]
 then
-    ibd_connect_timeout=15
+    case "${ibd_download_mode}" in
+        (encount)
+            ibd_encount=0
+        ;;
+        (full)
+            ibd_full=0
+        ;;
+        (repair)
+            ibd_repair=0
+        ;;
+        (*)
+            echo "Unrecognized download mode: '${ibd_download_mode}'. See '${0} -h'"
+            exit 1
+        ;;
+    esac
 fi
 
-if [[ -z "${ibd_download_timeout}" ]]
+if [ -n "${ibd_md5_mode}" ]
 then
-    ibd_download_timeout=86400
+    case "${ibd_md5_mode}" in
+        (keep)
+            ibd_keep=0
+        ;;
+        (skip)
+            ibd_skip=0
+        ;;
+        (*)
+            echo "Unrecognized MD5 checksums mode: '${ibd_md5_mode}'. See '${0} -h'"
+            exit 1
+        ;;
+    esac
 fi
 
-if [[ -z "${ibd_sleep_time}" ]]
+if [ -n "${ibd_exclude_mode}" ]
+then
+    case "${ibd_exclude_mode}" in
+        (download)
+            ibd_xdownload=0
+        ;;
+        (remove)
+            ibd_xremove=0
+        ;;
+        (reversive)
+            ibd_xreversive=0
+        ;;
+        (selfremove)
+            ibd_xselfremove=0
+        ;;
+        (*)
+            echo "Unrecognized exclude mode: '${ibd_exclude_mode}'. See '${0} -h'"
+            exit 1
+        ;;
+    esac
+fi
+
+if [ -z "${ibd_sleep_time}" ]
 then
     ibd_sleep_time=0
 fi
 
-if [[ -n "${ibd_image_board}" ]]
+if [ -z "${ibd_connect_timeout}" ]
+then
+    ibd_connect_timeout=15
+fi
+
+if [ -z "${ibd_download_timeout}" ]
+then
+    ibd_download_timeout=600
+fi
+
+if [ -z "${ibd_tries}" ]
+then
+    ibd_tries=5
+fi
+
+if [ -n "${ibd_image_board}" ]
 then
     case "${ibd_image_board}" in
-    gelbooru)
-        ibd_gelbooru=0
-    ;;
-    sankaku)
-        ibd_sankaku=0
-    ;;
-    yandere)
-        ibd_yandere=0
-    ;;
-    *)
-        echo "Unrecognized image board: '${ibd_image_board}'. See '${0} --help'"
-        exit 1
-    ;;
+        (gelbooru)
+            ibd_gelbooru=0
+        ;;
+        (sankaku)
+            ibd_sankaku=0
+        ;;
+        (yandere)
+            ibd_yandere=0
+        ;;
+        (*)
+            echo "Unrecognized image board: '${ibd_image_board}'. See '${0} -h'"
+            exit 1
+        ;;
     esac
 else
-    echo "No image board specified. See '${0} --help'"
+    echo "No image board specified. See '${0} -h'"
     exit 1
 fi
 
-if [[ -n "${ibd_gelbooru}" ]]
+if [ -n "${ibd_gelbooru}" ]
 then
     ibd_api="https://gelbooru.com"
 
-    if [[ -n "${ibd_auth}" ]]
+    if [ -n "${ibd_authorize}" ]
     then
         echo "Gelbooru authorization is not supported yet and is not required"
         exit 1
@@ -243,44 +320,47 @@ then
     ibd_ifilename="cut -d '/' -f 7"
 fi
 
-if [[ -n "${ibd_sankaku}" ]]
+if [ -n "${ibd_sankaku}" ]
 then
     ibd_config="${ibd_config}/sankaku"
     ibd_api="https://capi-v2.sankakucomplex.com"
 
     mkdir -p "${ibd_config}"
 
-    if [[ -f "${ibd_config}/time" ]]
+    if [ -z "${ibd_authorize}" ]
     then
-        current_date=$(date -u +%s)
-        sankaku_date=$(cat "${ibd_config}/time")
-
-        if [[ $((current_date - sankaku_date)) -ge 36000 ]]
+        if [ -f "${ibd_config}/time" ]
         then
-            ibd_auth=1
+            current_date=$(date -u +%s)
+            sankaku_date=$(cat "${ibd_config}/time")
+
+            if [ $((current_date - sankaku_date)) -ge 36000 ]
+            then
+                ibd_authorize=1
+            fi
+        else
+            ibd_authorize=1
         fi
-    else
-        ibd_auth=1
     fi
 
-    if [[ -n "${ibd_auth}" ]]
+    if [ -n "${ibd_authorize}" ]
     then
-        if [[ -f "${ibd_config}/login" ]] && [[ ${ibd_auth} -eq 1 ]]
+        if [ -f "${ibd_config}/login" ] && [ ${ibd_authorize} -eq 1 ]
         then
             sankaku_login="$(cat "${ibd_config}/login")"
         fi
 
-        while [[ -z "${sankaku_login}" ]]
+        while [ -z "${sankaku_login}" ]
         do
             read -p "Login: " sankaku_login
         done
 
-        if [[ -f "${ibd_config}/password" ]] && [[ ${ibd_auth} -eq 1 ]]
+        if [ -f "${ibd_config}/password" ] && [ ${ibd_authorize} -eq 1 ]
         then
             sankaku_password="$(cat "${ibd_config}/password")"
         fi
 
-        while [[ -z "${sankaku_password}" ]]
+        while [ -z "${sankaku_password}" ]
         do
             read -p "Password: " -s sankaku_password
             echo ''
@@ -288,34 +368,35 @@ then
 
         echo "Refreshing access token..."
 
-        curl --connect-timeout 10 \
+        curl --connect-timeout ${ibd_connect_timeout} \
             --data "{\"login\":\"${sankaku_login}\",\"password\":\"${sankaku_password}\"}" \
             --header "Content-Type: application/json" \
             --output "${ibd_cache}/login.json" \
             --proxy "${ibd_proxy}" \
             --request POST \
+            --retry ${ibd_tries} \
+            --retry-connrefused \
             --show-error \
             --silent \
             --user-agent "IBD" \
             "${ibd_api}/auth/token"
 
-        if [[ -f "${ibd_cache}/login.json" ]]
+        if [ -f "${ibd_cache}/login.json" ]
         then
             if jq -e '.' "${ibd_cache}/login.json" > /dev/null
             then
-                if [[ "$(jq -r '.success' "${ibd_cache}/login.json")" == "true" ]]
+                if [ "$(jq -r '.success' "${ibd_cache}/login.json")" = "true" ]
                 then
                     echo "$(jq -r '.access_token' "${ibd_cache}/login.json")" > "${ibd_config}/token"
                     echo "$(date -u +%s)" > "${ibd_config}/time"
                     echo "${sankaku_login}" > "${ibd_config}/login"
                     echo "${sankaku_password}" > "${ibd_config}/password"
-                    echo "Authorized successfully"
                 else
                     echo "Error: $(jq -r '.error' "${ibd_cache}/login.json")"
                     exit 1
                 fi
             else
-                echo "Invalid json detected"
+                echo "Failed to parse json"
                 exit 1
             fi
         else
@@ -324,7 +405,7 @@ then
         fi
     fi
 
-    if ! [[ -f "${ibd_config}/token" ]]
+    if ! [ -f "${ibd_config}/token" ]
     then
         echo "No access token found"
         exit 1
@@ -341,11 +422,11 @@ then
     ibd_ifilename="cut -d '?' -f 1 | cut -d '/' -f 7"
 fi
 
-if [[ -n "${ibd_yandere}" ]]
+if [ -n "${ibd_yandere}" ]
 then
     ibd_api="https://yande.re"
 
-    if [[ -n "${ibd_auth}" ]]
+    if [ -n "${ibd_authorize}" ]
     then
         echo "yande.re authorization is not supported yet and is not required"
         exit 1
@@ -364,6 +445,7 @@ fi
 alias ibd_icut="${ibd_ifilename}"
 
 mkdir -p "${ibd_dir}"
+rm -f "${ibd_dir}/list.txt"
 
 ibd_removed=0
 ibd_success=0
@@ -373,7 +455,7 @@ ibd_done=0
 echo "Downloading artworks..."
 echo -n "\r[Removed: ${ibd_removed}] [Success: ${ibd_success}] [Failed: ${ibd_failed}] [Done: ${ibd_done}] "
 
-while [[ -d "${ibd_dir}" ]]
+while [ -d "${ibd_dir}" ]
 do
     curl --connect-timeout ${ibd_connect_timeout} \
         --data-urlencode "${ibd_dfield1}" \
@@ -387,16 +469,18 @@ do
         --header "${ibd_header}" \
         --output "${ibd_cache}/${ibd_page}_posts.json" \
         --proxy "${ibd_proxy}" \
+        --retry ${ibd_tries} \
+        --retry-connrefused \
         --show-error \
         --silent \
         --user-agent "IBD" \
         "${ibd_posts_url}"
 
-    if [[ -f "${ibd_cache}/${ibd_page}_posts.json" ]]
+    if [ -f "${ibd_cache}/${ibd_page}_posts.json" ]
     then
         if ! jq -e '.' "${ibd_cache}/${ibd_page}_posts.json" > /dev/null
         then
-            echo "Invalid json detected"
+            echo "Failed to parse json"
             exit 1
         fi
     else
@@ -404,7 +488,7 @@ do
         exit 1
     fi
 
-    if ! [[ "$(jq "${ibd_condition}" "${ibd_cache}/${ibd_page}_posts.json")" == "true" ]]
+    if ! [ "$(jq "${ibd_condition}" "${ibd_cache}/${ibd_page}_posts.json")" = "true" ]
     then
         break
     fi
@@ -413,18 +497,18 @@ do
 
     for ibd_url in $(cat "${ibd_cache}/${ibd_page}_urls")
     do
-        if ! [[ -d "${ibd_dir}" ]]
+        if ! [ -d "${ibd_dir}" ]
         then
             echo "No download directory found"
             exit 1
         fi
 
-        if [[ ${ibd_done} -eq ${ibd_number} ]]
+        if [ ${ibd_done} -eq ${ibd_number} ]
         then
             break 2
         fi
 
-        if [[ "${ibd_url}" == "null" ]]
+        if [ "${ibd_url}" = "null" ]
         then
             ibd_done=$((ibd_done + 1))
             echo "\rIgnored empty URL${ibd_erase}"
@@ -436,13 +520,31 @@ do
         ibd_md5="$(echo "${ibd_filename}" | cut -d '.' -f 1)"
         ibd_continue=1
 
-        if [[ -f "${ibd_dir}/${ibd_md5}".* ]]
+        if [ -f "${ibd_dir}/${ibd_md5}".* ]
         then
-            if [[ -n "${ibd_repair}" ]]
+            if [ -n "${ibd_encount}" ]
+            then
+                break 2
+            elif [ -n "${ibd_full}" ]
+            then
+                if [ "$(md5sum "${ibd_dir}/${ibd_md5}".* | cut -d ' ' -f 1)" = "${ibd_md5}" ]
+                then
+                    ibd_continue=0
+                else
+                    rm -f "${ibd_dir}}/${ibd_md5}".*
+
+                    if [ -f "${ibd_dir}/failed.txt" ]
+                    then
+                        sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_dir}/failed.txt"
+                    fi
+
+                    ibd_removed=$((ibd_removed + 1))
+                fi
+            elif [ -n "${ibd_repair}" ]
             then
                 ibd_continue=0
 
-                if [[ -f "${ibd_dir}/failed.txt" ]]
+                if [ -f "${ibd_dir}/failed.txt" ]
                 then
                     if grep -q "${ibd_md5}" "${ibd_dir}/failed.txt"
                     then
@@ -453,60 +555,32 @@ do
                         ibd_removed=$((ibd_removed + 1))
                     fi
                 fi
-            elif [[ -n "${ibd_full_repair}" ]]
-            then
-                if [[ "$(md5sum "${ibd_dir}/${ibd_md5}".* | cut -d ' ' -f 1)" == "${ibd_md5}" ]]
-                then
-                    ibd_continue=0
-                else
-                    rm -f "${ibd_dir}}/${ibd_md5}".*
-
-                    if [[ -f "${ibd_dir}/failed.txt" ]]
-                    then
-                        sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_dir}/failed.txt"
-                    fi
-
-                    ibd_removed=$((ibd_removed + 1))
-                fi
-            elif [[ -n "${ibd_encount}" ]]
-            then
-                break 2
             else
                 ibd_continue=0
             fi
         fi
 
-        if [[ -n "${ibd_exclude_loop}" ]]
+        if [ -n "${ibd_exclude_dirs}" ]
         then
-            for ibd_exclude_dir in ${ibd_exclude_loop}
+            for ibd_exclude_dir in ${ibd_exclude_dirs}
             do
-                if [[ -f "${ibd_exclude_dir}/${ibd_md5}".* ]]
+                if [ -f "${ibd_exclude_dir}/${ibd_md5}".* ]
                 then
-                    if [[ -n "${ibd_reversive}" ]]
-                    then
-                        rm -f "${ibd_exclude_dir}/${ibd_md5}".*
-
-                        if [[ -f "${ibd_exclude_dir}/failed.txt" ]]
-                        then
-                            sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_exclude_dir}/failed.txt"
-                        fi
-
-                        ibd_removed=$((ibd_removed + 1))
-                    elif [[ -n "${ibd_xdownload}" ]] || [[ -n "${ibd_xremove}" ]]
+                    if [ -n "${ibd_xdownload}" ] || [ -n "${ibd_xremove}" ]
                     then
                         ibd_continue=0
 
-                        if [[ -n "${ibd_full_repair}" ]]
+                        if [ -n "${ibd_full}" ]
                         then
-                            if ! [[ "$(md5sum "${ibd_exclude_dir}/${ibd_md5}".* | cut -d ' ' -f 1)" == "${ibd_md5}" ]]
+                            if ! [ "$(md5sum "${ibd_exclude_dir}/${ibd_md5}".* | cut -d ' ' -f 1)" = "${ibd_md5}" ]
                             then
                                 ibd_continue=1
 
-                                if [[ -n "${ibd_xremove}" ]]
+                                if [ -n "${ibd_xremove}" ]
                                 then
                                     rm -f "${ibd_exclude_dir}/${ibd_md5}".*
 
-                                    if [[ -f "${ibd_exclude_dir}/failed.txt" ]]
+                                    if [ -f "${ibd_exclude_dir}/failed.txt" ]
                                     then
                                         sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_exclude_dir}/failed.txt"
                                     fi
@@ -515,13 +589,13 @@ do
                                 fi
                             fi
                         else
-                            if [[ -f "${ibd_exclude_dir}/failed.txt" ]]
+                            if [ -f "${ibd_exclude_dir}/failed.txt" ]
                             then
                                 if grep -q "${ibd_md5}" "${ibd_exclude_dir}/failed.txt"
                                 then
                                     ibd_continue=1
 
-                                    if [[ -n "${ibd_xremove}" ]]
+                                    if [ -n "${ibd_xremove}" ]
                                     then
                                         rm -f "${ibd_exclude_dir}/${ibd_md5}".*
                                         sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_exclude_dir}/failed.txt"
@@ -530,15 +604,25 @@ do
                                 fi
                             fi
                         fi
-                    elif [[ -n "${ibd_xselfremove}" ]]
+                    elif [ -n "${ibd_xreversive}" ]
+                    then
+                        rm -f "${ibd_exclude_dir}/${ibd_md5}".*
+
+                        if [ -f "${ibd_exclude_dir}/failed.txt" ]
+                        then
+                            sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_exclude_dir}/failed.txt"
+                        fi
+
+                        ibd_removed=$((ibd_removed + 1))
+                    elif [ -n "${ibd_xselfremove}" ]
                     then
                         ibd_continue=0
 
-                        if [[ -f "${ibd_dir}/${ibd_md5}".* ]]
+                        if [ -f "${ibd_dir}/${ibd_md5}".* ]
                         then
                             rm -f "${ibd_dir}/${ibd_md5}".*
 
-                            if [[ -f "${ibd_dir}/failed.txt" ]]
+                            if [ -f "${ibd_dir}/failed.txt" ]
                             then
                                 sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_dir}/failed.txt"
                             fi
@@ -553,32 +637,33 @@ do
             done
         fi
 
-        if [[ ${ibd_continue} -eq 1 ]]
+        if [ ${ibd_continue} -eq 1 ]
         then
             curl --connect-timeout ${ibd_download_timeout} \
                 --output "${ibd_dir}/${ibd_filename}" \
                 --remote-time \
                 --proxy "${ibd_proxy}" \
+                --retry ${ibd_tries} \
                 --retry-connrefused \
                 --show-error \
                 --silent \
                 --user-agent "IBD" \
                 "${ibd_url}"
 
-            if [[ -f "${ibd_dir}/${ibd_filename}" ]]
+            if [ -f "${ibd_dir}/${ibd_filename}" ]
             then
-                if [[ -n "${ibd_skip_md5}" ]]
+                if [ -n "${ibd_skip}" ]
                 then
                     ibd_success=$((ibd_success + 1))
                 else
-                    if [[ "$(md5sum "${ibd_dir}/${ibd_md5}".* | cut -d ' ' -f 1)" == "${ibd_md5}" ]]
+                    if [ "$(md5sum "${ibd_dir}/${ibd_md5}".* | cut -d ' ' -f 1)" = "${ibd_md5}" ]
                     then
                         ibd_success=$((ibd_success + 1))
                     else
                         ibd_failed=$((ibd_failed + 1))
                         echo "${ibd_md5}" >> "${ibd_dir}/failed.txt"
 
-                        if [[ -z "${ibd_keep_md5}" ]]
+                        if [ -z "${ibd_keep}" ]
                         then
                             rm -f "${ibd_dir}/${ibd_md5}".*
                             ibd_removed=$((ibd_removed + 1))
@@ -591,12 +676,17 @@ do
             fi
         fi
 
-        ibd_done=$((ibd_done + 1))
+        if [ -f "${ibd_dir}/${ibd_filename}" ]
+        then
+            echo "${ibd_filename}" >> "${ibd_dir}/list.txt"
+        fi
 
-        if [[ -z "${ibd_quiet}" ]]
+        if [ -z "${ibd_quiet}" ]
         then
             echo "\r${ibd_filename}${ibd_erase}"
         fi
+
+        ibd_done=$((ibd_done + 1))
 
         echo -n "\r[Removed: ${ibd_removed}] [Success: ${ibd_success}] [Failed: ${ibd_failed}] [Done: ${ibd_done}] "
     done
@@ -607,18 +697,18 @@ done
 
 echo ''
 
-if ! [[ -s "${ibd_dir}/failed.txt" ]]
+if ! [ -s "${ibd_dir}/failed.txt" ]
 then
     rm -f "${ibd_dir}/failed.txt"
 fi
 
-if [[ -n "${ibd_exclude_loop}" ]]
+if [ -n "${ibd_exclude_dirs}" ]
 then
-    for ibd_exclude_dir in ${ibd_exclude_loop}
+    for ibd_exclude_dir in ${ibd_exclude_dirs}
     do
-        if ! [[ -s "${ibd_exclude_loop}/failed.txt" ]]
+        if ! [ -s "${ibd_exclude_dirs}/failed.txt" ]
         then
-            rm -f "${ibd_exclude_loop}/failed.txt"
+            rm -f "${ibd_exclude_dirs}/failed.txt"
         fi
     done
 fi
