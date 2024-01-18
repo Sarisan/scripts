@@ -15,7 +15,7 @@ config_file="${tgbot_config}/config"
 mkdir -p "${tgbot_config}"
 mkdir -p "${default_json}"
 
-if [[ -f "${config_file}" ]]
+if [ -f "${config_file}" ]
 then
     . "${config_file}"
 else
@@ -24,26 +24,26 @@ else
     exit 0
 fi
 
-if [[ -z "${token}" ]]
+if [ -z "${token}" ]
 then
     echo "No access token specified. See '${config_file}'"
     exit 1
 fi
 
-if [[ -z "${json}" ]]
+if [ -z "${json}" ]
 then
     json="${default_json}"
 
-    if ! [[ -d "${json}" ]]
+    if ! [ -d "${json}" ]
     then
         echo "No json directory found. See '${config_file}'"
         exit 1
     fi
 fi
 
-if [[ -n "${1}" ]] && [[ -n "${2}" ]]
+if [ -n "${1}" ] && [ -n "${2}" ]
 then
-    if ! [[ -f "${json}/${2}.json" ]]
+    if ! [ -f "${json}/${2}.json" ]
     then
         echo "No json file '${2}.json' found. See '${json}'"
         exit 1
