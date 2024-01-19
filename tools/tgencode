@@ -21,11 +21,11 @@ then
     exit 1
 fi
 
-tgencode_version="1.6"
+tgencode_version="1.7"
 
 if [ -n "${1}" ]
 then
-    while getopts haf:qb tgencode_options
+    while getopts haf:qmb tgencode_options
     do
         case "${tgencode_options}" in
             (h)
@@ -39,6 +39,9 @@ then
             ;;
             (q)
                 tgencode_quiet=0
+            ;;
+            (m)
+                tgencode_multiple=0
             ;;
             (b)
                 tgencode_break=0
@@ -64,6 +67,7 @@ then
         "\n  -a\t\tRemove audio stream (Telegram GIF)" \
         "\n  -f <num>\tSet custom frame rate" \
         "\n  -q\t\tSuppress all ffmpeg output" \
+        "\n  -m\t\tAllow multiple files" \
         "\n  -b\t\tDo not exit on error"
     exit 0
 fi
@@ -97,6 +101,12 @@ tgencode_exit=0
 
 for tgencode_input in ${@}
 do
+    if [ -z "${tgencode_multiple}" ]
+    then
+        tgencode_input="${@}"
+        unset tgencode_break
+    fi
+
     if ! [ -f "${tgencode_input}" ]
     then
         tgencode_exit=1
@@ -131,6 +141,11 @@ do
         then
             exit ${tgencode_exit}
         fi
+    fi
+
+    if [ -z "${tgencode_multiple}" ]
+    then
+        break
     fi
 done
 
