@@ -23,7 +23,7 @@ then
     exit 1
 fi
 
-ibd_version="2.3"
+ibd_version="2.4"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 ibd_erase="\033[K"
@@ -113,25 +113,26 @@ fi
 
 if [ -n "${ibd_help}" ]
 then
-    echo "Image Board Downloader v${ibd_version}\n\nUsage: ${0} [options] [image board]" \
+    echo "Image Board Downloader v${ibd_version}" \
+        "\n\nUsage: ${0} [options] [image board]" \
         "\n\nOptions:" \
         "\n  -h\t\tShow help information" \
         "\n  -a\t\tAuthorize to image board" \
         "\n  -p <dir>\tDownload artworks to directory" \
         "\n  -r\t\tRemove unwanted files according to list" \
         "\n  -t <tags>\tDownload artworks by tags" \
-        "\n  -g <number>\tRange of artworks between curl requests, max: 100, default: 20" \
-        "\n  -n <number>\tLimit number of artworks to download" \
+        "\n  -g <num>\tRange of artworks between curl requests, max: 100, default: 20" \
+        "\n  -n <num>\tLimit number of artworks to download" \
         "\n  -m <mode>\tDownload mode" \
         "\n  -s <mode>\tMD5 checksums mode" \
         "\n  -x <dirs>\tExclude artworks found in directories" \
         "\n  -i <mode>\tExclude mode" \
-        "\n  -l <seconds>\tTime interval between curl requests" \
+        "\n  -l <secs>\tTime interval between curl requests" \
         "\n  -q\t\tDo not print file names" \
-        "\n  -c <seconds>\tAPI connetion timeout, default: 15 seconds" \
-        "\n  -d <seconds>\tDownload timeout, default: 10 minutes" \
-        "\n  -y <address>\tUse proxy server" \
-        "\n  -e <number>\tLimit number of curl request tries, default: 5" \
+        "\n  -c <secs>\tAPI connetion timeout, default: 15 secs" \
+        "\n  -d <secs>\tDownload timeout, default: 10 minutes" \
+        "\n  -y <addr>\tUse proxy server" \
+        "\n  -e <num>\tLimit number of curl request tries, default: 5" \
         "\n\nDownload modes:" \
         "\n  encount\tDownload new artworks only" \
         "\n  full\t\tRedownload undetected failed artworks" \
