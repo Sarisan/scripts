@@ -21,7 +21,7 @@ then
     exit 1
 fi
 
-tgencode_version="1.5"
+tgencode_version="1.6"
 
 if [ -n "${1}" ]
 then
@@ -35,7 +35,7 @@ then
                 tgencode_noaudio=0
             ;;
             (f)
-                tgencode_frame_rate=${OPTARG}
+                tgencode_fps=${OPTARG}
             ;;
             (q)
                 tgencode_quiet=0
@@ -62,7 +62,7 @@ then
         "\n\nOptions:" \
         "\n  -h\t\tShow help information" \
         "\n  -a\t\tRemove audio stream (Telegram GIF)" \
-        "\n  -f <num>\tSet custom frame rate, default: 60" \
+        "\n  -f <num>\tSet custom frame rate" \
         "\n  -q\t\tSuppress all ffmpeg output" \
         "\n  -b\t\tDo not exit on error"
     exit 0
@@ -75,9 +75,9 @@ else
     tgencode_acodec="-acodec aac"
 fi
 
-if [ -z "${tgencode_frame_rate}" ]
+if [ -z "${tgencode_fps}" ]
 then
-    tgencode_frame_rate=60
+    tgencode_fps="source_fps"
 fi
 
 if [ -n "${tgencode_quiet}" ]
@@ -116,11 +116,10 @@ do
         -loglevel ${tgencode_loglevel} \
         -profile:v high \
         -vcodec libx264 \
-        -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" \
+        -vf "fps=${tgencode_fps},pad=ceil(iw/2)*2:ceil(ih/2)*2" \
         -pix_fmt yuv420p \
         ${tgencode_acodec} \
         -movflags +faststart \
-        -r ${tgencode_frame_rate} \
         "${tgencode_output}" -y
     then
         echo "Succesfully reencoded: '${tgencode_output}'"
