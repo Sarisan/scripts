@@ -23,7 +23,7 @@ then
     exit 1
 fi
 
-ibd_version="2.5"
+ibd_version="2.6"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 ibd_erase="\033[K"
@@ -369,7 +369,7 @@ then
 
         while [ -z "${sankaku_login}" ]
         do
-            read -p "Login: " sankaku_login
+            read -p "Login: " -r sankaku_login
         done
 
         if [ -f "${ibd_config}/password" ] && [ ${ibd_authorize} -eq 1 ]
@@ -379,8 +379,7 @@ then
 
         while [ -z "${sankaku_password}" ]
         do
-            read -p "Password: " -s sankaku_password
-            echo ''
+            read -p "Password: " -r sankaku_password
         done
 
         echo "Refreshing access token..."
@@ -398,7 +397,7 @@ then
             --user-agent "IBD" \
             "${ibd_api}/auth/token"
 
-        if [ -f "${ibd_cache}/login.json" ]
+        if ! [ -f "${ibd_cache}/login.json" ]
         then
             echo "Failed to access '${ibd_api}'"
             exit 1
@@ -460,6 +459,7 @@ then
 fi
 
 alias ibd_icut="${ibd_ifilename}"
+
 mkdir -p "${ibd_dir}"
 rm -f "${ibd_dir}/list.txt"
 
