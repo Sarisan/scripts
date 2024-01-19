@@ -23,7 +23,7 @@ then
     exit 1
 fi
 
-ibd_version="2.6"
+ibd_version="2.7"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 ibd_erase="\033[K"
@@ -219,7 +219,7 @@ then
             ibd_repair=0
         ;;
         (*)
-            echo "Unrecognized download mode: '${ibd_download_mode}'. See '${0} -h'"
+            echo "Unrecognized download mode ${ibd_download_mode}. See '${0} -h'"
             exit 1
         ;;
     esac
@@ -235,7 +235,7 @@ then
             ibd_skip=0
         ;;
         (*)
-            echo "Unrecognized MD5 checksums mode: '${ibd_md5_mode}'. See '${0} -h'"
+            echo "Unrecognized MD5 checksums mode ${ibd_md5_mode}. See '${0} -h'"
             exit 1
         ;;
     esac
@@ -257,7 +257,7 @@ then
             ibd_xselfremove=0
         ;;
         (*)
-            echo "Unrecognized exclude mode: '${ibd_exclude_mode}'. See '${0} -h'"
+            echo "Unrecognized exclude mode ${ibd_exclude_mode}. See '${0} -h'"
             exit 1
         ;;
     esac
@@ -296,7 +296,7 @@ then
             ibd_yandere=0
         ;;
         (*)
-            echo "Unrecognized image board: '${1}'. See '${0} -h'"
+            echo "Unrecognized image board ${1}. See '${0} -h'"
             exit 1
         ;;
     esac
@@ -309,7 +309,7 @@ fi
 
 if [ -n "${1}" ]
 then
-    echo "Unrecognized action ${1}"
+    echo "Unrecognized action ${1}. See '${0} -h'"
     exit 1
 fi
 
