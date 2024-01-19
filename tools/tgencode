@@ -21,7 +21,7 @@ then
     exit 1
 fi
 
-tgencode_version="1.1"
+tgencode_version="1.2"
 
 if [ -n "${1}" ]
 then
@@ -78,26 +78,34 @@ then
     exit 1
 fi
 
-if ! [ -f "${1}" ]
-then
-    echo "No input file found. See '${0} -h'"
-    exit 1
-fi
+tgencode_exit=0
 
-tgencode_output="${1%\.*}_t.mp4"
+for tgencode_input in ${@}
+do
+    if ! [ -f "${tgencode_input}" ]
+    then
+        tgencode_exit=1
+        echo "No file found: '${tgencode_input}'"
+        continue
+    fi
 
-if ffmpeg -i "${1}" \
-    -profile:v high \
-    -vcodec libx264 \
-    -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" \
-    -pix_fmt yuv420p \
-    ${tgencode_acodec} \
-    -movflags +faststart \
-    -r ${tgencode_frame_rate} \
-    "${tgencode_output}" -y
-then
-    echo "Reencoded succesfully: '${tgencode_output}'"
-else
-    echo "Failed to reencode the media"
-    exit 1
-fi
+    tgencode_output="${tgencode_input%\.*}_t.mp4"
+
+    if ffmpeg -i "${1}" \
+        -profile:v high \
+        -vcodec libx264 \
+        -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" \
+        -pix_fmt yuv420p \
+        ${tgencode_acodec} \
+        -movflags +faststart \
+        -r ${tgencode_frame_rate} \
+        "${tgencode_output}" -y
+    then
+        echo "Succesfully reencoded: '${tgencode_output}'"
+    else
+        tgencode_exit=1
+        echo "Failed to reencode: '${tgencode_input}'"
+    fi
+done
+
+exit ${tgencode_exit}
