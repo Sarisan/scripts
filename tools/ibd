@@ -23,7 +23,7 @@ then
     exit 1
 fi
 
-ibd_version="2.4"
+ibd_version="2.5"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 ibd_erase="\033[K"
@@ -97,18 +97,6 @@ then
     shift $((OPTIND - 1))
 else
     ibd_help=0
-fi
-
-if [ -n "${1}" ]
-then
-    ibd_image_board="${1}"
-    shift
-fi
-
-if [ -n "${1}" ]
-then
-    echo "Unrecognized action ${1}"
-    exit 1
 fi
 
 if [ -n "${ibd_help}" ]
@@ -295,9 +283,9 @@ then
     ibd_tries=5
 fi
 
-if [ -n "${ibd_image_board}" ]
+if [ -n "${1}" ]
 then
-    case "${ibd_image_board}" in
+    case "${1}" in
         (gelbooru)
             ibd_gelbooru=0
         ;;
@@ -308,12 +296,20 @@ then
             ibd_yandere=0
         ;;
         (*)
-            echo "Unrecognized image board: '${ibd_image_board}'. See '${0} -h'"
+            echo "Unrecognized image board: '${1}'. See '${0} -h'"
             exit 1
         ;;
     esac
+
+    shift
 else
     echo "No image board specified. See '${0} -h'"
+    exit 1
+fi
+
+if [ -n "${1}" ]
+then
+    echo "Unrecognized action ${1}"
     exit 1
 fi
 
