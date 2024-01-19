@@ -21,7 +21,7 @@ then
     exit 1
 fi
 
-tgencode_version="1.4"
+tgencode_version="1.5"
 
 if [ -n "${1}" ]
 then
@@ -102,12 +102,12 @@ do
         tgencode_exit=1
         echo "No file found: '${tgencode_input}'"
 
-        if [ -n "${tgencode_break}" ]
+        if [ -z "${tgencode_break}" ]
         then
-            continue
+            exit ${tgencode_exit}
         fi
 
-        exit ${tgencode_exit}
+        continue
     fi
 
     tgencode_output="${tgencode_input%\.*}_t.mp4"
@@ -128,12 +128,10 @@ do
         tgencode_exit=1
         echo "Failed to reencode: '${tgencode_input}'"
 
-        if [ -n "${tgencode_break}" ]
+        if [ -z "${tgencode_break}" ]
         then
-            continue
+            exit ${tgencode_exit}
         fi
-
-        exit ${tgencode_exit}
     fi
 done
 
