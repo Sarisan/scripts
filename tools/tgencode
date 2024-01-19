@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2024 Maria Lisina
 #
-# Reencode media to optimize playback in Telegram
+# Telegram Media Reencoder
 
 set -e
 
@@ -21,30 +21,82 @@ then
     exit 1
 fi
 
+tgencode_version="1.0"
+
+if [ -n "${1}" ]
+then
+    while getopts haf: tgencode_options
+    do
+        case "${tgencode_options}" in
+            (h)
+                tgencode_help=0
+            ;;
+            (a)
+                tgencode_noaudio=0
+            ;;
+            (f)
+                tgencode_frame_rate=${OPTARG}
+            ;;
+            (*)
+                echo "See '${0} -h'"
+                exit 1
+            ;;
+        esac
+    done
+
+    shift $((OPTIND - 1))
+else
+    tgencode_help=0
+fi
+
+if [ -n "${tgencode_help}" ]
+then
+    echo "Telegram Media Reencoder v${tgencode_version}\n\nUsage: ${0} [options] [file]" \
+        "\n\nOptions:" \
+        "\n  -h\t\tShow help information" \
+        "\n  -a\t\tRemove audio stream (Telegram GIF)" \
+        "\n  -f <num>\tSet custom frame rate, default: 60"
+    exit 0
+fi
+
+if [ -n "${tgencode_noaudio}" ]
+then
+    tgencode_acodec="-an"
+else
+    tgencode_acodec="-acodec aac"
+fi
+
+if [ -z "${tgencode_frame_rate}" ]
+then
+    tgencode_frame_rate=60
+fi
+
 if [ -z "${1}" ]
 then
-    echo "No input file specified"
+    echo "No input file specified. See '${0} -h'"
     exit 1
 fi
 
 if ! [ -f "${1}" ]
 then
-    echo "No input file found"
+    echo "No input file found. See '${0} -h'"
     exit 1
 fi
 
-output_file="${1%.*}_t.mp4"
+output_file="${1%\.*}_t.mp4"
 
 if ffmpeg -i "${1}" \
-    -acodec aac \
-    -vcodec libx264 \
     -profile:v high \
+    -vcodec libx264 \
+    -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" \
     -pix_fmt yuv420p \
+    ${tgencode_acodec} \
     -movflags +faststart \
+    -r ${tgencode_frame_rate} \
     "${output_file}" -y
 then
     echo "Reencoded succesfully: '${output_file}'"
 else
-    echo "Failed to reencode the video"
+    echo "Failed to reencode the media"
     exit 1
 fi
