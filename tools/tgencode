@@ -21,7 +21,7 @@ then
     exit 1
 fi
 
-tgencode_version="1.0"
+tgencode_version="1.1"
 
 if [ -n "${1}" ]
 then
@@ -51,7 +51,8 @@ fi
 
 if [ -n "${tgencode_help}" ]
 then
-    echo "Telegram Media Reencoder v${tgencode_version}\n\nUsage: ${0} [options] [file]" \
+    echo "Telegram Media Reencoder v${tgencode_version}" \
+        "\n\nUsage: ${0} [options] [file]" \
         "\n\nOptions:" \
         "\n  -h\t\tShow help information" \
         "\n  -a\t\tRemove audio stream (Telegram GIF)" \
@@ -83,7 +84,7 @@ then
     exit 1
 fi
 
-output_file="${1%\.*}_t.mp4"
+tgencode_output="${1%\.*}_t.mp4"
 
 if ffmpeg -i "${1}" \
     -profile:v high \
@@ -93,9 +94,9 @@ if ffmpeg -i "${1}" \
     ${tgencode_acodec} \
     -movflags +faststart \
     -r ${tgencode_frame_rate} \
-    "${output_file}" -y
+    "${tgencode_output}" -y
 then
-    echo "Reencoded succesfully: '${output_file}'"
+    echo "Reencoded succesfully: '${tgencode_output}'"
 else
     echo "Failed to reencode the media"
     exit 1
