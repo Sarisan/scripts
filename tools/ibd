@@ -23,7 +23,7 @@ then
     exit 1
 fi
 
-ibd_version="2.8"
+ibd_version="2.9"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 ibd_erase="\033[K"
@@ -531,7 +531,7 @@ do
             ibd_done=$((ibd_done + 1))
             echo "\rIgnored empty URL${ibd_erase}"
             eval echo -n "\\\r${ibd_output} "
-            break
+            continue
         fi
 
         ibd_filename="$(echo "${ibd_url}" | ibd_icut)"
