@@ -23,10 +23,9 @@ then
     exit 1
 fi
 
-ibd_version="2.9"
+ibd_version="2.10"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
-ibd_erase="\033[K"
 
 rm -rf "${ibd_cache}"
 mkdir -p "${ibd_cache}"
@@ -469,6 +468,7 @@ ibd_failed=0
 ibd_done=0
 
 ibd_output="[Removed: \${ibd_removed}] [Success: \${ibd_success}] [Failed: \${ibd_failed}] [Done: \${ibd_done}]"
+ibd_erase="\033[K"
 
 echo "Downloading artworks..."
 eval echo -n "\\\r${ibd_output} "
