@@ -23,7 +23,7 @@ then
     exit 1
 fi
 
-ibd_version="2.16"
+ibd_version="2.17"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -365,7 +365,7 @@ then
 
         echo "Validating API Key..."
 
-        curl --connect-timeout ${ibd_connect_timeout} \
+        curl --max-time ${ibd_connect_timeout} \
             --output "${ibd_cache}/profile.json" \
             --proxy "${ibd_proxy}" \
             --request GET \
@@ -511,9 +511,9 @@ then
 
         echo "Refreshing access token..."
 
-        curl --connect-timeout ${ibd_connect_timeout} \
-            --data "{\"login\":\"${sankaku_login}\",\"password\":\"${sankaku_password}\"}" \
+        curl --data "{\"login\":\"${sankaku_login}\",\"password\":\"${sankaku_password}\"}" \
             --header "Content-Type: application/json" \
+            --max-time ${ibd_connect_timeout} \
             --output "${ibd_cache}/token.json" \
             --proxy "${ibd_proxy}" \
             --request POST \
@@ -601,8 +601,7 @@ eval echo -n "\\\r${ibd_output} "
 
 while [ -d "${ibd_dir}" ]
 do
-    curl --connect-timeout ${ibd_connect_timeout} \
-        --data-urlencode "${ibd_dfield1}" \
+    curl --data-urlencode "${ibd_dfield1}" \
         --data-urlencode "${ibd_dfield2}" \
         --data-urlencode "${ibd_dfield3}" \
         --data-urlencode "${ibd_dfield4}" \
@@ -611,6 +610,7 @@ do
         --data-urlencode "${ibd_dtags}=${ibd_tags}" \
         --get \
         --header "${ibd_header}" \
+        --max-time ${ibd_connect_timeout} \
         --output "${ibd_cache}/${ibd_page}_posts.json" \
         --proxy "${ibd_proxy}" \
         --retry ${ibd_tries} \
@@ -788,10 +788,10 @@ do
 
         if [ ${ibd_continue} -eq 1 ]
         then
-            curl --connect-timeout ${ibd_download_timeout} \
+            curl --max-time ${ibd_download_timeout} \
                 --output "${ibd_dir}/${ibd_filename}" \
-                --remote-time \
                 --proxy "${ibd_proxy}" \
+                --remote-time \
                 --retry ${ibd_tries} \
                 --retry-connrefused \
                 --show-error \
