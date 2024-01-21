@@ -8,7 +8,7 @@
 
 set -e
 
-for required in cat curl cut date grep jq md5sum mkdir rm sed sleep
+for required in base64 cat curl cut date grep jq md5sum mkdir rm sed sleep
 do
     if ! command -v ${required} > /dev/null
     then
@@ -23,7 +23,7 @@ then
     exit 1
 fi
 
-ibd_version="2.12"
+ibd_version="2.13"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -133,6 +133,7 @@ then
         "\n  reversive\tRemove artworks from excluded directories" \
         "\n  selfremove\tRemove artworks found in excluded directories" \
         "\n\nSupported image boards:" \
+        "\n  danbooru\tDanbooru <https://danbooru.donmai.us/>" \
         "\n  gelbooru\tGelbooru <https://gelbooru.com/>" \
         "\n  sankaku\tSankaku Channel <https://chan.sankakucomplex.com/>" \
         "\n  yandere\tyande.re <https://yande.re/>"
@@ -285,6 +286,9 @@ fi
 if [ -n "${1}" ]
 then
     case "${1}" in
+        (danbooru)
+            ibd_danbooru=0
+        ;;
         (gelbooru)
             ibd_gelbooru=0
         ;;
@@ -310,6 +314,112 @@ if [ -n "${1}" ]
 then
     echo "Unrecognized action ${1}. See '${0} -h'"
     exit 1
+fi
+
+if [ -n "${ibd_danbooru}" ]
+then
+    ibd_config="${ibd_config}/danbooru"
+    ibd_api="https://danbooru.donmai.us"
+
+    mkdir -p "${ibd_config}"
+
+    if [ -z "${ibd_authorize}" ]
+    then
+        if [ -f "${ibd_config}/time" ]
+        then
+            current_date=$(date -u +%s)
+            danbooru_date=$(cat "${ibd_config}/time")
+
+            if [ $((current_date - danbooru_date)) -ge 36000 ]
+            then
+                ibd_authorize=1
+            fi
+        else
+            ibd_authorize=1
+        fi
+    fi
+
+    if [ -n "${ibd_authorize}" ]
+    then
+        if [ -f "${ibd_config}/login" ] && [ ${ibd_authorize} -eq 1 ]
+        then
+            danbooru_login="$(cat "${ibd_config}/login")"
+        fi
+
+        while [ -z "${danbooru_login}" ]
+        do
+            read -p "Login: " -r danbooru_login
+        done
+
+        if [ -f "${ibd_config}/api_key" ] && [ ${ibd_authorize} -eq 1 ]
+        then
+            danbooru_api_key="$(cat "${ibd_config}/api_key")"
+        fi
+
+        while [ -z "${danbooru_api_key}" ]
+        do
+            read -p "API Key: " -r danbooru_api_key
+        done
+
+        echo "Validating API Key..."
+
+        curl --connect-timeout ${ibd_connect_timeout} \
+            --output "${ibd_cache}/profile.json" \
+            --proxy "${ibd_proxy}" \
+            --request GET \
+            --retry ${ibd_tries} \
+            --retry-connrefused \
+            --show-error \
+            --silent \
+            --user "${danbooru_login}:${danbooru_api_key}" \
+            --user-agent "IBD" \
+            "${ibd_api}/profile.json"
+
+        if ! [ -f "${ibd_cache}/profile.json" ]
+        then
+            echo "Failed to access '${ibd_api}'"
+            exit 1
+        fi
+
+        if ! jq -e '.' "${ibd_cache}/profile.json" > /dev/null
+        then
+            echo "Failed to parse json"
+            exit 1
+        fi
+
+        if [ "$(jq -r '.success' "${ibd_cache}/profile.json")" = "false" ]
+        then
+            echo "Error: $(jq -r '.message' "${ibd_cache}/profile.json")"
+            exit 1
+        fi
+
+        if [ "$(jq -r '.name' "${ibd_cache}/profile.json")" = "${danbooru_login}" ]
+        then
+            echo "$(echo -n "${danbooru_login}:${danbooru_api_key}" | base64)" > "${ibd_config}/token"
+            echo "$(date -u +%s)" > "${ibd_config}/time"
+            echo "${danbooru_login}" > "${ibd_config}/login"
+            echo "${danbooru_api_key}" > "${ibd_config}/api_key"
+        else
+            echo "An unexpectd error occurred"
+            exit 1
+        fi
+    fi
+
+    if ! [ -f "${ibd_config}/token" ]
+    then
+        echo "No access token found"
+        exit 1
+    fi
+
+    ibd_page=1
+    ibd_posts_url="${ibd_api}/posts.json"
+    ibd_header="Authorization: Baisc $(cat "${ibd_config}/token")"
+    ibd_dlimit="limit"
+    ibd_dpage="page"
+    ibd_dtags="tags"
+    ibd_condition=".[0]|has(\"id\")"
+    ibd_iurl=".[].file_url"
+    ibd_ifilename="cut -d '/' -f 7"
 fi
 
 if [ -n "${ibd_gelbooru}" ]
