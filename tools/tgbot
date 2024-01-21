@@ -21,7 +21,7 @@ then
     exit 1
 fi
 
-tgbot_version="1.0"
+tgbot_version="1.1"
 tgbot_config="${HOME}/.config/tgbot"
 tgbot_dfile="${tgbot_config}/config"
 tgbot_daddress="https://api.telegram.org"
@@ -147,6 +147,12 @@ then
     shift
 else
     echo "No json name specified. See '${0} -h'"
+    exit 1
+fi
+
+if [ -n "${1}" ]
+then
+    echo "Unrecognized action ${1}. See '${0} -h'"
     exit 1
 fi
 
