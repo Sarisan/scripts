@@ -23,7 +23,7 @@ then
     exit 1
 fi
 
-ibd_version="2.11"
+ibd_version="2.12"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -506,7 +506,7 @@ do
         exit 1
     fi
 
-    if ! [ "$(jq "${ibd_condition}" "${ibd_cache}/${ibd_page}_posts.json")" = "true" ]
+    if ! jq -e "${ibd_condition}" "${ibd_cache}/${ibd_page}_posts.json" > /dev/null 2>&1
     then
         break
     fi
