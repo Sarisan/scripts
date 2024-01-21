@@ -23,7 +23,7 @@ then
     exit 1
 fi
 
-ibd_version="2.14"
+ibd_version="2.15"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -135,6 +135,7 @@ then
         "\n\nSupported image boards:" \
         "\n  danbooru\tDanbooru <https://danbooru.donmai.us/>" \
         "\n  gelbooru\tGelbooru <https://gelbooru.com/>" \
+        "\n  konachan\tKonachan.com <https://konachan.com/>" \
         "\n  sankaku\tSankaku Channel <https://chan.sankakucomplex.com/>" \
         "\n  yandere\tyande.re <https://yande.re/>"
     exit 0
@@ -292,6 +293,9 @@ then
         (gelbooru)
             ibd_gelbooru=0
         ;;
+        (konachan)
+            ibd_konachan=0
+        ;;
         (sankaku)
             ibd_sankaku=0
         ;;
@@ -440,6 +444,26 @@ then
     ibd_condition="has(\"post\")"
     ibd_iurl=".post[].file_url"
     ibd_ifilename="cut -d '/' -f 7"
+fi
+
+if [ -n "${ibd_konachan}" ]
+then
+    ibd_api="https://konachan.com"
+
+    if [ -n "${ibd_authorize}" ]
+    then
+        echo "Konachan.com authorization is not supported yet"
+        exit 1
+    fi
+
+    ibd_page=1
+    ibd_posts_url="${ibd_api}/post.json"
+    ibd_dlimit="limit"
+    ibd_dpage="page"
+    ibd_dtags="tags"
+    ibd_condition=".[0]|has(\"id\")"
+    ibd_iurl=".[].file_url"
+    ibd_ifilename="sed 's/\/Konachan.com.*\./\./' | cut -d '/' -f 5"
 fi
 
 if [ -n "${ibd_sankaku}" ]
