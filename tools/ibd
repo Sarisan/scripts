@@ -23,7 +23,7 @@ then
     exit 1
 fi
 
-ibd_version="2.10"
+ibd_version="2.11"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -529,7 +529,12 @@ do
         if [ "${ibd_url}" = "null" ]
         then
             ibd_done=$((ibd_done + 1))
-            echo "\rIgnored empty URL${ibd_erase}"
+
+            if [ -z "${ibd_quiet}" ]
+            then
+                echo "\rIgnored empty URL${ibd_erase}"
+            fi
+
             eval echo -n "\\\r${ibd_output} "
             continue
         fi
