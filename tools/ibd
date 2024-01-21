@@ -4,7 +4,7 @@
 # Copyright (C) 2024 Danil Lisin
 #
 # Image Board Downloader
-# Supported image boards: Gelbooru, Sankaku Channel, yande.re
+# Supported image boards: Danbooru, Gelbooru, Konachan.com, Sankaku Channel, yande.re
 
 set -e
 
@@ -23,7 +23,7 @@ then
     exit 1
 fi
 
-ibd_version="2.15"
+ibd_version="2.16"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -428,7 +428,7 @@ then
 
     if [ -n "${ibd_authorize}" ]
     then
-        echo "Gelbooru authorization is not supported yet"
+        echo "Authorization is not supported yet: gelbooru"
         exit 1
     fi
 
@@ -452,7 +452,7 @@ then
 
     if [ -n "${ibd_authorize}" ]
     then
-        echo "Konachan.com authorization is not supported yet"
+        echo "Authorization is not supported yet: konachan"
         exit 1
     fi
 
@@ -569,7 +569,7 @@ then
 
     if [ -n "${ibd_authorize}" ]
     then
-        echo "yande.re authorization is not supported yet"
+        echo "Authorization is not supported yet: yandere"
         exit 1
     fi
 
