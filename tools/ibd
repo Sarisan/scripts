@@ -23,7 +23,7 @@ then
     exit 1
 fi
 
-ibd_version="2.13"
+ibd_version="2.14"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -334,8 +334,6 @@ then
             then
                 ibd_authorize=1
             fi
-        else
-            ibd_authorize=1
         fi
     fi
 
@@ -395,25 +393,23 @@ then
 
         if [ "$(jq -r '.name' "${ibd_cache}/profile.json")" = "${danbooru_login}" ]
         then
-            echo "$(echo -n "${danbooru_login}:${danbooru_api_key}" | base64)" > "${ibd_config}/token"
-            echo "$(date -u +%s)" > "${ibd_config}/time"
             echo "${danbooru_login}" > "${ibd_config}/login"
             echo "${danbooru_api_key}" > "${ibd_config}/api_key"
+            echo "$(date -u +%s)" > "${ibd_config}/time"
+            echo "$(echo -n "${danbooru_login}:${danbooru_api_key}" | base64)" > "${ibd_config}/token"
         else
             echo "An unexpectd error occurred"
             exit 1
         fi
     fi
 
-    if ! [ -f "${ibd_config}/token" ]
+    if [ -f "${ibd_config}/token" ]
     then
-        echo "No access token found"
-        exit 1
+        ibd_header="Authorization: Baisc $(cat "${ibd_config}/token")"
     fi
 
     ibd_page=1
     ibd_posts_url="${ibd_api}/posts.json"
-    ibd_header="Authorization: Baisc $(cat "${ibd_config}/token")"
     ibd_dlimit="limit"
     ibd_dpage="page"
     ibd_dtags="tags"
@@ -428,7 +424,7 @@ then
 
     if [ -n "${ibd_authorize}" ]
     then
-        echo "Gelbooru authorization is not supported yet and is not required"
+        echo "Gelbooru authorization is not supported yet"
         exit 1
     fi
 
@@ -464,8 +460,6 @@ then
             then
                 ibd_authorize=1
             fi
-        else
-            ibd_authorize=1
         fi
     fi
 
@@ -496,7 +490,7 @@ then
         curl --connect-timeout ${ibd_connect_timeout} \
             --data "{\"login\":\"${sankaku_login}\",\"password\":\"${sankaku_password}\"}" \
             --header "Content-Type: application/json" \
-            --output "${ibd_cache}/login.json" \
+            --output "${ibd_cache}/token.json" \
             --proxy "${ibd_proxy}" \
             --request POST \
             --retry ${ibd_tries} \
@@ -506,39 +500,37 @@ then
             --user-agent "IBD" \
             "${ibd_api}/auth/token"
 
-        if ! [ -f "${ibd_cache}/login.json" ]
+        if ! [ -f "${ibd_cache}/token.json" ]
         then
             echo "Failed to access '${ibd_api}'"
             exit 1
         fi
 
-        if ! jq -e '.' "${ibd_cache}/login.json" > /dev/null
+        if ! jq -e '.' "${ibd_cache}/token.json" > /dev/null
         then
             echo "Failed to parse json"
             exit 1
         fi
 
-        if [ "$(jq -r '.success' "${ibd_cache}/login.json")" = "true" ]
+        if [ "$(jq -r '.success' "${ibd_cache}/token.json")" = "true" ]
         then
-            echo "$(jq -r '.access_token' "${ibd_cache}/login.json")" > "${ibd_config}/token"
-            echo "$(date -u +%s)" > "${ibd_config}/time"
             echo "${sankaku_login}" > "${ibd_config}/login"
             echo "${sankaku_password}" > "${ibd_config}/password"
+            echo "$(date -u +%s)" > "${ibd_config}/time"
+            echo "$(jq -r '.access_token' "${ibd_cache}/token.json")" > "${ibd_config}/token"
         else
-            echo "Error: $(jq -r '.error' "${ibd_cache}/login.json")"
+            echo "Error: $(jq -r '.error' "${ibd_cache}/token.json")"
             exit 1
         fi
     fi
 
-    if ! [ -f "${ibd_config}/token" ]
+    if [ -f "${ibd_config}/token" ]
     then
-        echo "No access token found"
-        exit 1
+        ibd_header="Authorization: Bearer $(cat "${ibd_config}/token")"
     fi
 
     ibd_page=1
     ibd_posts_url="${ibd_api}/posts"
-    ibd_header="Authorization: Bearer $(cat "${ibd_config}/token")"
     ibd_dlimit="limit"
     ibd_dpage="page"
     ibd_dtags="tags"
@@ -553,7 +545,7 @@ then
 
     if [ -n "${ibd_authorize}" ]
     then
-        echo "yande.re authorization is not supported yet and is not required"
+        echo "yande.re authorization is not supported yet"
         exit 1
     fi
 
