@@ -23,7 +23,7 @@ then
     exit 1
 fi
 
-ibd_version="2.17"
+ibd_version="2.18"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -597,7 +597,7 @@ ibd_output="[Removed: \${ibd_removed}] [Success: \${ibd_success}] [Failed: \${ib
 ibd_erase="\033[K"
 
 echo "Downloading artworks..."
-eval echo -n "\\\r${ibd_output} "
+eval echo -n "\\\r${ibd_output}\ "
 
 while [ -d "${ibd_dir}" ]
 do
@@ -661,7 +661,7 @@ do
                 echo "\rIgnored empty URL${ibd_erase}"
             fi
 
-            eval echo -n "\\\r${ibd_output} "
+            eval echo -n "\\\r${ibd_output}\ "
             continue
         fi
 
@@ -836,7 +836,7 @@ do
         fi
 
         ibd_done=$((ibd_done + 1))
-        eval echo -n "\\\r${ibd_output} "
+        eval echo -n "\\\r${ibd_output}\ "
     done
 
     ibd_page=$((ibd_page + 1))
