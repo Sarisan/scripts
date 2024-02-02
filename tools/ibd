@@ -23,7 +23,7 @@ then
     exit 1
 fi
 
-ibd_version="2.19"
+ibd_version="2.20"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -383,8 +383,8 @@ then
 
         if [ "$(jq -r '.name' "${ibd_cache}/profile.json")" = "${danbooru_login}" ]
         then
-            echo "${danbooru_login}" | base64 > "${ibd_config}/login"
-            echo "${danbooru_api_key}" | base64 > "${ibd_config}/api_key"
+            echo -n "${danbooru_login}" | base64 > "${ibd_config}/login"
+            echo -n "${danbooru_api_key}" | base64 > "${ibd_config}/api_key"
             echo -n "${danbooru_login}:${danbooru_api_key}" | base64 > "${ibd_config}/token"
         else
             echo "An unexpectd error occurred"
@@ -524,8 +524,8 @@ then
 
         if [ "$(jq -r '.success' "${ibd_cache}/token.json")" = "true" ]
         then
-            echo "${sankaku_login}" | base64 > "${ibd_config}/login"
-            echo "${sankaku_password}" | base64 > "${ibd_config}/password"
+            echo -n "${sankaku_login}" | base64 > "${ibd_config}/login"
+            echo -n "${sankaku_password}" | base64 > "${ibd_config}/password"
             date -u +%s > "${ibd_config}/time"
             jq -r '.access_token' "${ibd_cache}/token.json" > "${ibd_config}/token"
         else
