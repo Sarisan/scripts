@@ -23,7 +23,7 @@ then
     exit 1
 fi
 
-ibd_version="2.18"
+ibd_version="2.19"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -327,25 +327,11 @@ then
 
     mkdir -p "${ibd_config}"
 
-    if [ -z "${ibd_authorize}" ]
-    then
-        if [ -f "${ibd_config}/time" ]
-        then
-            current_date=$(date -u +%s)
-            danbooru_date=$(cat "${ibd_config}/time")
-
-            if [ $((current_date - danbooru_date)) -ge 36000 ]
-            then
-                ibd_authorize=1
-            fi
-        fi
-    fi
-
     if [ -n "${ibd_authorize}" ]
     then
-        if [ -f "${ibd_config}/login" ] && [ ${ibd_authorize} -eq 1 ]
+        if [ -f "${ibd_config}/login" ]
         then
-            danbooru_login="$(cat "${ibd_config}/login")"
+            danbooru_login="$(cat "${ibd_config}/login" | base64 -d)"
         fi
 
         while [ -z "${danbooru_login}" ]
@@ -353,9 +339,9 @@ then
             read -p "Login: " -r danbooru_login
         done
 
-        if [ -f "${ibd_config}/api_key" ] && [ ${ibd_authorize} -eq 1 ]
+        if [ -f "${ibd_config}/api_key" ]
         then
-            danbooru_api_key="$(cat "${ibd_config}/api_key")"
+            danbooru_api_key="$(cat "${ibd_config}/api_key" | base64 -d)"
         fi
 
         while [ -z "${danbooru_api_key}" ]
@@ -397,10 +383,9 @@ then
 
         if [ "$(jq -r '.name' "${ibd_cache}/profile.json")" = "${danbooru_login}" ]
         then
-            echo "${danbooru_login}" > "${ibd_config}/login"
-            echo "${danbooru_api_key}" > "${ibd_config}/api_key"
-            echo "$(date -u +%s)" > "${ibd_config}/time"
-            echo "$(echo -n "${danbooru_login}:${danbooru_api_key}" | base64)" > "${ibd_config}/token"
+            echo "${danbooru_login}" | base64 > "${ibd_config}/login"
+            echo "${danbooru_api_key}" | base64 > "${ibd_config}/api_key"
+            echo -n "${danbooru_login}:${danbooru_api_key}" | base64 > "${ibd_config}/token"
         else
             echo "An unexpectd error occurred"
             exit 1
@@ -417,8 +402,8 @@ then
     ibd_dlimit="limit"
     ibd_dpage="page"
     ibd_dtags="tags"
-    ibd_condition=".[0]|has(\"id\")"
-    ibd_iurl=".[].file_url"
+    ibd_iid="id"
+    ibd_ifile_url="file_url"
     ibd_ifilename="cut -d '/' -f 7"
 fi
 
@@ -441,8 +426,9 @@ then
     ibd_dlimit="limit"
     ibd_dpage="pid"
     ibd_dtags="tags"
-    ibd_condition="has(\"post\")"
-    ibd_iurl=".post[].file_url"
+    ibd_iarray="post"
+    ibd_iid="id"
+    ibd_ifile_url="file_url"
     ibd_ifilename="cut -d '/' -f 7"
 fi
 
@@ -461,8 +447,8 @@ then
     ibd_dlimit="limit"
     ibd_dpage="page"
     ibd_dtags="tags"
-    ibd_condition=".[0]|has(\"id\")"
-    ibd_iurl=".[].file_url"
+    ibd_iid="id"
+    ibd_ifile_url="file_url"
     ibd_ifilename="sed 's/\/Konachan.com.*\./\./' | cut -d '/' -f 5"
 fi
 
@@ -491,7 +477,7 @@ then
     then
         if [ -f "${ibd_config}/login" ] && [ ${ibd_authorize} -eq 1 ]
         then
-            sankaku_login="$(cat "${ibd_config}/login")"
+            sankaku_login="$(cat "${ibd_config}/login" | base64 -d)"
         fi
 
         while [ -z "${sankaku_login}" ]
@@ -501,7 +487,7 @@ then
 
         if [ -f "${ibd_config}/password" ] && [ ${ibd_authorize} -eq 1 ]
         then
-            sankaku_password="$(cat "${ibd_config}/password")"
+            sankaku_password="$(cat "${ibd_config}/password" | base64 -d)"
         fi
 
         while [ -z "${sankaku_password}" ]
@@ -538,10 +524,10 @@ then
 
         if [ "$(jq -r '.success' "${ibd_cache}/token.json")" = "true" ]
         then
-            echo "${sankaku_login}" > "${ibd_config}/login"
-            echo "${sankaku_password}" > "${ibd_config}/password"
-            echo "$(date -u +%s)" > "${ibd_config}/time"
-            echo "$(jq -r '.access_token' "${ibd_cache}/token.json")" > "${ibd_config}/token"
+            echo "${sankaku_login}" | base64 > "${ibd_config}/login"
+            echo "${sankaku_password}" | base64 > "${ibd_config}/password"
+            date -u +%s > "${ibd_config}/time"
+            jq -r '.access_token' "${ibd_cache}/token.json" > "${ibd_config}/token"
         else
             echo "Error: $(jq -r '.error' "${ibd_cache}/token.json")"
             exit 1
@@ -558,8 +544,8 @@ then
     ibd_dlimit="limit"
     ibd_dpage="page"
     ibd_dtags="tags"
-    ibd_condition=".[0]|has(\"id\")"
-    ibd_iurl=".[].file_url"
+    ibd_iid="id"
+    ibd_ifile_url="file_url"
     ibd_ifilename="cut -d '?' -f 1 | cut -d '/' -f 7"
 fi
 
@@ -578,12 +564,10 @@ then
     ibd_dlimit="limit"
     ibd_dpage="page"
     ibd_dtags="tags"
-    ibd_condition=".[0]|has(\"id\")"
-    ibd_iurl=".[].file_url"
+    ibd_iid="id"
+    ibd_ifile_url="file_url"
     ibd_ifilename="sed 's/\/yande.re.*\./\./' | cut -d '/' -f 5"
 fi
-
-alias ibd_icut="${ibd_ifilename}"
 
 mkdir -p "${ibd_dir}"
 rm -f "${ibd_dir}/list.txt"
@@ -601,6 +585,8 @@ eval echo -n "\\\r${ibd_output}\ "
 
 while [ -d "${ibd_dir}" ]
 do
+    ibd_file="${ibd_cache}/${ibd_page}_posts.json"
+
     curl --data-urlencode "${ibd_dfield1}" \
         --data-urlencode "${ibd_dfield2}" \
         --data-urlencode "${ibd_dfield3}" \
@@ -611,7 +597,7 @@ do
         --get \
         --header "${ibd_header}" \
         --max-time ${ibd_connect_timeout} \
-        --output "${ibd_cache}/${ibd_page}_posts.json" \
+        --output "${ibd_file}" \
         --proxy "${ibd_proxy}" \
         --retry ${ibd_tries} \
         --retry-connrefused \
@@ -620,39 +606,41 @@ do
         --user-agent "IBD" \
         "${ibd_posts_url}"
 
-    if ! [ -f "${ibd_cache}/${ibd_page}_posts.json" ]
+    if ! [ -f "${ibd_file}" ]
     then
         echo "Failed to access '${ibd_api}'"
         exit 1
     fi
 
-    if ! jq -e '.' "${ibd_cache}/${ibd_page}_posts.json" > /dev/null
+    if ! jq -e '.' "${ibd_file}" > /dev/null
     then
         echo "Failed to parse json"
         exit 1
     fi
 
-    if ! jq -e "${ibd_condition}" "${ibd_cache}/${ibd_page}_posts.json" > /dev/null 2>&1
+    if ! jq -e ".${ibd_iarray}[0]|has(\"${ibd_iid}\")" "${ibd_file}" > /dev/null 2>&1
     then
         break
     fi
 
-    echo "$(jq -r "${ibd_iurl}" "${ibd_cache}/${ibd_page}_posts.json")" > "${ibd_cache}/${ibd_page}_urls"
+    ibd_array=0
 
-    for ibd_url in $(cat "${ibd_cache}/${ibd_page}_urls")
+    until [ "$(jq -r ".${ibd_iarray}[${ibd_array}].${ibd_iid}" "${ibd_file}")" = "null" ]
     do
-        if ! [ -d "${ibd_dir}" ]
-        then
-            echo "No download directory found"
-            exit 1
-        fi
+        ibd_file_url="$(jq -r ".${ibd_iarray}[${ibd_array}].${ibd_ifile_url}" "${ibd_file}")"
 
         if [ ${ibd_done} -eq ${ibd_number} ]
         then
             break 2
         fi
 
-        if [ "${ibd_url}" = "null" ]
+        if ! [ -d "${ibd_dir}" ]
+        then
+            echo "No download directory found"
+            exit 1
+        fi
+
+        if [ "${ibd_file_url}" = "null" ]
         then
             ibd_done=$((ibd_done + 1))
 
@@ -662,10 +650,12 @@ do
             fi
 
             eval echo -n "\\\r${ibd_output}\ "
+
+            ibd_array=$((ibd_array + 1))
             continue
         fi
 
-        ibd_filename="$(echo "${ibd_url}" | ibd_icut)"
+        ibd_filename="$(echo "${ibd_file_url}" | eval ${ibd_ifilename})"
         ibd_md5="$(echo "${ibd_filename}" | cut -d '.' -f 1)"
         ibd_continue=1
 
@@ -780,7 +770,6 @@ do
                         fi
                     else
                         ibd_continue=0
-                        break
                     fi
                 fi
             done
@@ -797,7 +786,7 @@ do
                 --show-error \
                 --silent \
                 --user-agent "IBD" \
-                "${ibd_url}"
+                "${ibd_file_url}"
 
             if [ -f "${ibd_dir}/${ibd_filename}" ]
             then
@@ -837,6 +826,8 @@ do
 
         ibd_done=$((ibd_done + 1))
         eval echo -n "\\\r${ibd_output}\ "
+
+        ibd_array=$((ibd_array + 1))
     done
 
     ibd_page=$((ibd_page + 1))
