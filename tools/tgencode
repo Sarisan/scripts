@@ -21,7 +21,7 @@ then
     exit 1
 fi
 
-tgencode_version="1.7"
+tgencode_version="1.8"
 
 if [ -n "${1}" ]
 then
@@ -64,7 +64,7 @@ then
         "\n\nUsage: ${0} [options] [file]" \
         "\n\nOptions:" \
         "\n  -h\t\tShow help information" \
-        "\n  -a\t\tRemove audio stream (Telegram GIF)" \
+        "\n  -a\t\tRemove audio stream" \
         "\n  -f <num>\tSet custom frame rate" \
         "\n  -q\t\tSuppress all ffmpeg output" \
         "\n  -m\t\tAllow multiple files" \
