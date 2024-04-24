@@ -4,11 +4,12 @@
 # Copyright (C) 2024 Danil Lisin
 #
 # Image Board Downloader
-# Supported image boards: Danbooru, Gelbooru, Konachan.com, Sankaku Channel, yande.re
+# Supported image boards: Danbooru, Gelbooru, Idol Complex, Konachan.com, Sankaku Channel, yande.re
 
 set -e
+umask 77
 
-for required in base64 cat curl cut date grep jq md5sum mkdir rm sed sleep
+for required in awk base64 cat curl cut date grep jq md5sum mkdir rm sed sha1sum sleep tr
 do
     if ! command -v ${required} > /dev/null
     then
@@ -23,16 +24,13 @@ then
     exit 1
 fi
 
-ibd_version="2.20"
+ibd_version="3.0"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
-rm -rf "${ibd_cache}"
-mkdir -p "${ibd_cache}"
-
 if [ -n "${1}" ]
 then
-    while getopts hap:rt:g:n:m:s:x:i:l:qc:d:y:e: ibd_options
+    while getopts hao:rp:t:g:n:m:s:x:i:l:qc:d:y:e: ibd_options
     do
         case "${ibd_options}" in
             (h)
@@ -41,11 +39,14 @@ then
             (a)
                 ibd_authorize=0
             ;;
-            (p)
+            (o)
                 ibd_dir="${OPTARG}"
             ;;
             (r)
                 ibd_prune=0
+            ;;
+            (p)
+                ibd_page=${OPTARG}
             ;;
             (t)
                 ibd_tags="${OPTARG}"
@@ -105,8 +106,9 @@ then
         "\n\nOptions:" \
         "\n  -h\t\tShow help information" \
         "\n  -a\t\tAuthorize to image board" \
-        "\n  -p <dir>\tDownload artworks to directory" \
+        "\n  -o <dir>\tDownload artworks to directory" \
         "\n  -r\t\tRemove unwanted files according to list" \
+        "\n  -p <num>\tStart from specified results page" \
         "\n  -t <tags>\tDownload artworks by tags" \
         "\n  -g <num>\tRange of artworks between curl requests, max: 100, default: 20" \
         "\n  -n <num>\tLimit number of artworks to download" \
@@ -135,6 +137,7 @@ then
         "\n\nSupported image boards:" \
         "\n  danbooru\tDanbooru <https://danbooru.donmai.us/>" \
         "\n  gelbooru\tGelbooru <https://gelbooru.com/>" \
+        "\n  idol\t\tIdol Complex <https://idol.sankakucomplex.com/>" \
         "\n  konachan\tKonachan.com <https://konachan.com/>" \
         "\n  sankaku\tSankaku Channel <https://chan.sankakucomplex.com/>" \
         "\n  yandere\tyande.re <https://yande.re/>"
@@ -185,6 +188,11 @@ then
             esac
         done
     fi
+fi
+
+if [ -z "${ibd_page}" ]
+then
+    ibd_page=1
 fi
 
 if [ -n "${ibd_range}" ]
@@ -286,28 +294,7 @@ fi
 
 if [ -n "${1}" ]
 then
-    case "${1}" in
-        (danbooru)
-            ibd_danbooru=0
-        ;;
-        (gelbooru)
-            ibd_gelbooru=0
-        ;;
-        (konachan)
-            ibd_konachan=0
-        ;;
-        (sankaku)
-            ibd_sankaku=0
-        ;;
-        (yandere)
-            ibd_yandere=0
-        ;;
-        (*)
-            echo "Unrecognized image board ${1}. See '${0} -h'"
-            exit 1
-        ;;
-    esac
-
+    ibd_board="${1}"
     shift
 else
     echo "No image board specified. See '${0} -h'"
@@ -320,268 +307,375 @@ then
     exit 1
 fi
 
-if [ -n "${ibd_danbooru}" ]
-then
-    ibd_config="${ibd_config}/danbooru"
-    ibd_api="https://danbooru.donmai.us"
+rm -fr "${ibd_cache}"
+rm -f "${ibd_dir}/list.txt"
+mkdir -p "${ibd_cache}"
+mkdir -p "${ibd_dir}"
 
-    mkdir -p "${ibd_config}"
+case "${ibd_board}" in
+    (danbooru)
+        ibd_api="https://danbooru.donmai.us"
+        ibd_config="${ibd_config}/danbooru"
 
-    if [ -n "${ibd_authorize}" ]
-    then
-        if [ -f "${ibd_config}/login" ]
+        if [ -n "${ibd_authorize}" ]
         then
-            danbooru_login="$(cat "${ibd_config}/login" | base64 -d)"
-        fi
+            mkdir -p "${ibd_config}"
 
-        while [ -z "${danbooru_login}" ]
-        do
-            read -p "Login: " -r danbooru_login
-        done
+            while [ -z "${ibd_login}" ]
+            do
+                read -p "Login: " -r ibd_login
+            done
 
-        if [ -f "${ibd_config}/api_key" ]
-        then
-            danbooru_api_key="$(cat "${ibd_config}/api_key" | base64 -d)"
-        fi
+            while [ -z "${ibd_api_key}" ]
+            do
+                read -p "API Key: " -r ibd_api_key
+            done
 
-        while [ -z "${danbooru_api_key}" ]
-        do
-            read -p "API Key: " -r danbooru_api_key
-        done
+            echo "Validating API Key..."
 
-        echo "Validating API Key..."
+            ibd_file="${ibd_cache}/profile.json"
 
-        curl --max-time ${ibd_connect_timeout} \
-            --output "${ibd_cache}/profile.json" \
-            --proxy "${ibd_proxy}" \
-            --request GET \
-            --retry ${ibd_tries} \
-            --retry-connrefused \
-            --show-error \
-            --silent \
-            --user "${danbooru_login}:${danbooru_api_key}" \
-            --user-agent "IBD" \
-            "${ibd_api}/profile.json"
+            curl --max-time ${ibd_connect_timeout} \
+                --output "${ibd_file}" \
+                --proxy "${ibd_proxy}" \
+                --request GET \
+                --retry ${ibd_tries} \
+                --retry-all-errors \
+                --show-error \
+                --silent \
+                --user "${ibd_login}:${ibd_api_key}" \
+                --user-agent "IBD" \
+                "${ibd_api}/profile.json"
 
-        if ! [ -f "${ibd_cache}/profile.json" ]
-        then
-            echo "Failed to access '${ibd_api}'"
-            exit 1
-        fi
-
-        if ! jq -e '.' "${ibd_cache}/profile.json" > /dev/null
-        then
-            echo "Failed to parse json"
-            exit 1
-        fi
-
-        if [ "$(jq -r '.success' "${ibd_cache}/profile.json")" = "false" ]
-        then
-            echo "Error: $(jq -r '.message' "${ibd_cache}/profile.json")"
-            exit 1
-        fi
-
-        if [ "$(jq -r '.name' "${ibd_cache}/profile.json")" = "${danbooru_login}" ]
-        then
-            echo -n "${danbooru_login}" | base64 > "${ibd_config}/login"
-            echo -n "${danbooru_api_key}" | base64 > "${ibd_config}/api_key"
-            echo -n "${danbooru_login}:${danbooru_api_key}" | base64 > "${ibd_config}/token"
-        else
-            echo "An unexpectd error occurred"
-            exit 1
-        fi
-    fi
-
-    if [ -f "${ibd_config}/token" ]
-    then
-        ibd_header="Authorization: Baisc $(cat "${ibd_config}/token")"
-    fi
-
-    ibd_page=1
-    ibd_posts_url="${ibd_api}/posts.json"
-    ibd_dlimit="limit"
-    ibd_dpage="page"
-    ibd_dtags="tags"
-    ibd_iid="id"
-    ibd_ifile_url="file_url"
-    ibd_ifilename="cut -d '/' -f 7"
-fi
-
-if [ -n "${ibd_gelbooru}" ]
-then
-    ibd_api="https://gelbooru.com"
-
-    if [ -n "${ibd_authorize}" ]
-    then
-        echo "Authorization is not supported yet: gelbooru"
-        exit 1
-    fi
-
-    ibd_page=0
-    ibd_posts_url="${ibd_api}/index.php"
-    ibd_dfield1="page=dapi"
-    ibd_dfield2="s=post"
-    ibd_dfield3="q=index"
-    ibd_dfield4="json=1"
-    ibd_dlimit="limit"
-    ibd_dpage="pid"
-    ibd_dtags="tags"
-    ibd_iarray="post"
-    ibd_iid="id"
-    ibd_ifile_url="file_url"
-    ibd_ifilename="cut -d '/' -f 7"
-fi
-
-if [ -n "${ibd_konachan}" ]
-then
-    ibd_api="https://konachan.com"
-
-    if [ -n "${ibd_authorize}" ]
-    then
-        echo "Authorization is not supported yet: konachan"
-        exit 1
-    fi
-
-    ibd_page=1
-    ibd_posts_url="${ibd_api}/post.json"
-    ibd_dlimit="limit"
-    ibd_dpage="page"
-    ibd_dtags="tags"
-    ibd_iid="id"
-    ibd_ifile_url="file_url"
-    ibd_ifilename="sed 's/\/Konachan.com.*\./\./' | cut -d '/' -f 5"
-fi
-
-if [ -n "${ibd_sankaku}" ]
-then
-    ibd_config="${ibd_config}/sankaku"
-    ibd_api="https://capi-v2.sankakucomplex.com"
-
-    mkdir -p "${ibd_config}"
-
-    if [ -z "${ibd_authorize}" ]
-    then
-        if [ -f "${ibd_config}/time" ]
-        then
-            current_date=$(date -u +%s)
-            sankaku_date=$(cat "${ibd_config}/time")
-
-            if [ $((current_date - sankaku_date)) -ge 36000 ]
+            if ! [ -f "${ibd_file}" ]
             then
-                ibd_authorize=1
+                echo "Failed to process request"
+                exit 1
+            fi
+
+            if ! jq -e '.' "${ibd_file}" > /dev/null 2>&1
+            then
+                echo "An unknown error occurred"
+                exit 1
+            fi
+
+            if [ "$(jq -r '.success' "${ibd_file}")" = "false" ]
+            then
+                echo "Error: $(jq -r '.message' "${ibd_file}")"
+                exit 1
+            fi
+
+            if [ "$(jq -r '.name' "${ibd_file}")" != "${ibd_login}" ]
+            then
+                echo "An unexpectd error occurred"
+                exit 1
+            fi
+
+            printf "%s" "${ibd_login}:${ibd_api_key}" | base64 > "${ibd_config}/token"
+        fi
+
+        if [ -f "${ibd_config}/token" ]
+        then
+            ibd_header="Authorization: Baisc $(cat "${ibd_config}/token")"
+        fi
+
+        ibd_data_url="${ibd_api}/posts.json"
+        ibd_dlimit="limit"
+        ibd_dpage="page"
+        ibd_dquery="tags"
+        ibd_iid="id"
+        ibd_ifile="file_url"
+        ibd_ifilename="cut -d '/' -f 7"
+    ;;
+    (gelbooru)
+        ibd_api="https://gelbooru.com"
+        ibd_config="${ibd_config}/gelbooru"
+
+        if [ -n "${ibd_authorize}" ]
+        then
+            mkdir -p "${ibd_config}"
+
+            while [ -z "${ibd_user_id}" ]
+            do
+                read -p "User ID: " -r ibd_user_id
+            done
+
+            while [ -z "${ibd_api_key}" ]
+            do
+                read -p "API key: " -r ibd_api_key
+            done
+
+            printf '%s="%s"\n%s="%s"' \
+                "ibd_dfield5" "user_id=${ibd_user_id}" \
+                "ibd_dfield6" "api_key=${ibd_api_key}" > "${ibd_config}/legacy"
+
+            echo "Authorization cannot be verified, make sure you provided the correct credentials"
+        fi
+
+        if [ -f "${ibd_config}/legacy" ]
+        then
+            . "${ibd_config}/legacy"
+        fi
+
+        ibd_data_url="${ibd_api}/index.php"
+        ibd_dfield1="page=dapi"
+        ibd_dfield2="s=post"
+        ibd_dfield3="q=index"
+        ibd_dfield4="json=1"
+        ibd_dlimit="limit"
+        ibd_dpage="pid"
+        ibd_dquery="tags"
+        ibd_ioffset="-1"
+        ibd_iarray="post"
+        ibd_iid="id"
+        ibd_ifile="file_url"
+        ibd_ifilename="cut -d '/' -f 7"
+    ;;
+    (idol)
+        ibd_api="https://iapi.sankakucomplex.com"
+        ibd_config="${ibd_config}/idol"
+        ibd_exception_idol=0
+
+        if [ -n "${ibd_authorize}" ]
+        then
+            mkdir -p "${ibd_config}"
+
+            while [ -z "${ibd_login}" ]
+            do
+                read -p "Login: " -r ibd_login
+            done
+
+            while [ -z "${ibd_password}" ]
+            do
+                read -p "Password: " -r ibd_password
+            done
+
+            ibd_login_lower="$(printf "%s" "${ibd_login}" | tr '[:upper:]' '[:lower:]')"
+            ibd_password_hash="$(printf "choujin-steiner--%s--" "${ibd_password}" | sha1sum | awk '{print $1}')"
+            ibd_appkey="$(printf "sankakuapp_%s_Z5NE9YASej" "${ibd_login_lower}" | sha1sum | awk '{print $1}')"
+
+            printf '%s="%s"\n%s="%s"\n%s="%s"' \
+                "ibd_dfield4" "login=${ibd_login}" \
+                "ibd_dfield5" "password_hash=${ibd_password_hash}" \
+                "ibd_dfield6" "appkey=${ibd_appkey}" > "${ibd_config}/legacy"
+
+            echo "Authorization cannot be verified, make sure you provided the correct credentials"
+        fi
+
+        if [ -f "${ibd_config}/legacy" ]
+        then
+            . "${ibd_config}/legacy"
+        fi
+
+        ibd_data_url="${ibd_api}/posts.json"
+        ibd_dlimit="limit"
+        ibd_dpage="page"
+        ibd_dquery="tags"
+        ibd_iid="id"
+        ibd_ifile="file_url"
+        ibd_ifilename="cut -d '?' -f 1 | cut -d '/' -f 7"
+    ;;
+    (sankaku)
+        ibd_api="https://capi-v2.sankakucomplex.com"
+        ibd_config="${ibd_config}/sankaku"
+
+        if [ -z "${ibd_authorize}" ]
+        then
+            if [ -f "${ibd_config}/time" ]
+            then
+                current_date=$(date +%s)
+                previous_date=$(cat "${ibd_config}/time")
+
+                if [ $((current_date - previous_date)) -ge 36000 ]
+                then
+                    ibd_authorize=1
+                fi
             fi
         fi
-    fi
 
-    if [ -n "${ibd_authorize}" ]
-    then
-        if [ -f "${ibd_config}/login" ] && [ ${ibd_authorize} -eq 1 ]
+        if [ -n "${ibd_authorize}" ]
         then
-            sankaku_login="$(cat "${ibd_config}/login" | base64 -d)"
+            mkdir -p "${ibd_config}"
+
+            if [ -f "${ibd_config}/login" ] && [ ${ibd_authorize} -eq 1 ]
+            then
+                ibd_login="$(cat "${ibd_config}/login")"
+            fi
+
+            if [ -f "${ibd_config}/password" ] && [ ${ibd_authorize} -eq 1 ]
+            then
+                ibd_password="$(cat "${ibd_config}/password")"
+            fi
+
+            while [ -z "${ibd_login}" ]
+            do
+                read -p "Login: " -r ibd_login
+            done
+
+            while [ -z "${ibd_password}" ]
+            do
+                read -p "Password: " -r ibd_password
+            done
+
+            if [ ${ibd_authorize} -eq 1 ]
+            then
+                echo "Refreshing access token..."
+            else
+                echo "Retrieving access token..."
+            fi
+
+            ibd_login_data="$(jq --null-input --compact-output \
+                --arg login "${ibd_login}" \
+                --arg password "${ibd_password}" \
+                '{"login": $login, "password": $password}')"
+
+            ibd_file="${ibd_cache}/token.json"
+
+            curl --data "${ibd_login_data}" \
+                --header "Content-Type: application/json" \
+                --max-time ${ibd_connect_timeout} \
+                --output "${ibd_file}" \
+                --proxy "${ibd_proxy}" \
+                --request POST \
+                --retry ${ibd_tries} \
+                --retry-all-errors \
+                --show-error \
+                --silent \
+                --user-agent "IBD" \
+                "${ibd_api}/auth/token"
+
+            if ! [ -f "${ibd_file}" ]
+            then
+                echo "Failed to process request"
+                exit 1
+            fi
+
+            if ! jq -e '.' "${ibd_file}" > /dev/null 2>&1
+            then
+                echo "An unknown error occurred"
+                exit 1
+            fi
+
+            if [ "$(jq -r '.success' "${ibd_file}")" != "true" ]
+            then
+                echo "Error: $(jq -r '.error' "${ibd_file}")"
+                exit 1
+            fi
+
+            printf "%s" "${ibd_login}" > "${ibd_config}/login"
+            printf "%s" "${ibd_password}" > "${ibd_config}/password"
+            jq -r '.access_token' "${ibd_file}" > "${ibd_config}/token"
+            date +%s > "${ibd_config}/time"
         fi
 
-        while [ -z "${sankaku_login}" ]
-        do
-            read -p "Login: " -r sankaku_login
-        done
-
-        if [ -f "${ibd_config}/password" ] && [ ${ibd_authorize} -eq 1 ]
+        if [ -f "${ibd_config}/token" ]
         then
-            sankaku_password="$(cat "${ibd_config}/password" | base64 -d)"
+            ibd_header="Authorization: Bearer $(cat "${ibd_config}/token")"
         fi
 
-        while [ -z "${sankaku_password}" ]
-        do
-            read -p "Password: " -r sankaku_password
-        done
+        ibd_data_url="${ibd_api}/posts"
+        ibd_dlimit="limit"
+        ibd_dpage="page"
+        ibd_dquery="tags"
+        ibd_iid="id"
+        ibd_ifile="file_url"
+        ibd_ifilename="cut -d '?' -f 1 | cut -d '/' -f 7"
+    ;;
+    (konachan | yandere)
+        case "${ibd_board}" in
+            (konachan)
+                ibd_api="https://konachan.com"
+                ibd_config="${ibd_config}/konachan"
+                ibd_pattern="Konachan.com"
+            ;;
+            (yandere)
+                ibd_api="https://yande.re"
+                ibd_config="${ibd_config}/yandere"
+                ibd_pattern="yande.re"
+            ;;
+        esac
 
-        echo "Refreshing access token..."
-
-        curl --data "{\"login\":\"${sankaku_login}\",\"password\":\"${sankaku_password}\"}" \
-            --header "Content-Type: application/json" \
-            --max-time ${ibd_connect_timeout} \
-            --output "${ibd_cache}/token.json" \
-            --proxy "${ibd_proxy}" \
-            --request POST \
-            --retry ${ibd_tries} \
-            --retry-connrefused \
-            --show-error \
-            --silent \
-            --user-agent "IBD" \
-            "${ibd_api}/auth/token"
-
-        if ! [ -f "${ibd_cache}/token.json" ]
+        if [ -n "${ibd_authorize}" ]
         then
-            echo "Failed to access '${ibd_api}'"
-            exit 1
+            mkdir -p "${ibd_config}"
+
+            while [ -z "${ibd_username}" ]
+            do
+                read -p "Username: " -r ibd_username
+            done
+
+            while [ -z "${ibd_api_key}" ]
+            do
+                read -p "API Key: " -r ibd_api_key
+            done
+
+            echo "Validating API Key..."
+
+            ibd_file="${ibd_cache}/user.json"
+
+            curl --data-urlencode "username=${ibd_username}" \
+                --data-urlencode "api_key=${ibd_api_key}" \
+                --max-time ${ibd_connect_timeout} \
+                --output "${ibd_file}" \
+                --proxy "${ibd_proxy}" \
+                --retry ${ibd_tries} \
+                --retry-all-errors \
+                --show-error \
+                --silent \
+                --user-agent "IBD" \
+                "${ibd_api}/user.json"
+
+            if ! [ -f "${ibd_file}" ]
+            then
+                echo "Failed to process request"
+                exit 1
+            fi
+
+            if ! jq -e '.' "${ibd_file}" > /dev/null 2>&1
+            then
+                echo "Invalid username or API key"
+                exit 1
+            fi
+
+            printf '%s="%s"\n%s="%s"' \
+                "ibd_dfield5" "username=${ibd_username}" \
+                "ibd_dfield6" "api_key=${ibd_api_key}" > "${ibd_config}/legacy"
         fi
 
-        if ! jq -e '.' "${ibd_cache}/token.json" > /dev/null
+        if [ -f "${ibd_config}/legacy" ]
         then
-            echo "Failed to parse json"
-            exit 1
+            . "${ibd_config}/legacy"
         fi
 
-        if [ "$(jq -r '.success' "${ibd_cache}/token.json")" = "true" ]
-        then
-            echo -n "${sankaku_login}" | base64 > "${ibd_config}/login"
-            echo -n "${sankaku_password}" | base64 > "${ibd_config}/password"
-            date -u +%s > "${ibd_config}/time"
-            jq -r '.access_token' "${ibd_cache}/token.json" > "${ibd_config}/token"
-        else
-            echo "Error: $(jq -r '.error' "${ibd_cache}/token.json")"
-            exit 1
-        fi
-    fi
-
-    if [ -f "${ibd_config}/token" ]
-    then
-        ibd_header="Authorization: Bearer $(cat "${ibd_config}/token")"
-    fi
-
-    ibd_page=1
-    ibd_posts_url="${ibd_api}/posts"
-    ibd_dlimit="limit"
-    ibd_dpage="page"
-    ibd_dtags="tags"
-    ibd_iid="id"
-    ibd_ifile_url="file_url"
-    ibd_ifilename="cut -d '?' -f 1 | cut -d '/' -f 7"
-fi
-
-if [ -n "${ibd_yandere}" ]
-then
-    ibd_api="https://yande.re"
-
-    if [ -n "${ibd_authorize}" ]
-    then
-        echo "Authorization is not supported yet: yandere"
+        ibd_data_url="${ibd_api}/post.json"
+        ibd_dlimit="limit"
+        ibd_dpage="page"
+        ibd_dquery="tags"
+        ibd_iid="id"
+        ibd_ifile="file_url"
+        ibd_ifilename="sed 's/\/${ibd_pattern}.*\./\./' | cut -d '/' -f 5"
+    ;;
+    (*)
+        echo "Unrecognized image board ${ibd_board}. See '${0} -h'"
         exit 1
-    fi
-
-    ibd_page=1
-    ibd_posts_url="${ibd_api}/post.json"
-    ibd_dlimit="limit"
-    ibd_dpage="page"
-    ibd_dtags="tags"
-    ibd_iid="id"
-    ibd_ifile_url="file_url"
-    ibd_ifilename="sed 's/\/yande.re.*\./\./' | cut -d '/' -f 5"
-fi
-
-mkdir -p "${ibd_dir}"
-rm -f "${ibd_dir}/list.txt"
+    ;;
+esac
 
 ibd_removed=0
 ibd_success=0
 ibd_failed=0
 ibd_done=0
 
-ibd_output="[Removed: \${ibd_removed}] [Success: \${ibd_success}] [Failed: \${ibd_failed}] [Done: \${ibd_done}]"
-ibd_erase="\033[K"
+ibd_output="\r[Removed: %s] [Success: %s] [Failed: %s] [Done: %s] "
+ibd_erase="\r%s\033[K\n"
 
 echo "Downloading artworks..."
-eval echo -n "\\\r${ibd_output}\ "
+printf "${ibd_output}" "${ibd_removed}" "${ibd_success}" "${ibd_failed}" "${ibd_done}"
+
+if [ -n "${ibd_tags}" ]
+then
+    ibd_query="${ibd_dquery}=${ibd_tags}"
+fi
 
 while [ -d "${ibd_dir}" ]
 do
@@ -591,20 +685,22 @@ do
         --data-urlencode "${ibd_dfield2}" \
         --data-urlencode "${ibd_dfield3}" \
         --data-urlencode "${ibd_dfield4}" \
+        --data-urlencode "${ibd_dfield5}" \
+        --data-urlencode "${ibd_dfield6}" \
         --data-urlencode "${ibd_dlimit}=${ibd_range}" \
-        --data-urlencode "${ibd_dpage}=${ibd_page}" \
-        --data-urlencode "${ibd_dtags}=${ibd_tags}" \
+        --data-urlencode "${ibd_dpage}=$((ibd_page + ibd_ioffset))" \
+        --data-urlencode "${ibd_query}" \
         --get \
         --header "${ibd_header}" \
         --max-time ${ibd_connect_timeout} \
         --output "${ibd_file}" \
         --proxy "${ibd_proxy}" \
         --retry ${ibd_tries} \
-        --retry-connrefused \
+        --retry-all-errors \
         --show-error \
         --silent \
         --user-agent "IBD" \
-        "${ibd_posts_url}"
+        "${ibd_data_url}"
 
     if ! [ -f "${ibd_file}" ]
     then
@@ -612,9 +708,9 @@ do
         exit 1
     fi
 
-    if ! jq -e '.' "${ibd_file}" > /dev/null
+    if ! jq -e '.' "${ibd_file}" > /dev/null 2>&1
     then
-        echo "Failed to parse json"
+        echo "An unknown error occurred"
         exit 1
     fi
 
@@ -627,7 +723,7 @@ do
 
     until [ "$(jq -r ".${ibd_iarray}[${ibd_array}].${ibd_iid}" "${ibd_file}")" = "null" ]
     do
-        ibd_file_url="$(jq -r ".${ibd_iarray}[${ibd_array}].${ibd_ifile_url}" "${ibd_file}")"
+        ibd_file_url="$(jq -r ".${ibd_iarray}[${ibd_array}].${ibd_ifile}" "${ibd_file}")"
 
         if [ ${ibd_done} -eq ${ibd_number} ]
         then
@@ -640,23 +736,25 @@ do
             exit 1
         fi
 
-        if [ "${ibd_file_url}" = "null" ]
+        if [ -z "${ibd_file_url}" ] || [ "${ibd_file_url}" = "null" ]
         then
-            ibd_done=$((ibd_done + 1))
-
             if [ -z "${ibd_quiet}" ]
             then
-                echo "\rIgnored empty URL${ibd_erase}"
+                printf "${ibd_erase}" "Ignored empty URL"
             fi
 
-            eval echo -n "\\\r${ibd_output}\ "
+            ibd_done=$((ibd_done + 1))
+            printf "${ibd_output}" "${ibd_removed}" "${ibd_success}" "${ibd_failed}" "${ibd_done}"
 
             ibd_array=$((ibd_array + 1))
             continue
+        elif [ -n "${ibd_exception_idol}" ]
+        then
+            ibd_file_url="https:${ibd_file_url}"
         fi
 
-        ibd_filename="$(echo "${ibd_file_url}" | eval ${ibd_ifilename})"
-        ibd_md5="$(echo "${ibd_filename}" | cut -d '.' -f 1)"
+        ibd_filename="$(printf "%s" "${ibd_file_url}" | eval ${ibd_ifilename})"
+        ibd_md5="$(printf "%s" "${ibd_filename}" | cut -d '.' -f 1)"
         ibd_continue=1
 
         if [ -f "${ibd_dir}/${ibd_md5}".* ]
@@ -782,7 +880,7 @@ do
                 --proxy "${ibd_proxy}" \
                 --remote-time \
                 --retry ${ibd_tries} \
-                --retry-connrefused \
+                --retry-all-errors \
                 --show-error \
                 --silent \
                 --user-agent "IBD" \
@@ -799,7 +897,7 @@ do
                         ibd_success=$((ibd_success + 1))
                     else
                         ibd_failed=$((ibd_failed + 1))
-                        echo "${ibd_md5}" >> "${ibd_dir}/failed.txt"
+                        printf "%s\n" "${ibd_md5}" >> "${ibd_dir}/failed.txt"
 
                         if [ -z "${ibd_keep}" ]
                         then
@@ -810,22 +908,22 @@ do
                 fi
             else
                 ibd_failed=$((ibd_failed + 1))
-                echo "${ibd_md5}" >> "${ibd_dir}/failed.txt"
+                printf "%s\n" "${ibd_md5}" >> "${ibd_dir}/failed.txt"
             fi
         fi
 
         if [ -f "${ibd_dir}/${ibd_filename}" ]
         then
-            echo "${ibd_filename}" >> "${ibd_dir}/list.txt"
+            printf "%s\n" "${ibd_filename}" >> "${ibd_dir}/list.txt"
         fi
 
         if [ -z "${ibd_quiet}" ]
         then
-            echo "\r${ibd_filename}${ibd_erase}"
+            printf "${ibd_erase}" "${ibd_filename}"
         fi
 
         ibd_done=$((ibd_done + 1))
-        eval echo -n "\\\r${ibd_output}\ "
+        printf "${ibd_output}" "${ibd_removed}" "${ibd_success}" "${ibd_failed}" "${ibd_done}"
 
         ibd_array=$((ibd_array + 1))
     done
