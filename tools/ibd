@@ -24,7 +24,7 @@ then
     exit 1
 fi
 
-ibd_version="3.0"
+ibd_version="3.1"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -932,7 +932,7 @@ do
     sleep ${ibd_sleep_time}
 done
 
-echo ''
+printf "\n"
 
 if ! [ -s "${ibd_dir}/failed.txt" ]
 then
