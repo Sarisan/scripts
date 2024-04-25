@@ -24,7 +24,7 @@ then
     exit 1
 fi
 
-ibd_version="3.1"
+ibd_version="3.2"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -321,12 +321,12 @@ case "${ibd_board}" in
         then
             mkdir -p "${ibd_config}"
 
-            while [ -z "${ibd_login}" ]
+            until [ -n "${ibd_login}" ]
             do
                 read -p "Login: " -r ibd_login
             done
 
-            while [ -z "${ibd_api_key}" ]
+            until [ -n "${ibd_api_key}" ]
             do
                 read -p "API Key: " -r ibd_api_key
             done
@@ -395,12 +395,12 @@ case "${ibd_board}" in
         then
             mkdir -p "${ibd_config}"
 
-            while [ -z "${ibd_user_id}" ]
+            until [ -n "${ibd_user_id}" ]
             do
                 read -p "User ID: " -r ibd_user_id
             done
 
-            while [ -z "${ibd_api_key}" ]
+            until [ -n "${ibd_api_key}" ]
             do
                 read -p "API key: " -r ibd_api_key
             done
@@ -440,12 +440,12 @@ case "${ibd_board}" in
         then
             mkdir -p "${ibd_config}"
 
-            while [ -z "${ibd_login}" ]
+            until [ -n "${ibd_login}" ]
             do
                 read -p "Login: " -r ibd_login
             done
 
-            while [ -z "${ibd_password}" ]
+            until [ -n "${ibd_password}" ]
             do
                 read -p "Password: " -r ibd_password
             done
@@ -507,12 +507,12 @@ case "${ibd_board}" in
                 ibd_password="$(cat "${ibd_config}/password")"
             fi
 
-            while [ -z "${ibd_login}" ]
+            until [ -n "${ibd_login}" ]
             do
                 read -p "Login: " -r ibd_login
             done
 
-            while [ -z "${ibd_password}" ]
+            until [ -n "${ibd_password}" ]
             do
                 read -p "Password: " -r ibd_password
             done
@@ -599,12 +599,12 @@ case "${ibd_board}" in
         then
             mkdir -p "${ibd_config}"
 
-            while [ -z "${ibd_username}" ]
+            until [ -n "${ibd_username}" ]
             do
                 read -p "Username: " -r ibd_username
             done
 
-            while [ -z "${ibd_api_key}" ]
+            until [ -n "${ibd_api_key}" ]
             do
                 read -p "API Key: " -r ibd_api_key
             done
