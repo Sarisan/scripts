@@ -21,14 +21,11 @@ then
     exit 1
 fi
 
-tgbot_version="1.2"
+tgbot_version="1.3"
 tgbot_config="${HOME}/.config/tgbot"
 tgbot_dfile="${tgbot_config}/config"
 tgbot_daddress="https://api.telegram.org"
 tgbot_djson="${tgbot_config}/json"
-
-mkdir -p "${tgbot_config}"
-mkdir -p "${tgbot_djson}"
 
 if [ -n "${1}" ]
 then
@@ -75,13 +72,19 @@ then
     exit 0
 fi
 
+mkdir -p "${tgbot_config}"
+mkdir -p "${tgbot_djson}"
+
 if [ -z "${tgbot_file}" ]
 then
     tgbot_file="${tgbot_dfile}"
 
     if ! [ -f "${tgbot_file}" ]
     then
-        echo "address=\"${tgbot_daddress}\"\ntoken=\"\"\njson=\"${tgbot_djson}\"" > "${tgbot_file}"
+        printf '%s="%s"\n%s="%s"\n%s="%s"' \
+            "address" "${tgbot_daddress}" \
+            "token" "" \
+            "json" "${tgbot_djson}" > "${tgbot_file}"
         echo "Empty configuration file has been written to '${tgbot_file}'"
         exit 0
     fi
