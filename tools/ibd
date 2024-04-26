@@ -24,7 +24,7 @@ then
     exit 1
 fi
 
-ibd_version="3.2"
+ibd_version="3.3"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -809,7 +809,7 @@ do
 
                         if [ -n "${ibd_full}" ]
                         then
-                            if ! [ "$(md5sum "${ibd_exclude_dir}/${ibd_md5}".* | cut -d ' ' -f 1)" = "${ibd_md5}" ]
+                            if [ "$(md5sum "${ibd_exclude_dir}/${ibd_md5}".* | cut -d ' ' -f 1)" != "${ibd_md5}" ]
                             then
                                 ibd_continue=1
 
