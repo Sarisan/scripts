@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-for required in awk base64 cat curl cut date grep jq md5sum mkdir rm sed sha1sum sleep tr
+for required in base64 cat curl cut date grep jq md5sum mkdir rm sed sha1sum sleep tr
 do
     if ! command -v ${required} > /dev/null
     then
@@ -25,7 +25,7 @@ then
     exit 1
 fi
 
-ibd_version="3.4"
+ibd_version="3.5"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -438,8 +438,8 @@ case "${ibd_board}" in
             done
 
             ibd_login_lower="$(printf "%s" "${ibd_login}" | tr '[:upper:]' '[:lower:]')"
-            ibd_password_hash="$(printf "choujin-steiner--%s--" "${ibd_password}" | sha1sum | awk '{print $1}')"
-            ibd_appkey="$(printf "sankakuapp_%s_Z5NE9YASej" "${ibd_login_lower}" | sha1sum | awk '{print $1}')"
+            ibd_password_hash="$(printf "choujin-steiner--%s--" "${ibd_password}" | sha1sum | cut -d ' ' -f 1)"
+            ibd_appkey="$(printf "sankakuapp_%s_Z5NE9YASej" "${ibd_login_lower}" | sha1sum | cut -d ' ' -f 1)"
 
             printf '%s="%s"\n%s="%s"\n%s="%s"' \
                 "ibd_dfield4" "login=${ibd_login}" \
