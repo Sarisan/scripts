@@ -6,6 +6,7 @@
 # Telegram Bot JSON Sender
 
 set -e
+umask 77
 
 for required in curl mkdir
 do
@@ -22,7 +23,7 @@ then
     exit 1
 fi
 
-tgbot_version="1.3"
+tgbot_version="1.4"
 tgbot_config="${HOME}/.config/tgbot"
 tgbot_dfile="${tgbot_config}/config"
 tgbot_daddress="https://api.telegram.org"
