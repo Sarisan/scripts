@@ -7,21 +7,6 @@
 
 set -e
 
-for required in ffmpeg
-do
-    if ! command -v ${required} > /dev/null
-    then
-        missing="${missing} ${required}"
-    fi
-done
-
-if [ -n "${missing}" ]
-then
-    echo "Missing dependencies:${missing}" \
-        "\nFor more information follow: https://command-not-found.com/"
-    exit 1
-fi
-
 tgencode_version="1.8"
 
 if [ -n "${1}" ]
@@ -71,6 +56,21 @@ then
         "\n  -m\t\tAllow multiple files" \
         "\n  -b\t\tDo not exit on error"
     exit 0
+fi
+
+for required in ffmpeg
+do
+    if ! command -v ${required} > /dev/null
+    then
+        missing="${missing} ${required}"
+    fi
+done
+
+if [ -n "${missing}" ]
+then
+    echo "Missing dependencies:${missing}" \
+        "\nFor more information follow: https://command-not-found.com/"
+    exit 1
 fi
 
 if [ -n "${tgencode_noaudio}" ]

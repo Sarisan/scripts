@@ -8,21 +8,6 @@
 set -e
 umask 77
 
-for required in curl mkdir
-do
-    if ! command -v ${required} > /dev/null
-    then
-        missing="${missing} ${required}"
-    fi
-done
-
-if [ -n "${missing}" ]
-then
-    echo "Missing dependencies:${missing}" \
-        "\nFor more information follow: https://command-not-found.com/"
-    exit 1
-fi
-
 tgbot_version="1.4"
 tgbot_config="${HOME}/.config/tgbot"
 tgbot_dfile="${tgbot_config}/config"
@@ -72,6 +57,21 @@ then
         "\n  -t <token>\tSpecify access token" \
         "\n  -j <dir>\tSpecify json directory"
     exit 0
+fi
+
+for required in curl mkdir
+do
+    if ! command -v ${required} > /dev/null
+    then
+        missing="${missing} ${required}"
+    fi
+done
+
+if [ -n "${missing}" ]
+then
+    echo "Missing dependencies:${missing}" \
+        "\nFor more information follow: https://command-not-found.com/"
+    exit 1
 fi
 
 mkdir -p "${tgbot_config}"

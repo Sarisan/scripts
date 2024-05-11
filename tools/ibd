@@ -10,21 +10,6 @@
 set -e
 umask 77
 
-for required in base64 cat curl cut date grep jq md5sum mkdir rm sed sha1sum sleep tr
-do
-    if ! command -v ${required} > /dev/null
-    then
-        missing="${missing} ${required}"
-    fi
-done
-
-if [ -n "${missing}" ]
-then
-    echo "Missing dependencies:${missing}" \
-        "\nFor more information follow: https://command-not-found.com/"
-    exit 1
-fi
-
 ibd_version="3.5"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
@@ -143,6 +128,21 @@ then
         "\n  sankaku\tSankaku Channel <https://chan.sankakucomplex.com/>" \
         "\n  yandere\tyande.re <https://yande.re/>"
     exit 0
+fi
+
+for required in base64 cat curl cut date grep jq md5sum mkdir rm sed sha1sum sleep tr
+do
+    if ! command -v ${required} > /dev/null
+    then
+        missing="${missing} ${required}"
+    fi
+done
+
+if [ -n "${missing}" ]
+then
+    echo "Missing dependencies:${missing}" \
+        "\nFor more information follow: https://command-not-found.com/"
+    exit 1
 fi
 
 if [ -z "${ibd_dir}" ]
