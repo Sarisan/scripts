@@ -20,8 +20,8 @@ done
 
 if [ -n "${missing}" ]
 then
-    echo "Missing dependencies:${missing}\n" \
-        "For more information follow: https://command-not-found.com/"
+    echo "Missing dependencies:${missing}" \
+        "\nFor more information follow: https://command-not-found.com/"
     exit 1
 fi
 
