@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.8"
+ibd_version="3.9"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -186,13 +186,25 @@ then
     fi
 fi
 
-if [ -z "${ibd_page}" ]
+if [ -n "${ibd_page}" ]
 then
+    if ! test ${ibd_page} -gt 0 > /dev/null 2>&1
+    then
+        echo "Illegal page number"
+        exit 1
+    fi
+else
     ibd_page=1
 fi
 
 if [ -n "${ibd_range}" ]
 then
+    if ! test ${ibd_range} -gt 0 > /dev/null 2>&1
+    then
+        echo "Illegal range number"
+        exit 1
+    fi
+
     if [ ${ibd_range} -gt 100 ]
     then
         ibd_range=100
@@ -203,6 +215,12 @@ fi
 
 if [ -n "${ibd_number}" ]
 then
+    if ! test ${ibd_number} -gt 0 > /dev/null 2>&1
+    then
+        echo "Illegal limit number"
+        exit 1
+    fi
+
     if [ ${ibd_number} -lt ${ibd_range} ]
     then
         ibd_range=${ibd_number}
@@ -247,23 +265,47 @@ then
     esac
 fi
 
-if [ -z "${ibd_sleep_time}" ]
+if [ -n "${ibd_sleep_time}" ]
 then
+    if ! test ${ibd_sleep_time} -gt 0 > /dev/null 2>&1
+    then
+        echo "Illegal sleep time"
+        exit 1
+    fi
+else
     ibd_sleep_time=0
 fi
 
-if [ -z "${ibd_connect_timeout}" ]
+if [ -n "${ibd_connect_timeout}" ]
 then
+    if ! test ${ibd_connect_timeout} -gt 0 > /dev/null 2>&1
+    then
+        echo "Illegal connect timeout"
+        exit 1
+    fi
+else
     ibd_connect_timeout=15
 fi
 
-if [ -z "${ibd_download_timeout}" ]
+if [ -n "${ibd_download_timeout}" ]
 then
+    if ! test ${ibd_download_timeout} -gt 0 > /dev/null 2>&1
+    then
+        echo "Illegal download timeout"
+        exit 1
+    fi
+else
     ibd_download_timeout=600
 fi
 
-if [ -z "${ibd_tries}" ]
+if [ -n "${ibd_tries}" ]
 then
+    if ! test ${ibd_tries} -gt 0 > /dev/null 2>&1
+    then
+        echo "Illegal tries number"
+        exit 1
+    fi
+else
     ibd_tries=5
 fi
 
