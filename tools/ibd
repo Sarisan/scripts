@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.5"
+ibd_version="3.6"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -861,6 +861,8 @@ do
 
         if [ ${ibd_download} -eq 1 ] && [ ${ibd_exclude} -eq 1 ]
         then
+            umask 22
+
             curl --max-time ${ibd_download_timeout} \
                 --output "${ibd_dir}/${ibd_filename}" \
                 --proxy "${ibd_proxy}" \
@@ -900,6 +902,8 @@ do
                 ibd_failed=$((ibd_failed + 1))
                 printf "%s\n" "${ibd_md5}" >> "${ibd_dir}/failed.txt"
             fi
+
+            umask 77
         fi
 
         if [ -z "${ibd_quiet}" ]
