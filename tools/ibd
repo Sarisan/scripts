@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.6"
+ibd_version="3.7"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -214,11 +214,7 @@ fi
 if [ -n "${ibd_download_mode}" ]
 then
     case "${ibd_download_mode}" in
-        (encount)
-        ;;
-        (full)
-        ;;
-        (repair)
+        (encount | full | repair)
         ;;
         (*)
             echo "Unrecognized download mode ${ibd_download_mode}. See '${0} -h'"
@@ -230,9 +226,7 @@ fi
 if [ -n "${ibd_md5_mode}" ]
 then
     case "${ibd_md5_mode}" in
-        (keep)
-        ;;
-        (skip)
+        (keep | skip)
         ;;
         (*)
             echo "Unrecognized MD5 checksums mode ${ibd_md5_mode}. See '${0} -h'"
@@ -244,13 +238,7 @@ fi
 if [ -n "${ibd_exclude_mode}" ]
 then
     case "${ibd_exclude_mode}" in
-        (download)
-        ;;
-        (remove)
-        ;;
-        (reversive)
-        ;;
-        (selfremove)
+        (download | remove | reversive | selfremove)
         ;;
         (*)
             echo "Unrecognized exclude mode ${ibd_exclude_mode}. See '${0} -h'"
