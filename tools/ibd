@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.7"
+ibd_version="3.8"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -409,7 +409,6 @@ case "${ibd_board}" in
     (idol)
         ibd_api="https://iapi.sankakucomplex.com"
         ibd_config="${ibd_config}/idol"
-        ibd_exception_idol=0
 
         if [ -n "${ibd_authorize}" ]
         then
@@ -723,7 +722,7 @@ do
 
             ibd_array=$((ibd_array + 1))
             continue
-        elif [ -n "${ibd_exception_idol}" ]
+        elif [ "${ibd_board}" = "idol" ]
         then
             ibd_file_url="https:${ibd_file_url}"
         fi
