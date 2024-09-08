@@ -7,30 +7,33 @@
 
 set -e
 
-tgencode_version="1.10"
+tgencode_version="2.0"
 
 if [ -n "${1}" ]
 then
-    while getopts haf:p:c:qmb tgencode_options
+    while getopts hl:r:f:ap:c:mb tgencode_options
     do
         case "${tgencode_options}" in
             (h)
                 tgencode_help=0
             ;;
-            (a)
-                tgencode_noaudio=0
+            (l)
+                tgencode_loglevel=${OPTARG}
+            ;;
+            (r)
+                tgencode_fps=${OPTARG}
             ;;
             (f)
-                tgencode_fps=${OPTARG}
+                tgencode_filters="${OPTARG}"
+            ;;
+            (a)
+                tgencode_noaudio=0
             ;;
             (p)
                 tgencode_preset=${OPTARG}
             ;;
             (c)
                 tgencode_crf=${OPTARG}
-            ;;
-            (q)
-                tgencode_quiet=0
             ;;
             (m)
                 tgencode_multiple=0
@@ -56,11 +59,12 @@ then
         "\n\nUsage: ${0} [options] [file]" \
         "\n\nOptions:" \
         "\n  -h\t\tShow help information" \
+        "\n  -l <lvl>\tLog level, default: info" \
+        "\n  -r <num>\tSet custom frame rate" \
+        "\n  -f <str>\tSet custom filters" \
         "\n  -a\t\tRemove audio stream" \
-        "\n  -f <num>\tSet custom frame rate" \
         "\n  -p <pst>\tPreset, default: medium" \
         "\n  -c <num>\tConstant Rate Factor, default: 23" \
-        "\n  -q\t\tSuppress all ffmpeg output" \
         "\n  -m\t\tAllow multiple files" \
         "\n  -b\t\tDo not exit on error"
     exit 0
@@ -81,16 +85,26 @@ then
     exit 1
 fi
 
-if [ -n "${tgencode_noaudio}" ]
+if [ -z "${tgencode_loglevel}" ]
 then
-    tgencode_acodec="-an"
-else
-    tgencode_acodec="-acodec aac"
+    tgencode_loglevel=info
 fi
 
 if [ -z "${tgencode_fps}" ]
 then
     tgencode_fps=source_fps
+fi
+
+if [ -z "${tgencode_filters}" ]
+then
+    tgencode_filters="pad=ceil(iw/2)*2:ceil(ih/2)*2"
+fi
+
+if [ -n "${tgencode_noaudio}" ]
+then
+    tgencode_acodec="-an"
+else
+    tgencode_acodec="-acodec aac"
 fi
 
 if [ -z "${tgencode_preset}" ]
@@ -101,13 +115,6 @@ fi
 if [ -z "${tgencode_crf}" ]
 then
     tgencode_crf=23
-fi
-
-if [ -n "${tgencode_quiet}" ]
-then
-    tgencode_loglevel=quiet
-else
-    tgencode_loglevel=info
 fi
 
 if [ -z "${1}" ]
@@ -129,7 +136,7 @@ do
     if ! [ -f "${tgencode_input}" ]
     then
         tgencode_exit=1
-        echo "No file found: '${tgencode_input}'"
+        echo "No file found: ${tgencode_input}"
 
         if [ -z "${tgencode_break}" ]
         then
@@ -140,12 +147,13 @@ do
     fi
 
     tgencode_output="${tgencode_input%\.*}_t.mp4"
+    echo "Reencoding: ${tgencode_input}"
 
     if ffmpeg -i "${tgencode_input}" \
         -loglevel ${tgencode_loglevel} \
         -profile:v high \
         -vcodec libx264 \
-        -vf "fps=${tgencode_fps},pad=ceil(iw/2)*2:ceil(ih/2)*2" \
+        -vf "fps=${tgencode_fps},${tgencode_filters}" \
         -pix_fmt yuv420p \
         ${tgencode_acodec} \
         -preset ${tgencode_preset} \
@@ -153,10 +161,10 @@ do
         -movflags +faststart \
         "${tgencode_output}" -y
     then
-        echo "Succesfully reencoded: '${tgencode_output}'"
+        echo "Succesfully reencoded: ${tgencode_output}"
     else
         tgencode_exit=1
-        echo "Failed to reencode: '${tgencode_input}'"
+        echo "Failed to reencode: ${tgencode_input}"
 
         if [ -z "${tgencode_break}" ]
         then
