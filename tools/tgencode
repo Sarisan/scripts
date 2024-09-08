@@ -7,11 +7,11 @@
 
 set -e
 
-tgencode_version="1.8"
+tgencode_version="1.9"
 
 if [ -n "${1}" ]
 then
-    while getopts haf:qmb tgencode_options
+    while getopts haf:p:c:qmb tgencode_options
     do
         case "${tgencode_options}" in
             (h)
@@ -22,6 +22,12 @@ then
             ;;
             (f)
                 tgencode_fps=${OPTARG}
+            ;;
+            (p)
+                tgencode_preset=${OPTARG}
+            ;;
+            (c)
+                tgencode_crf=${OPTARG}
             ;;
             (q)
                 tgencode_quiet=0
@@ -52,6 +58,8 @@ then
         "\n  -h\t\tShow help information" \
         "\n  -a\t\tRemove audio stream" \
         "\n  -f <num>\tSet custom frame rate" \
+        "\n  -p <pst>\tPreset, default: medium" \
+        "\n  -c <num>\tConstant Rate Factor, default: 23" \
         "\n  -q\t\tSuppress all ffmpeg output" \
         "\n  -m\t\tAllow multiple files" \
         "\n  -b\t\tDo not exit on error"
@@ -83,6 +91,16 @@ fi
 if [ -z "${tgencode_fps}" ]
 then
     tgencode_fps="source_fps"
+fi
+
+if [ -z "${tgencode_preset}" ]
+then
+    tgencode_preset="medium"
+fi
+
+if [ -z "${tgencode_crf}" ]
+then
+    tgencode_crf=23
 fi
 
 if [ -n "${tgencode_quiet}" ]
@@ -130,6 +148,8 @@ do
         -vf "fps=${tgencode_fps},pad=ceil(iw/2)*2:ceil(ih/2)*2" \
         -pix_fmt yuv420p \
         ${tgencode_acodec} \
+        -preset ${tgencode_preset} \
+        -crf ${tgencode_crf} \
         -movflags +faststart \
         "${tgencode_output}" -y
     then
