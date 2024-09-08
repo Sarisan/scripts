@@ -7,7 +7,7 @@
 
 set -e
 
-tgencode_version="1.9"
+tgencode_version="1.10"
 
 if [ -n "${1}" ]
 then
@@ -90,12 +90,12 @@ fi
 
 if [ -z "${tgencode_fps}" ]
 then
-    tgencode_fps="source_fps"
+    tgencode_fps=source_fps
 fi
 
 if [ -z "${tgencode_preset}" ]
 then
-    tgencode_preset="medium"
+    tgencode_preset=medium
 fi
 
 if [ -z "${tgencode_crf}" ]
@@ -105,9 +105,9 @@ fi
 
 if [ -n "${tgencode_quiet}" ]
 then
-    tgencode_loglevel="quiet"
+    tgencode_loglevel=quiet
 else
-    tgencode_loglevel="info"
+    tgencode_loglevel=info
 fi
 
 if [ -z "${1}" ]
