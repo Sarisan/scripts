@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.13"
+ibd_version="3.14"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -361,7 +361,7 @@ case "${ibd_board}" in
 
             ibd_file="${ibd_cache}/profile.json"
 
-            curl --max-time ${ibd_connect_timeout} \
+            if ! curl --max-time ${ibd_connect_timeout} \
                 --output "${ibd_file}" \
                 --proxy "${ibd_proxy}" \
                 --request GET \
@@ -372,8 +372,6 @@ case "${ibd_board}" in
                 --user "${ibd_login}:${ibd_api_key}" \
                 --user-agent "IBD" \
                 "${ibd_api}/profile.json"
-
-            if ! [ -f "${ibd_file}" ]
             then
                 echo "Failed to process request"
                 exit 1
@@ -556,7 +554,7 @@ case "${ibd_board}" in
 
             ibd_file="${ibd_cache}/token.json"
 
-            curl --data "${ibd_login_data}" \
+            if ! curl --data "${ibd_login_data}" \
                 --header "Content-Type: application/json" \
                 --max-time ${ibd_connect_timeout} \
                 --output "${ibd_file}" \
@@ -568,8 +566,6 @@ case "${ibd_board}" in
                 --silent \
                 --user-agent "IBD" \
                 "${ibd_api}/auth/token"
-
-            if ! [ -f "${ibd_file}" ]
             then
                 echo "Failed to process request"
                 exit 1
@@ -638,7 +634,7 @@ case "${ibd_board}" in
 
             ibd_file="${ibd_cache}/user.json"
 
-            curl --data-urlencode "username=${ibd_username}" \
+            if ! curl --data-urlencode "username=${ibd_username}" \
                 --data-urlencode "api_key=${ibd_api_key}" \
                 --max-time ${ibd_connect_timeout} \
                 --output "${ibd_file}" \
@@ -649,8 +645,6 @@ case "${ibd_board}" in
                 --silent \
                 --user-agent "IBD" \
                 "${ibd_api}/user.json"
-
-            if ! [ -f "${ibd_file}" ]
             then
                 echo "Failed to process request"
                 exit 1
@@ -706,7 +700,7 @@ while [ -d "${ibd_dir}" ]
 do
     ibd_file="${ibd_cache}/${ibd_page}_posts.json"
 
-    curl --data-urlencode "${ibd_dfield1}" \
+    if ! curl --data-urlencode "${ibd_dfield1}" \
         --data-urlencode "${ibd_dfield2}" \
         --data-urlencode "${ibd_dfield3}" \
         --data-urlencode "${ibd_dfield4}" \
@@ -726,8 +720,6 @@ do
         --silent \
         --user-agent "IBD" \
         "${ibd_data_url}"
-
-    if ! [ -f "${ibd_file}" ]
     then
         echo "Failed to access '${ibd_api}'"
         exit 1
@@ -901,7 +893,7 @@ do
         then
             umask 22
 
-            curl --max-time ${ibd_download_timeout} \
+            if ! curl --max-time ${ibd_download_timeout} \
                 --output "${ibd_dir}/${ibd_filename}" \
                 --proxy "${ibd_proxy}" \
                 --remote-time \
@@ -911,33 +903,31 @@ do
                 --silent \
                 --user-agent "IBD" \
                 "${ibd_file_url}"
-
-            if [ -f "${ibd_dir}/${ibd_filename}" ]
             then
-                case "${ibd_md5_mode}" in
-                    (skip)
-                        ibd_success=$((ibd_success + 1))
-                    ;;
-                    (*)
-                        if [ "$(md5sum "${ibd_dir}/${ibd_md5}".* | cut -d ' ' -f 1)" != "${ibd_md5}" ]
-                        then
-                            ibd_failed=$((ibd_failed + 1))
-                            printf "%s\n" "${ibd_md5}" >> "${ibd_dir}/failed.txt"
-
-                            if [ "${ibd_md5_mode}" != "keep" ]
-                            then
-                                rm -f "${ibd_dir}/${ibd_md5}".*
-                                ibd_removed=$((ibd_removed + 1))
-                            fi
-                        else
-                            ibd_success=$((ibd_success + 1))
-                        fi
-                    ;;
-                esac
-            else
-                ibd_failed=$((ibd_failed + 1))
-                printf "%s\n" "${ibd_md5}" >> "${ibd_dir}/failed.txt"
+                echo "Failed to download artwork"
+                exit 1
             fi
+
+            case "${ibd_md5_mode}" in
+                (skip)
+                    ibd_success=$((ibd_success + 1))
+                ;;
+                (*)
+                    if [ "$(md5sum "${ibd_dir}/${ibd_md5}".* | cut -d ' ' -f 1)" != "${ibd_md5}" ]
+                    then
+                        ibd_failed=$((ibd_failed + 1))
+                        printf "%s\n" "${ibd_md5}" >> "${ibd_dir}/failed.txt"
+
+                        if [ "${ibd_md5_mode}" != "keep" ]
+                        then
+                            rm -f "${ibd_dir}/${ibd_md5}".*
+                            ibd_removed=$((ibd_removed + 1))
+                        fi
+                    else
+                        ibd_success=$((ibd_success + 1))
+                    fi
+                ;;
+            esac
 
             printf "%s\n" "${ibd_filename}" >> "${ibd_dir}/list.txt"
 
