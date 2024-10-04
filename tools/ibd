@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.11"
+ibd_version="3.12"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -44,16 +44,16 @@ then
                 ibd_number=${OPTARG}
             ;;
             (m)
-                ibd_download_mode="${OPTARG}"
+                ibd_download_mode=${OPTARG}
             ;;
             (s)
-                ibd_md5_mode="${OPTARG}"
+                ibd_md5_mode=${OPTARG}
             ;;
             (x)
                 ibd_exclude_dirs="${OPTARG}"
             ;;
             (i)
-                ibd_exclude_mode="${OPTARG}"
+                ibd_exclude_mode=${OPTARG}
             ;;
             (l)
                 ibd_sleep_time=${OPTARG}
@@ -109,13 +109,16 @@ then
         "\n  -y <addr>\tUse proxy server" \
         "\n  -e <num>\tLimit number of curl request tries, default: 5" \
         "\n\nDownload modes:" \
+        "\n  none\t\tDownload artworks normally" \
         "\n  encount\tDownload new artworks only" \
         "\n  full\t\tRedownload undetected failed artworks" \
         "\n  repair\tRedownload detected failed artworks only" \
         "\n\nMD5 checksum modes:" \
+        "\n  none\t\tRemove artworks failed md5 checksums" \
         "\n  keep\t\tKeep artworks failed md5 checksums" \
         "\n  skip\t\tSkip MD5 checksums" \
         "\n\nExclude modes:" \
+        "\n  none\t\tSkip artworks found in excluded directories" \
         "\n  download\tDownload artworks found failed in excluded directories" \
         "\n  remove\tDownload and remove artworks found failied in excluded directories" \
         "\n  reversive\tRemove artworks from excluded directories" \
@@ -232,37 +235,43 @@ fi
 if [ -n "${ibd_download_mode}" ]
 then
     case "${ibd_download_mode}" in
-        (encount | full | repair)
+        (none | encount | full | repair)
         ;;
         (*)
             echo "Unrecognized download mode ${ibd_download_mode}. See '${0} -h'"
             exit 1
         ;;
     esac
+else
+    ibd_download_mode=none
 fi
 
 if [ -n "${ibd_md5_mode}" ]
 then
     case "${ibd_md5_mode}" in
-        (keep | skip)
+        (none | keep | skip)
         ;;
         (*)
             echo "Unrecognized MD5 checksums mode ${ibd_md5_mode}. See '${0} -h'"
             exit 1
         ;;
     esac
+else
+    ibd_md5_mode=none
 fi
 
 if [ -n "${ibd_exclude_mode}" ]
 then
     case "${ibd_exclude_mode}" in
-        (download | remove | reversive | selfremove)
+        (none | download | remove | reversive | selfremove)
         ;;
         (*)
             echo "Unrecognized exclude mode ${ibd_exclude_mode}. See '${0} -h'"
             exit 1
         ;;
     esac
+else
+    ibd_exclude_mode=none
 fi
 
 if [ -n "${ibd_sleep_time}" ]
