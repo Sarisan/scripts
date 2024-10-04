@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.14"
+ibd_version="3.15"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -909,16 +909,13 @@ do
             fi
 
             case "${ibd_md5_mode}" in
-                (skip)
-                    ibd_success=$((ibd_success + 1))
-                ;;
-                (*)
+                (none | keep)
                     if [ "$(md5sum "${ibd_dir}/${ibd_md5}".* | cut -d ' ' -f 1)" != "${ibd_md5}" ]
                     then
                         ibd_failed=$((ibd_failed + 1))
                         printf "%s\n" "${ibd_md5}" >> "${ibd_dir}/failed.txt"
 
-                        if [ "${ibd_md5_mode}" != "keep" ]
+                        if [ "${ibd_md5_mode}" = "none" ]
                         then
                             rm -f "${ibd_dir}/${ibd_md5}".*
                             ibd_removed=$((ibd_removed + 1))
@@ -926,6 +923,9 @@ do
                     else
                         ibd_success=$((ibd_success + 1))
                     fi
+                ;;
+                (skip)
+                    ibd_success=$((ibd_success + 1))
                 ;;
             esac
 
