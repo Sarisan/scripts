@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.10"
+ibd_version="3.11"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -925,12 +925,12 @@ do
                         fi
                     ;;
                 esac
-
-                printf "%s\n" "${ibd_filename}" >> "${ibd_dir}/list.txt"
             else
                 ibd_failed=$((ibd_failed + 1))
                 printf "%s\n" "${ibd_md5}" >> "${ibd_dir}/failed.txt"
             fi
+
+            printf "%s\n" "${ibd_filename}" >> "${ibd_dir}/list.txt"
 
             umask 77
         fi
