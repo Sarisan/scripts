@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.12"
+ibd_version="3.13"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -506,10 +506,10 @@ case "${ibd_board}" in
 
         if [ -z "${ibd_authorize}" ]
         then
-            if [ -f "${ibd_config}/time" ]
+            if [ -f "${ibd_config}/timestamp" ]
             then
                 current_date=$(date +%s)
-                previous_date=$(cat "${ibd_config}/time")
+                previous_date=$(cat "${ibd_config}/timestamp")
 
                 if [ $((current_date - previous_date)) -ge 36000 ]
                 then
@@ -590,7 +590,7 @@ case "${ibd_board}" in
             printf "%s" "${ibd_login}" > "${ibd_config}/login"
             printf "%s" "${ibd_password}" > "${ibd_config}/password"
             jq -r '.access_token' "${ibd_file}" > "${ibd_config}/token"
-            date +%s > "${ibd_config}/time"
+            date +%s > "${ibd_config}/timestamp"
         fi
 
         if [ -f "${ibd_config}/token" ]
