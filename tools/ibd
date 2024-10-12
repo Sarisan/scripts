@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.15"
+ibd_version="3.16"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -929,8 +929,6 @@ do
                 ;;
             esac
 
-            printf "%s\n" "${ibd_filename}" >> "${ibd_dir}/list.txt"
-
             umask 77
         fi
 
@@ -940,6 +938,7 @@ do
         fi
 
         ibd_done=$((ibd_done + 1))
+        printf "%s\n" "${ibd_filename}" >> "${ibd_dir}/list.txt"
         printf "${ibd_output}" "${ibd_removed}" "${ibd_success}" "${ibd_failed}" "${ibd_done}"
 
         ibd_array=$((ibd_array + 1))
