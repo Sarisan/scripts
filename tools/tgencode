@@ -7,7 +7,7 @@
 
 set -e
 
-tgencode_version="2.0"
+tgencode_version="2.1"
 
 if [ -n "${1}" ]
 then
@@ -70,17 +70,17 @@ then
     exit 0
 fi
 
-for required in ffmpeg
+for tgencode_required in ffmpeg
 do
-    if ! command -v ${required} > /dev/null
+    if ! command -v ${tgencode_required} > /dev/null
     then
-        missing="${missing} ${required}"
+        tgencode_missing="${tgencode_missing} ${tgencode_required}"
     fi
 done
 
-if [ -n "${missing}" ]
+if [ -n "${tgencode_missing}" ]
 then
-    echo "Missing dependencies:${missing}" \
+    echo "Missing dependencies:${tgencode_missing}" \
         "\nFor more information follow: https://command-not-found.com/"
     exit 1
 fi
