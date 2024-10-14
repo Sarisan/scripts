@@ -8,7 +8,7 @@
 set -e
 umask 77
 
-tgbot_version="1.4"
+tgbot_version="1.5"
 tgbot_config="${HOME}/.config/tgbot"
 tgbot_dfile="${tgbot_config}/config"
 tgbot_daddress="https://api.telegram.org"
@@ -59,17 +59,17 @@ then
     exit 0
 fi
 
-for required in curl mkdir
+for tgbot_required in curl mkdir
 do
-    if ! command -v ${required} > /dev/null
+    if ! command -v ${tgbot_required} > /dev/null
     then
-        missing="${missing} ${required}"
+        tgbot_missing="${tgbot_missing} ${tgbot_required}"
     fi
 done
 
-if [ -n "${missing}" ]
+if [ -n "${tgbot_missing}" ]
 then
-    echo "Missing dependencies:${missing}" \
+    echo "Missing dependencies:${tgbot_missing}" \
         "\nFor more information follow: https://command-not-found.com/"
     exit 1
 fi
