@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.17"
+ibd_version="3.18"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -170,10 +170,7 @@ then
             fi
 
             case "${ibd_filename}" in
-                (failed.txt)
-                    continue
-                ;;
-                (list.txt)
+                (failed.txt | list.txt)
                     continue
                 ;;
                 (*)
