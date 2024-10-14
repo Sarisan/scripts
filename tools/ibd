@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.19"
+ibd_version="3.20"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -133,17 +133,17 @@ then
     exit 0
 fi
 
-for required in base64 cat curl cut date grep jq md5sum mkdir rm sed sha1sum sleep tr
+for ibd_required in base64 cat curl cut date grep jq md5sum mkdir rm sed sha1sum sleep tr
 do
-    if ! command -v ${required} > /dev/null
+    if ! command -v ${ibd_required} > /dev/null
     then
-        missing="${missing} ${required}"
+        ibd_missing="${ibd_missing} ${ibd_required}"
     fi
 done
 
-if [ -n "${missing}" ]
+if [ -n "${ibd_missing}" ]
 then
-    echo "Missing dependencies:${missing}" \
+    echo "Missing dependencies:${ibd_missing}" \
         "\nFor more information follow: https://command-not-found.com/"
     exit 1
 fi
