@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.18"
+ibd_version="3.19"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -328,11 +328,6 @@ if [ -n "${1}" ]
 then
     echo "Unrecognized action ${1}. See '${0} -h'"
     exit 1
-fi
-
-if [ "${ibd_download_mode}" != "encount" ]
-then
-    rm -f "${ibd_dir}/list.txt"
 fi
 
 rm -fr "${ibd_cache}"
@@ -939,7 +934,6 @@ do
         fi
 
         ibd_done=$((ibd_done + 1))
-        printf "%s\n" "${ibd_filename}" >> "${ibd_dir}/list.txt"
         printf "${ibd_output}" "${ibd_removed}" "${ibd_success}" "${ibd_failed}" "${ibd_done}"
 
         ibd_array=$((ibd_array + 1))
@@ -962,4 +956,20 @@ do
     then
         rm -f "${ibd_exclude_dirs}/failed.txt"
     fi
+done
+
+rm -f "${ibd_dir}/list.txt"
+
+for ibd_filepath in "${ibd_dir}"/*
+do
+    ibd_filename="${ibd_filepath##*/}"
+
+    case "${ibd_filename}" in
+        (failed.txt)
+            continue
+        ;;
+        (*)
+            printf "%s\n" "${ibd_filename}" >> "${ibd_dir}/list.txt"
+        ;;
+    esac
 done
