@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.26"
+ibd_version="3.27"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -330,7 +330,7 @@ then
     exit 1
 fi
 
-if [ "${ibd_download_mode}" != "encount" ]
+if [ ${ibd_number} -eq -1 ] && [ "${ibd_download_mode}" != "encount" ]
 then
     rm -f "${ibd_dir}/list.txt"
 fi
