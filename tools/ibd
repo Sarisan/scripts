@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.28"
+ibd_version="3.29"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -114,8 +114,8 @@ then
         "\n  full\t\tRedownload undetected failed artworks" \
         "\n  repair\tRedownload detected failed artworks only" \
         "\n\nMD5 checksum modes:" \
-        "\n  none\t\tRemove artworks failed md5 checksums" \
-        "\n  keep\t\tKeep artworks failed md5 checksums" \
+        "\n  none\t\tRemove artworks failed MD5 checksums" \
+        "\n  keep\t\tKeep artworks failed MD5 checksums" \
         "\n  skip\t\tSkip MD5 checksums" \
         "\n\nExclude modes:" \
         "\n  none\t\tSkip artworks found in excluded directories" \
