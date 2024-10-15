@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.25"
+ibd_version="3.26"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -328,6 +328,11 @@ if [ -n "${1}" ]
 then
     echo "Unrecognized action ${1}. See '${0} -h'"
     exit 1
+fi
+
+if [ "${ibd_download_mode}" != "encount" ]
+then
+    rm -f "${ibd_dir}/list.txt"
 fi
 
 rm -fr "${ibd_cache}"
@@ -791,6 +796,11 @@ do
                             sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_dir}/failed.txt"
                         fi
 
+                        if [ -f "${ibd_dir}/list.txt" ]
+                        then
+                            sed -e "s/${ibd_filename}//" -e '/^$/d' -i "${ibd_dir}/list.txt"
+                        fi
+
                         ibd_removed=$((ibd_removed + 1))
                     fi
                 ;;
@@ -801,6 +811,7 @@ do
 
                         rm -f "${ibd_dir}/${ibd_md5}".*
                         sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_dir}/failed.txt"
+                        sed -e "s/${ibd_filename}//" -e '/^$/d' -i "${ibd_dir}/list.txt"
                         ibd_removed=$((ibd_removed + 1))
                     fi
                 ;;
@@ -836,6 +847,11 @@ do
                                     sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_exclude_dir}/failed.txt"
                                 fi
 
+                                if [ -f "${ibd_exclude_dir}/list.txt" ]
+                                then
+                                    sed -e "s/${ibd_filename}//" -e '/^$/d' -i "${ibd_exclude_dir}/list.txt"
+                                fi
+
                                 ibd_removed=$((ibd_removed + 1))
                             fi
                         ;;
@@ -856,6 +872,7 @@ do
                             then
                                 rm -f "${ibd_exclude_dir}/${ibd_md5}".*
                                 sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_exclude_dir}/failed.txt"
+                                sed -e "s/${ibd_filename}//" -e '/^$/d' -i "${ibd_exclude_dir}/list.txt"
                                 ibd_removed=$((ibd_removed + 1))
                             fi
                         ;;
@@ -871,6 +888,11 @@ do
                         sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_exclude_dir}/failed.txt"
                     fi
 
+                    if [ -f "${ibd_exclude_dir}/list.txt" ]
+                    then
+                        sed -e "s/${ibd_filename}//" -e '/^$/d' -i "${ibd_exclude_dir}/list.txt"
+                    fi
+
                     ibd_removed=$((ibd_removed + 1))
                 ;;
                 (selfremove)
@@ -879,6 +901,11 @@ do
                     if [ -f "${ibd_dir}/failed.txt" ]
                     then
                         sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_dir}/failed.txt"
+                    fi
+
+                    if [ -f "${ibd_dir}/list.txt" ]
+                    then
+                        sed -e "s/${ibd_filename}//" -e '/^$/d' -i "${ibd_dir}/list.txt"
                     fi
 
                     ibd_removed=$((ibd_removed + 1))
@@ -935,6 +962,7 @@ do
         fi
 
         ibd_done=$((ibd_done + 1))
+        printf "%s\n" "${ibd_filename}" >> "${ibd_dir}/list.txt"
         printf "${ibd_output}" "${ibd_removed}" "${ibd_success}" "${ibd_failed}" "${ibd_done}"
 
         ibd_array=$((ibd_array + 1))
@@ -945,54 +973,26 @@ do
 done
 
 printf "\n"
-echo "Updating lists..."
 
 if ! [ -s "${ibd_dir}/failed.txt" ]
 then
     rm -f "${ibd_dir}/failed.txt"
 fi
 
-rm -f "${ibd_dir}/list.txt"
-
-for ibd_filepath in "${ibd_dir}"/*
-do
-    ibd_filename="${ibd_filepath##*/}"
-
-    case "${ibd_filename}" in
-        (failed.txt)
-            continue
-        ;;
-        (*)
-            printf "%s\n" "${ibd_filename}" >> "${ibd_dir}/list.txt"
-        ;;
-    esac
-done
+if ! [ -s "${ibd_dir}/list.txt" ]
+then
+    rm -f "${ibd_dir}/list.txt"
+fi
 
 for ibd_exclude_dir in ${ibd_exclude_dirs}
 do
-    if ! [ -d "${ibd_exclude_dir}" ]
-    then
-        continue
-    fi
-
     if ! [ -s "${ibd_exclude_dir}/failed.txt" ]
     then
         rm -f "${ibd_exclude_dir}/failed.txt"
     fi
 
-    rm -f "${ibd_exclude_dir}/list.txt"
-
-    for ibd_filepath in "${ibd_exclude_dir}"/*
-    do
-        ibd_filename="${ibd_filepath##*/}"
-
-        case "${ibd_filename}" in
-            (failed.txt)
-                continue
-            ;;
-            (*)
-                printf "%s\n" "${ibd_filename}" >> "${ibd_exclude_dir}/list.txt"
-            ;;
-        esac
-    done
+    if ! [ -s "${ibd_exclude_dir}/list.txt" ]
+    then
+        rm -f "${ibd_exclude_dir}/list.txt"
+    fi
 done
