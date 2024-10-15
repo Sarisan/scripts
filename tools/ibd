@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.20"
+ibd_version="3.21"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -950,14 +950,6 @@ then
     rm -f "${ibd_dir}/failed.txt"
 fi
 
-for ibd_exclude_dir in ${ibd_exclude_dirs}
-do
-    if ! [ -s "${ibd_exclude_dirs}/failed.txt" ]
-    then
-        rm -f "${ibd_exclude_dirs}/failed.txt"
-    fi
-done
-
 rm -f "${ibd_dir}/list.txt"
 
 for ibd_filepath in "${ibd_dir}"/*
@@ -972,4 +964,28 @@ do
             printf "%s\n" "${ibd_filename}" >> "${ibd_dir}/list.txt"
         ;;
     esac
+done
+
+for ibd_exclude_dir in ${ibd_exclude_dirs}
+do
+    if ! [ -s "${ibd_exclude_dir}/failed.txt" ]
+    then
+        rm -f "${ibd_exclude_dir}/failed.txt"
+    fi
+
+    rm -f "${ibd_exclude_dir}/list.txt"
+
+    for ibd_filepath in "${ibd_exclude_dir}"/*
+    do
+        ibd_filename="${ibd_filepath##*/}"
+
+        case "${ibd_filename}" in
+            (failed.txt)
+                continue
+            ;;
+            (*)
+                printf "%s\n" "${ibd_filename}" >> "${ibd_exclude_dir}/list.txt"
+            ;;
+        esac
+    done
 done
