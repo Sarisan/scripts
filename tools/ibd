@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.21"
+ibd_version="3.22"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -29,7 +29,7 @@ then
                 ibd_dir="${OPTARG}"
             ;;
             (r)
-                ibd_prune=0
+                ibd_purge=0
             ;;
             (p)
                 ibd_page=${OPTARG}
@@ -154,9 +154,9 @@ then
     exit 1
 fi
 
-if [ -n "${ibd_prune}" ]
+if [ -n "${ibd_purge}" ]
 then
-    echo "Pruning files..."
+    echo "Purging files..."
 
     if [ -f "${ibd_dir}/list.txt" ]
     then
@@ -944,6 +944,7 @@ do
 done
 
 printf "\n"
+echo "Updating lists..."
 
 if ! [ -s "${ibd_dir}/failed.txt" ]
 then
