@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.23"
+ibd_version="3.24"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -809,80 +809,81 @@ do
 
         for ibd_exclude_dir in ${ibd_exclude_dirs}
         do
-            if [ -f "${ibd_exclude_dir}/${ibd_md5}".* ]
+            if ! [ -f "${ibd_exclude_dir}/${ibd_md5}".* ]
             then
-                ibd_exclude=0
+                continue
+            fi
 
-                case "${ibd_exclude_mode}" in
-                    (download | remove)
-                        case "${ibd_download_mode}" in
-                            (full)
-                                if [ "$(md5sum "${ibd_exclude_dir}/${ibd_md5}".* | cut -d ' ' -f 1)" != "${ibd_md5}" ]
-                                then
-                                    ibd_exclude=1
+            ibd_exclude=0
 
-                                    if [ "${ibd_exclude_mode}" = "remove" ]
-                                    then
-                                        rm -f "${ibd_exclude_dir}/${ibd_md5}".*
-
-                                        if [ -f "${ibd_exclude_dir}/failed.txt" ]
-                                        then
-                                            sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_exclude_dir}/failed.txt"
-                                        fi
-
-                                        ibd_removed=$((ibd_removed + 1))
-                                    fi
-                                fi
-                            ;;
-                            (repair)
-                                if [ -f "${ibd_exclude_dir}/failed.txt" ]
-                                then
-                                    if grep "${ibd_md5}" "${ibd_exclude_dir}/failed.txt" > /dev/null
-                                    then
-                                        ibd_exclude=1
-
-                                        if [ "${ibd_exclude_mode}" = "remove" ]
-                                        then
-                                            rm -f "${ibd_exclude_dir}/${ibd_md5}".*
-                                            sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_exclude_dir}/failed.txt"
-                                            ibd_removed=$((ibd_removed + 1))
-                                        fi
-                                    fi
-                                fi
-                            ;;
-                        esac
-                    ;;
-                    (reversive)
-                        case "${ibd_download_mode}" in
-                            (full | repair)
-                                ibd_exclude=1
-                            ;;
-                        esac
-
-                        rm -f "${ibd_exclude_dir}/${ibd_md5}".*
-
-                        if [ -f "${ibd_exclude_dir}/failed.txt" ]
-                        then
-                            sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_exclude_dir}/failed.txt"
-                        fi
-
-                        ibd_removed=$((ibd_removed + 1))
-                    ;;
-                    (selfremove)
-                        if [ -f "${ibd_dir}/${ibd_md5}".* ]
-                        then
-                            rm -f "${ibd_dir}/${ibd_md5}".*
-
-                            if [ -f "${ibd_dir}/failed.txt" ]
+            case "${ibd_exclude_mode}" in
+                (download | remove)
+                    case "${ibd_download_mode}" in
+                        (full)
+                            if [ "$(md5sum "${ibd_exclude_dir}/${ibd_md5}".* | cut -d ' ' -f 1)" = "${ibd_md5}" ]
                             then
-                                sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_dir}/failed.txt"
+                                continue
                             fi
 
-                            ibd_removed=$((ibd_removed + 1))
-                        fi
-                    ;;
-                esac
-            fi
+                            ibd_exclude=1
+
+                            if [ "${ibd_exclude_mode}" = "remove" ]
+                            then
+                                rm -f "${ibd_exclude_dir}/${ibd_md5}".*
+
+                                if [ -f "${ibd_exclude_dir}/failed.txt" ]
+                                then
+                                    sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_exclude_dir}/failed.txt"
+                                fi
+
+                                ibd_removed=$((ibd_removed + 1))
+                            fi
+                        ;;
+                        (repair)
+                            if [ -f "${ibd_exclude_dir}/failed.txt" ]
+                            then
+                                if ! grep "${ibd_md5}" "${ibd_exclude_dir}/failed.txt" > /dev/null
+                                then
+                                    continue
+                                fi
+                            else
+                                continue
+                            fi
+
+                            ibd_exclude=1
+
+                            if [ "${ibd_exclude_mode}" = "remove" ]
+                            then
+                                rm -f "${ibd_exclude_dir}/${ibd_md5}".*
+                                sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_exclude_dir}/failed.txt"
+                                ibd_removed=$((ibd_removed + 1))
+                            fi
+                        ;;
+                    esac
+                ;;
+                (reversive)
+                    ibd_exclude=1
+
+                    rm -f "${ibd_exclude_dir}/${ibd_md5}".*
+
+                    if [ -f "${ibd_exclude_dir}/failed.txt" ]
+                    then
+                        sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_exclude_dir}/failed.txt"
+                    fi
+
+                    ibd_removed=$((ibd_removed + 1))
+                ;;
+                (selfremove)
+                    rm -f "${ibd_dir}/${ibd_md5}".*
+
+                    if [ -f "${ibd_dir}/failed.txt" ]
+                    then
+                        sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_dir}/failed.txt"
+                    fi
+
+                    ibd_removed=$((ibd_removed + 1))
+                ;;
+            esac
         done
 
         if [ ${ibd_download} -eq 1 ] && [ ${ibd_exclude} -eq 1 ]
