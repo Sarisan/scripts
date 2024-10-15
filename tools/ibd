@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.22"
+ibd_version="3.23"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -969,6 +969,11 @@ done
 
 for ibd_exclude_dir in ${ibd_exclude_dirs}
 do
+    if ! [ -d "${ibd_exclude_dir}" ]
+    then
+        continue
+    fi
+
     if ! [ -s "${ibd_exclude_dir}/failed.txt" ]
     then
         rm -f "${ibd_exclude_dir}/failed.txt"
