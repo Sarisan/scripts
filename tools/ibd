@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.31"
+ibd_version="3.32"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -791,22 +791,16 @@ do
                             sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_dir}/failed.txt"
                         fi
 
-                        if [ -f "${ibd_dir}/list.txt" ]
-                        then
-                            sed -e "s/${ibd_filename}//" -e '/^$/d' -i "${ibd_dir}/list.txt"
-                        fi
-
                         ibd_removed=$((ibd_removed + 1))
                     fi
                 ;;
                 (repair)
-                    if grep "${ibd_md5}" "${ibd_dir}/failed.txt" > /dev/null
+                    if [ -f "${ibd_dir}/failed.txt" ] && grep "${ibd_md5}" "${ibd_dir}/failed.txt" > /dev/null
                     then
                         ibd_download=1
 
                         rm -f "${ibd_dir}/${ibd_md5}".*
                         sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_dir}/failed.txt"
-                        sed -e "s/${ibd_filename}//" -e '/^$/d' -i "${ibd_dir}/list.txt"
                         ibd_removed=$((ibd_removed + 1))
                     fi
                 ;;
@@ -842,22 +836,12 @@ do
                                     sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_exclude_dir}/failed.txt"
                                 fi
 
-                                if [ -f "${ibd_exclude_dir}/list.txt" ]
-                                then
-                                    sed -e "s/${ibd_filename}//" -e '/^$/d' -i "${ibd_exclude_dir}/list.txt"
-                                fi
-
                                 ibd_removed=$((ibd_removed + 1))
                             fi
                         ;;
                         (repair)
-                            if [ -f "${ibd_exclude_dir}/failed.txt" ]
+                            if ! [ -f "${ibd_exclude_dir}/failed.txt" ] || ! grep "${ibd_md5}" "${ibd_exclude_dir}/failed.txt" > /dev/null
                             then
-                                if ! grep "${ibd_md5}" "${ibd_exclude_dir}/failed.txt" > /dev/null
-                                then
-                                    continue
-                                fi
-                            else
                                 continue
                             fi
 
@@ -867,7 +851,6 @@ do
                             then
                                 rm -f "${ibd_exclude_dir}/${ibd_md5}".*
                                 sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_exclude_dir}/failed.txt"
-                                sed -e "s/${ibd_filename}//" -e '/^$/d' -i "${ibd_exclude_dir}/list.txt"
                                 ibd_removed=$((ibd_removed + 1))
                             fi
                         ;;
@@ -883,11 +866,6 @@ do
                         sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_exclude_dir}/failed.txt"
                     fi
 
-                    if [ -f "${ibd_exclude_dir}/list.txt" ]
-                    then
-                        sed -e "s/${ibd_filename}//" -e '/^$/d' -i "${ibd_exclude_dir}/list.txt"
-                    fi
-
                     ibd_removed=$((ibd_removed + 1))
                 ;;
                 (selfremove)
@@ -896,11 +874,6 @@ do
                     if [ -f "${ibd_dir}/failed.txt" ]
                     then
                         sed -e "s/${ibd_md5}//" -e '/^$/d' -i "${ibd_dir}/failed.txt"
-                    fi
-
-                    if [ -f "${ibd_dir}/list.txt" ]
-                    then
-                        sed -e "s/${ibd_filename}//" -e '/^$/d' -i "${ibd_dir}/list.txt"
                     fi
 
                     ibd_removed=$((ibd_removed + 1))
@@ -948,12 +921,12 @@ do
                 ;;
             esac
 
-            if ! grep "${ibd_filename}" "${ibd_dir}/list.txt" > /dev/null
-            then
-                printf "%s\n" "${ibd_filename}" >> "${ibd_dir}/list.txt"
-            fi
-
             umask 77
+        fi
+
+        if ! [ -f "${ibd_dir}/list.txt" ] || ! grep "${ibd_filename}" "${ibd_dir}/list.txt" > /dev/null
+        then
+            printf "%s\n" "${ibd_filename}" >> "${ibd_dir}/list.txt"
         fi
 
         if [ -z "${ibd_quiet}" ]
@@ -978,20 +951,10 @@ then
     rm -f "${ibd_dir}/failed.txt"
 fi
 
-if ! [ -s "${ibd_dir}/list.txt" ]
-then
-    rm -f "${ibd_dir}/list.txt"
-fi
-
 for ibd_exclude_dir in ${ibd_exclude_dirs}
 do
     if ! [ -s "${ibd_exclude_dir}/failed.txt" ]
     then
         rm -f "${ibd_exclude_dir}/failed.txt"
-    fi
-
-    if ! [ -s "${ibd_exclude_dir}/list.txt" ]
-    then
-        rm -f "${ibd_exclude_dir}/list.txt"
     fi
 done
