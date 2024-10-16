@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.30"
+ibd_version="3.31"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -328,11 +328,6 @@ if [ -n "${1}" ]
 then
     echo "Unrecognized action ${1}. See '${0} -h'"
     exit 1
-fi
-
-if [ ${ibd_page} -eq 1 ] && [ ${ibd_number} -eq -1 ] && [ "${ibd_download_mode}" != "encount" ]
-then
-    rm -f "${ibd_dir}/list.txt"
 fi
 
 rm -fr "${ibd_cache}"
@@ -953,7 +948,10 @@ do
                 ;;
             esac
 
-            printf "%s\n" "${ibd_filename}" >> "${ibd_dir}/list.txt"
+            if ! grep "${ibd_filename}" "${ibd_dir}/list.txt" > /dev/null
+            then
+                printf "%s\n" "${ibd_filename}" >> "${ibd_dir}/list.txt"
+            fi
 
             umask 77
         fi
