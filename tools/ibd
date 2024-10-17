@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.32"
+ibd_version="3.33"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -869,6 +869,11 @@ do
                     ibd_removed=$((ibd_removed + 1))
                 ;;
                 (selfremove)
+                    if ! [ -f "${ibd_dir}/${ibd_md5}".* ]
+                    then
+                        continue
+                    fi
+
                     rm -f "${ibd_dir}/${ibd_md5}".*
 
                     if [ -f "${ibd_dir}/failed.txt" ]
