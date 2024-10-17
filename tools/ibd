@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.33"
+ibd_version="3.34"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -93,7 +93,7 @@ then
         "\n  -h\t\tShow help information" \
         "\n  -a\t\tAuthorize to image board" \
         "\n  -o <dir>\tDownload artworks to directory" \
-        "\n  -r\t\tRemove unwanted files according to list" \
+        "\n  -r\t\tPurge unwanted files according to list" \
         "\n  -p <num>\tStart from specified results page" \
         "\n  -t <tags>\tDownload artworks by tags" \
         "\n  -g <num>\tRange of artworks between curl requests, max: 100, default: 20" \
