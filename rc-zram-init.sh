@@ -3,7 +3,7 @@
 # Copyright (C) 2025 Maria Lisina
 # SPDX-License-Identifier: Apache-2.0
 #
-# Alpine Linux zram
+# OpenRC zram-init configuration
 
 if [ -n "${1}" ]
 then
