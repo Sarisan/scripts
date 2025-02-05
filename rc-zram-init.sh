@@ -33,7 +33,7 @@ fi
 
 cat << EOF > /etc/conf.d/zram-init
 load_on_start=yes
-unload_on_stop=no
+unload_on_stop=yes
 num_devices=${__num_devices}
 EOF
 
