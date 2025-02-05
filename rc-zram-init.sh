@@ -5,6 +5,8 @@
 #
 # OpenRC zram-init configuration
 
+set -e
+
 if [ -n "${1}" ]
 then
     __num_devices=${1}

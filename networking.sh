@@ -5,6 +5,8 @@
 #
 # networking configuration
 
+set -e
+
 if [ -n "${1}" ]
 then
     __hostname="${1}"
