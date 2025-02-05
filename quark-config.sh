@@ -73,8 +73,8 @@ do
     mkdir ../out-${__arch}
     cp ../azure-${__arch} ../out-${__arch}/.config
     make -j 16 ARCH=${__arch} O=../out-${__arch} CROSS_COMPILE=${_arch}-linux-gnu- olddefconfig
-    sed -i 's/CONFIG_LOCALVERSION.*$/CONFIG_LOCALVERSION="-microsoft-quark-WSL2"/' ../out-${__arch}/.config
-    sed -i 's/CONFIG_SYSTEM_TRUSTED_KEYS.*$//' ../out-${__arch}/.config
+    sed -i 's/CONFIG_LOCALVERSION=.*$/CONFIG_LOCALVERSION="-microsoft-quark-WSL2"/' ../out-${__arch}/.config
+    sed -i 's/CONFIG_SYSTEM_TRUSTED_KEYS=.*$//' ../out-${__arch}/.config
 
     for __config in ${__wsl2_required_configs}
     do
@@ -85,9 +85,9 @@ do
 
     echo "# CONFIG_MODULES is not set" >> ../out-${__arch}/.config
 
-    for __module in $(grep '=m' ../out-${__arch}/.config)
+    for __module in $(grep '=m$' ../out-${__arch}/.config)
     do
-        sed -i "s/${__module}/# ${__module%=*} is not set/g" ../out-${__arch}/.config
+        sed -i "s/${__module}/# ${__module%=*} is not set/" ../out-${__arch}/.config
     done
 
     make -j 16 ARCH=${__arch} O=../out-${__arch} CROSS_COMPILE=${_arch}-linux-gnu- olddefconfig
