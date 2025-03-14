@@ -10,7 +10,7 @@
 set -e
 umask 77
 
-ibd_version="3.34"
+ibd_version="3.35"
 ibd_cache="${HOME}/.cache/ibd/${$}"
 ibd_config="${HOME}/.config/ibd"
 
@@ -495,7 +495,7 @@ case "${ibd_board}" in
         ibd_ifilename="cut -d '?' -f 1 | cut -d '/' -f 7"
     ;;
     (sankaku)
-        ibd_api="https://capi-v2.sankakucomplex.com"
+        ibd_api="https://sankakuapi.com"
         ibd_config="${ibd_config}/sankaku"
 
         if [ -z "${ibd_authorize}" ]
