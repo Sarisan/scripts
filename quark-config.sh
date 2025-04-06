@@ -143,6 +143,7 @@ do
 
     make -j 4 O=../out-${__arch} ARCH=${__arch} CROSS_COMPILE=${_arch}-linux-gnu- olddefconfig
 
+    echo "# CONFIG_BPF_SYSCALL is not set" >> ../out-${__arch}/.config
     echo "# CONFIG_MODULES is not set" >> ../out-${__arch}/.config
 
     for __module in $(grep '=m$' ../out-${__arch}/.config)
