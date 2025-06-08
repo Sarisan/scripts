@@ -42,7 +42,7 @@ nameserver 2001:4860:4860::8888
 nameserver 2001:4860:4860::8844
 EOF
 
-cat << EOF > /hosts
+cat << EOF > /etc/hosts
 127.0.0.1 localhost ${__hostname}
 ::1 localhost ipv6-localhost ipv6-loopback ${__hostname}
 fe00::0 ipv6-localnet
