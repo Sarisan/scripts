@@ -8,7 +8,7 @@
 set -e
 
 cat << EOF >> /etc/fstab
-//172.16.0.1/Users/sekoo /media/cifs/Windows cifs _netdev,defaults,vers=3.1.1,credentials=/root/.cifs
+//172.16.0.1/Users/${1} /media/cifs/Windows cifs _netdev,defaults,vers=3.1.1,credentials=/root/.cifs
 EOF
 
 cat << EOF > /root/.cifs
