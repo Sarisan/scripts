@@ -9,8 +9,9 @@ set -e
 
 cat << EOF > /etc/ssh/sshd_config.d/root.conf
 PermitRootLogin yes
-PasswordAuthentication no
 PubkeyAuthentication yes
+PasswordAuthentication no
+KbdInteractiveAuthentication no
 AllowTcpForwarding yes
 EOF
 
