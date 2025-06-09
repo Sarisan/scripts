@@ -18,3 +18,4 @@ ${__dir}/locale.sh
 ${__dir}/timezone.sh
 ${__dir}/squid.sh
 ${__dir}/ssh.sh
+${__dir}/setup-rc.sh
