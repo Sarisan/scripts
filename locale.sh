@@ -7,6 +7,6 @@
 
 set -e
 
-cat << EOF > /etc/profile.d/20locale.sh
+cat << EOF > /etc/profile.d/10locale.sh
 export LANG=en_US.UTF-8
 EOF
