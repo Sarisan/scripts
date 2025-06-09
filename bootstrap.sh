@@ -7,10 +7,11 @@
 
 set -e
 
-parted /dev/${1} mklabel gpt
-parted /dev/${1} mkpart "EFI system partition" fat32 1MiB 101MiB
-parted /dev/${1} set 1 esp on
-parted /dev/${1} mkpart "Linux filesystem partition" ext4 101MiB 100%
+parted --script /dev/${1} \
+    mklabel gpt \
+    mkpart '"EFI system partition"' fat32 1MiB 101MiB \
+    set 1 esp on \
+    mkpart '"Linux filesystem partition"' ext4 101MiB 100%
 
 mkfs.fat -F 32 -n "EFI" /dev/${1}1
 mkfs.ext4 -L "Alpine Linux" /dev/${1}2
