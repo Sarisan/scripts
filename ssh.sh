@@ -15,4 +15,4 @@ KbdInteractiveAuthentication no
 AllowTcpForwarding yes
 EOF
 
-sed -i 's/AllowTcpForwarding no/#AllowTcpForwarding no/' /etc/ssh/sshd_config
+sed -i 's/^AllowTcpForwarding no$/#AllowTcpForwarding no/' /etc/ssh/sshd_config

@@ -7,4 +7,4 @@
 
 set -e
 
-sed -i 's|# include /usr/share/nano/\*.nanorc|include /usr/share/nano/\*.nanorc|' /etc/nanorc
+sed -i 's|^# include /usr/share/nano/\*.nanorc$|include /usr/share/nano/\*.nanorc|' /etc/nanorc
