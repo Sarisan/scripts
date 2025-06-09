@@ -1,4 +1,4 @@
-#!/usr/bin/env dash
+#!/bin/sh
 #
 # Copyright (C) 2025 Maria Lisina
 # SPDX-License-Identifier: Apache-2.0
