@@ -7,4 +7,4 @@
 
 set -e
 
-ln -fs /usr/share/zoneinfo/Asia/Yekaterinburg /etc/localtime
+ln -fs /usr/share/zoneinfo/${1} /etc/localtime
