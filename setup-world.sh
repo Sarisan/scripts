@@ -9,6 +9,7 @@ set -e
 
 __world="
     alpine-sdk
+    certbot
     cifs-utils
     curl
     dash
