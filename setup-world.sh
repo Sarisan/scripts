@@ -33,7 +33,6 @@ __world="
     openssh
     pipx
     py3-aiohttp
-    py3-pip
     python3
     recode
     squid
