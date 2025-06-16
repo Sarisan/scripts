@@ -7,4 +7,7 @@
 
 set -e
 
-sed -i 's|^# include /usr/share/nano/\*.nanorc$|include /usr/share/nano/\*.nanorc|' /etc/nanorc
+sed -i \
+    -e 's/^# set historylog$/set historylog/' \
+    -e 's|^# include /usr/share/nano/\*.nanorc$|include /usr/share/nano/\*.nanorc|' \
+    /etc/nanorc
