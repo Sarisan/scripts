@@ -36,10 +36,8 @@ iface eth1 inet6 auto
 EOF
 
 cat << EOF > /etc/resolv.conf
-nameserver 8.8.8.8
-nameserver 8.8.4.4
-nameserver 2001:4860:4860::8888
-nameserver 2001:4860:4860::8844
+nameserver 192.168.0.1
+nameserver fe80::0
 EOF
 
 cat << EOF > /etc/hosts
