@@ -35,7 +35,6 @@ __world="
     py3-aiohttp
     python3
     recode
-    squid
     telegram-bot-api
     tzdata
     util-linux

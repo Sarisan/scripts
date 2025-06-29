@@ -17,6 +17,5 @@ ${__dir}/rc-zram-init.sh ${3} ${4}
 ${__dir}/locale.sh
 ${__dir}/timezone.sh ${5}
 ${__dir}/nano.sh
-${__dir}/squid.sh
 ${__dir}/ssh.sh
 ${__dir}/setup-rc.sh

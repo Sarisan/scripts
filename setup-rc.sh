@@ -25,5 +25,4 @@ rc-update add swap boot
 rc-update add nftables boot
 rc-update add netmount
 rc-update add sshd
-rc-update add squid
 rc-update add zram-init
