@@ -17,4 +17,9 @@ do
     sed -i "${_line_num}s/^# //" /etc/dnscrypt-proxy/dnscrypt-proxy.toml
 done
 
+cat << EOF > /etc/resolv.conf
+nameserver 127.0.0.1
+nameserver ::1
+EOF
+
 rc-service dnscrypt-proxy start

@@ -10,8 +10,8 @@ set -e
 __dir="${0%/*}"
 
 ${__dir}/networking.sh ${1}
-${__dir}/dnscrypt.sh ${1}
 ${__dir}/setup-world.sh
+${__dir}/dnscrypt.sh ${1}
 ${__dir}/fstab.sh ${2}
 ${__dir}/nft-accept-filter.sh
 ${__dir}/rc-zram-init.sh ${3} ${4}

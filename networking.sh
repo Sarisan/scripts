@@ -36,8 +36,8 @@ iface eth1 inet6 auto
 EOF
 
 cat << EOF > /etc/resolv.conf
-nameserver 127.0.0.1
-nameserver ::1
+nameserver 192.168.0.1
+nameserver fe80::0
 EOF
 
 cat << EOF > /etc/hosts
