@@ -14,6 +14,7 @@ __world="
     curl
     dash
     dmesg
+    dnscrypt-proxy
     dosfstools
     e2fsprogs
     efibootmgr
