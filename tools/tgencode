@@ -157,6 +157,7 @@ do
         -pix_fmt yuv420p \
         ${tgencode_acodec} \
         -preset ${tgencode_preset} \
+        -level 4.1 \
         -crf ${tgencode_crf} \
         -movflags +faststart \
         "${tgencode_output}" -y
