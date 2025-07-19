@@ -21,6 +21,7 @@ __world="
     fastfetch
     ffmpeg
     git
+    go
     htop
     jq
     lang
@@ -36,6 +37,7 @@ __world="
     py3-aiohttp
     python3
     recode
+    shadowsocks-rust
     telegram-bot-api
     tzdata
     util-linux
