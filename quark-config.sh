@@ -132,7 +132,7 @@ do
     rm -fr ../out-${__arch}
     mkdir ../out-${__arch}
     cp ../azure-${__arch} ../out-${__arch}/.config
-    make -j 4 O=../out-${__arch} ARCH=${__arch} CROSS_COMPILE=${_arch}-linux-gnu- olddefconfig
+    make -j 16 O=../out-${__arch} ARCH=${__arch} CROSS_COMPILE=${_arch}-linux-gnu- olddefconfig
     sed -i 's/^CONFIG_LOCALVERSION=.*$/CONFIG_LOCALVERSION="-microsoft-quark-WSL2"/' ../out-${__arch}/.config
     sed -i 's/^CONFIG_SYSTEM_TRUSTED_KEYS=.*$//' ../out-${__arch}/.config
 
@@ -141,7 +141,7 @@ do
         echo "${__config}=y" >> ../out-${__arch}/.config
     done
 
-    make -j 4 O=../out-${__arch} ARCH=${__arch} CROSS_COMPILE=${_arch}-linux-gnu- olddefconfig
+    make -j 16 O=../out-${__arch} ARCH=${__arch} CROSS_COMPILE=${_arch}-linux-gnu- olddefconfig
 
     echo "# CONFIG_BPF_SYSCALL is not set" >> ../out-${__arch}/.config
     echo "# CONFIG_MODULES is not set" >> ../out-${__arch}/.config
@@ -151,13 +151,13 @@ do
         sed -i "s/${__module}/# ${__module%=*} is not set/" ../out-${__arch}/.config
     done
 
-    make -j 4 O=../out-${__arch} ARCH=${__arch} CROSS_COMPILE=${_arch}-linux-gnu- olddefconfig
+    make -j 16 O=../out-${__arch} ARCH=${__arch} CROSS_COMPILE=${_arch}-linux-gnu- olddefconfig
 
     for __config in ${__wsl2_quark_configs}
     do
         echo "${__config}=y" >> ../out-${__arch}/.config
     done
 
-    make -j 4 O=../out-${__arch} ARCH=${__arch} CROSS_COMPILE=${_arch}-linux-gnu- olddefconfig
-    make -j 4 O=../out-${__arch} ARCH=${__arch} CROSS_COMPILE=${_arch}-linux-gnu- savedefconfig
+    make -j 16 O=../out-${__arch} ARCH=${__arch} CROSS_COMPILE=${_arch}-linux-gnu- olddefconfig
+    make -j 16 O=../out-${__arch} ARCH=${__arch} CROSS_COMPILE=${_arch}-linux-gnu- savedefconfig
 done

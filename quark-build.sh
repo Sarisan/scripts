@@ -17,6 +17,6 @@ do
     fi
 
     rm -fr ../out-${__arch}
-    make -j 4 O=../out-${__arch} ARCH=${__arch} CROSS_COMPILE=${_arch}-linux-gnu- wsl2_defconfig
-    make -j 4 O=../out-${__arch} ARCH=${__arch} CROSS_COMPILE=${_arch}-linux-gnu-
+    make -j 16 O=../out-${__arch} ARCH=${__arch} CROSS_COMPILE=${_arch}-linux-gnu- wsl2_defconfig
+    make -j 16 O=../out-${__arch} ARCH=${__arch} CROSS_COMPILE=${_arch}-linux-gnu-
 done
