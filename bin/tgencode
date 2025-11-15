@@ -7,7 +7,7 @@
 
 set -e
 
-tgencode_version="3.0"
+tgencode_version="3.1"
 
 if [[ -n "${1}" ]]
 then
@@ -153,6 +153,7 @@ do
 
     if ffmpeg -i "${tgencode_file}" \
         -loglevel ${tgencode_loglevel} \
+        -map_metadata -1 \
         -profile:v high \
         -vcodec libx264 \
         -vf "fps=${tgencode_fps},${tgencode_filters}" \
