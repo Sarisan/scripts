@@ -3,7 +3,7 @@
 # Copyright (C) 2025 Maria Lisina
 # SPDX-License-Identifier: Apache-2.0
 #
-# Quark Kernel defconfig based on Azure Linux 6.6
+# Sekoohaka Kernel defconfig based on Azure Linux 6.6
 
 set -e
 
@@ -60,7 +60,7 @@ __wsl2_required_configs="
     CONFIG_NETFILTER_XT_MATCH_TCPMSS
 "
 
-__wsl2_quark_configs="
+__wsl2_sekoohaka_configs="
     CONFIG_KERNEL_ZSTD
 
     CONFIG_ZRAM
@@ -135,7 +135,7 @@ do
     mkdir ../out-${__arch}
     cp ../azure-${__arch} ../out-${__arch}/.config
     make -j 16 O=../out-${__arch} ARCH=${__arch} CROSS_COMPILE=${_arch}-linux-gnu- olddefconfig
-    sed -i 's/^CONFIG_LOCALVERSION=.*$/CONFIG_LOCALVERSION="-microsoft-quark-WSL2"/' ../out-${__arch}/.config
+    sed -i 's/^CONFIG_LOCALVERSION=.*$/CONFIG_LOCALVERSION="-microsoft-sekoohaka-WSL2"/' ../out-${__arch}/.config
     sed -i 's/^CONFIG_SYSTEM_TRUSTED_KEYS=.*$//' ../out-${__arch}/.config
 
     for __config in ${__wsl2_required_configs}
@@ -155,7 +155,7 @@ do
 
     make -j 16 O=../out-${__arch} ARCH=${__arch} CROSS_COMPILE=${_arch}-linux-gnu- olddefconfig
 
-    for __config in ${__wsl2_quark_configs}
+    for __config in ${__wsl2_sekoohaka_configs}
     do
         echo "${__config}=y" >> ../out-${__arch}/.config
     done

@@ -3,7 +3,7 @@
 # Copyright (C) 2025 Maria Lisina
 # SPDX-License-Identifier: Apache-2.0
 #
-# Quark Kernel build script
+# Sekoohaka Kernel build script
 
 set -e
 
