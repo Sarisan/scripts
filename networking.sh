@@ -22,22 +22,20 @@ auto lo
 iface lo inet loopback
 
 auto eth0
-iface eth0 inet static
-    address 192.168.0.5
-    netmask 255.255.255.0
-    gateway 192.168.0.1
-iface eth0 inet6 auto
+iface eth0 inet dhcp
 
 auto eth1
 iface eth1 inet static
-    address 172.16.0.5
+    address 172.16.0.1
     netmask 255.240.0.0
 iface eth1 inet6 auto
 EOF
 
 cat << EOF > /etc/resolv.conf
-nameserver 192.168.0.1
-nameserver fe80::0
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+nameserver 2001:4860:4860::8888
+nameserver 2001:4860:4860::8844
 EOF
 
 cat << EOF > /etc/hosts

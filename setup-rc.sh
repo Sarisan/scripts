@@ -22,8 +22,4 @@ rc-update add savecache shutdown
 rc-update add seedrng boot
 rc-update add swap boot
 
-rc-update add nftables boot
-rc-update add dnscrypt-proxy
-rc-update add netmount
 rc-update add sshd
-rc-update add zram-init

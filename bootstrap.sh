@@ -18,7 +18,7 @@ mkfs.ext4 -L "Alpine Linux" /dev/${1}2
 mount -m /dev/${1}2 /mnt/bootstrap
 mount -m /dev/${1}1 /mnt/bootstrap/boot
 
-apk -p /mnt/bootstrap -U -X http://dl-cdn.alpinelinux.org/alpine/v3.22/main --allow-untrusted --arch x86_64 --initdb add alpine-base
+apk -p /mnt/bootstrap -U -X https://dl-cdn.alpinelinux.org/alpine/v3.23/main --allow-untrusted --arch x86_64 --initdb add alpine-base
 
 for __dev in dev proc run sys tmp
 do
