@@ -12,7 +12,4 @@ PermitRootLogin yes
 PubkeyAuthentication yes
 PasswordAuthentication no
 KbdInteractiveAuthentication no
-AllowTcpForwarding yes
 EOF
-
-sed -i 's/^AllowTcpForwarding no$/#AllowTcpForwarding no/' /etc/ssh/sshd_config
