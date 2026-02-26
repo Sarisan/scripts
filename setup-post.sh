@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (C) 2025 Maria Lisina
+# Copyright (C) 2025-2026 Maria Lisina
 # SPDX-License-Identifier: Apache-2.0
 #
 # Alpine Linux post setup script, supposed to be ran in working system

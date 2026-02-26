@@ -1,6 +1,6 @@
 #!/usr/bin/env dash
 #
-# Copyright (C) 2025 Maria Lisina
+# Copyright (C) 2025-2026 Maria Lisina
 # SPDX-License-Identifier: Apache-2.0
 #
 # Sekoohaka Kernel build script
