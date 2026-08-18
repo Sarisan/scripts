@@ -5,38 +5,43 @@
 #
 # Telegram Media Re-encoder
 
+if (( __env != 1 ))
+then
+    exec /usr/bin/env -i PATH="${PATH}" __env=1 "${0}" ${@} 2> /dev/null
+fi
+
 set -e
 
-tgencode_version="3.2"
+version="3.3"
 
 if [[ -n "${1}" ]]
 then
-    while getopts hl:r:f:ap:c:d tgencode_options
+    while getopts hl:r:f:ap:c:d opts
     do
-        case "${tgencode_options}" in
+        case "${opts}" in
             (h)
-                tgencode_help=0
+                help=1
             ;;
             (l)
-                tgencode_loglevel=${OPTARG}
+                loglevel=${OPTARG}
             ;;
             (r)
-                tgencode_fps=${OPTARG}
+                fps=${OPTARG}
             ;;
             (f)
-                tgencode_filters="${OPTARG}"
+                filters="${OPTARG}"
             ;;
             (a)
-                tgencode_noaudio=0
+                noaudio=1
             ;;
             (p)
-                tgencode_preset=${OPTARG}
+                preset=${OPTARG}
             ;;
             (c)
-                tgencode_crf=${OPTARG}
+                crf=${OPTARG}
             ;;
             (d)
-                tgencode_delete=0
+                delete=1
             ;;
             (*)
                 echo "Unrecognized options" \
@@ -48,12 +53,12 @@ then
 
     shift $((OPTIND - 1))
 else
-    tgencode_help=0
+    help=1
 fi
 
-if [[ -n "${tgencode_help}" ]]
+if (( help == 1 ))
 then
-    echo "Telegram Media Re-encoder v${tgencode_version}" \
+    echo "Telegram Media Re-encoder v${version}" \
         "\n\nUsage: ${0} [options] [file]" \
         "\n\nOptions:" \
         "\n  -h\t\tShow help information" \
@@ -67,66 +72,66 @@ then
     exit 0
 fi
 
-for tgencode_zmod in zsh/files
+for zmod in zsh/files
 do
-    if ! zmodload ${tgencode_zmod}
+    if ! zmodload ${zmod}
     then
-        tgencode_failed="${tgencode_failed} ${tgencode_zmod}"
+        failed+=(${zmod})
     fi
 done
 
-if [[ -n "${tgencode_failed}" ]]
+if [[ -n "${failed}" ]]
 then
-    echo "Failed to load Z Shell modules:${tgencode_failed}" \
+    echo "Failed to load Z Shell modules: ${failed}" \
         "\nUpdate your Z Shell or get a version with all required modules"
     exit 1
 fi
 
-for tgencode_req in ffmpeg
+for req in ffmpeg
 do
-    if ! command -v ${tgencode_req} > /dev/null
+    if ! command -v ${req} > /dev/null
     then
-        tgencode_missing="${tgencode_missing} ${tgencode_req}"
+        missing+=(${req})
     fi
 done
 
-if [[ -n "${tgencode_missing}" ]]
+if [[ -n "${missing}" ]]
 then
-    echo "Missing dependencies:${tgencode_missing}" \
+    echo "Missing dependencies: ${missing}" \
         "\nFor more information follow: https://command-not-found.com/"
     exit 1
 fi
 
-if [[ -z "${tgencode_loglevel}" ]]
+if [[ -z "${loglevel}" ]]
 then
-    tgencode_loglevel=info
+    loglevel=info
 fi
 
-if [[ -z "${tgencode_fps}" ]]
+if [[ -z "${fps}" ]]
 then
-    tgencode_fps=source_fps
+    fps=source_fps
 fi
 
-if [[ -z "${tgencode_filters}" ]]
+if [[ -z "${filters}" ]]
 then
-    tgencode_filters="pad=ceil(iw/2)*2:ceil(ih/2)*2"
+    filters="pad=ceil(iw/2)*2:ceil(ih/2)*2"
 fi
 
-if [[ -n "${tgencode_noaudio}" ]]
+if (( noaudio == 1 ))
 then
-    tgencode_acodec=(an)
+    acodec=(an)
 else
-    tgencode_acodec=(acodec aac)
+    acodec=(acodec aac)
 fi
 
-if [[ -z "${tgencode_preset}" ]]
+if [[ -z "${preset}" ]]
 then
-    tgencode_preset=medium
+    preset=medium
 fi
 
-if [[ -z "${tgencode_crf}" ]]
+if [[ -z "${crf}" ]]
 then
-    tgencode_crf=23
+    crf=23
 fi
 
 if [[ -z "${1}" ]]
@@ -135,49 +140,49 @@ then
     exit 1
 fi
 
-tgencode_exit=0
-tgencode_input=(${@})
+exit=0
+input=(${@})
 
-for tgencode_file in ${tgencode_input}
+for file in ${input}
 do
-    if ! [[ -f "${tgencode_file}" ]]
+    if ! [[ -f "${file}" ]]
     then
-        tgencode_exit=1
-        echo "No file found: ${tgencode_file}"
+        exit=1
+        echo "No file found: ${file}"
 
         continue
     fi
 
-    tgencode_output="${tgencode_file%.*}_t.mp4"
-    echo "Re-encoding: ${tgencode_file}"
+    output="${file%.*}_t.mp4"
+    echo "Re-encoding: ${file}"
 
-    if ffmpeg -i "${tgencode_file}" \
-        -loglevel ${tgencode_loglevel} \
+    if ffmpeg -i "${file}" \
+        -loglevel ${loglevel} \
         -map_metadata -1 \
         -profile:v high \
         -vcodec libx264 \
-        -vf "fps=${tgencode_fps},${tgencode_filters}" \
+        -vf "fps=${fps},${filters}" \
         -pix_fmt yuv420p \
-        -${tgencode_acodec[@]} \
-        -preset ${tgencode_preset} \
+        -${acodec[@]} \
+        -preset ${preset} \
         -level 4.0 \
-        -crf ${tgencode_crf} \
+        -crf ${crf} \
         -movflags +faststart \
-        "${tgencode_output}" -y
+        "${output}" -y 2>&1
     then
-        if [[ -n "${tgencode_delete}" ]]
+        if (( delete == 1 ))
         then
-            rm -f "${tgencode_file}"
-            mv "${tgencode_output}" "${tgencode_file%.*}.mp4"
+            rm -f "${file}"
+            mv "${output}" "${file%.*}.mp4"
 
-            echo "Succesfully re-encoded: ${tgencode_file%.*}.mp4"
+            echo "Succesfully re-encoded: ${file%.*}.mp4"
         else
-            echo "Succesfully re-encoded: ${tgencode_output}"
+            echo "Succesfully re-encoded: ${output}"
         fi
     else
-        tgencode_exit=1
-        echo "Failed to re-encode: ${tgencode_file}"
+        exit=1
+        echo "Failed to re-encode: ${file}"
     fi
 done
 
-exit ${tgencode_exit}
+exit ${exit}
