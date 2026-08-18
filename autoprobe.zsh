@@ -7,8 +7,9 @@
 
 set -e
 
-lkddb="$(dirname "${0}")/lkddb.list"
-defconfig="$(dirname "${0}")/autoprobe.defconfig"
+dir="${0%/*}"
+lkddb="${dir}/lkddb.list"
+defconfig="${dir}/autoprobe.defconfig"
 
 if ! [[ -f "${lkddb}" ]]
 then
