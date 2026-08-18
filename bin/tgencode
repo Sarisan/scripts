@@ -12,7 +12,7 @@ fi
 
 set -e
 
-version="3.3"
+version="3.4"
 
 if [[ -n "${1}" ]]
 then
@@ -136,7 +136,8 @@ fi
 
 if [[ -z "${1}" ]]
 then
-    echo "No input file specified. See '${0} -h'"
+    echo "No input file specified" \
+        "\nSee '${0} -h'"
     exit 1
 fi
 
