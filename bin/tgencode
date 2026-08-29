@@ -12,7 +12,7 @@ fi
 
 set -e
 
-version="3.4"
+version="3.5"
 
 if [[ -n "${1}" ]]
 then
@@ -45,7 +45,7 @@ then
             ;;
             (*)
                 echo "Unrecognized options" \
-                    "\nSee '${0} -h'"
+                    "\nSee 'tgencode -h'"
                 exit 1
             ;;
         esac
@@ -59,7 +59,7 @@ fi
 if (( help == 1 ))
 then
     echo "Telegram Media Re-encoder v${version}" \
-        "\n\nUsage: ${0} [options] [file]" \
+        "\n\nUsage: tgencode [options] [file]" \
         "\n\nOptions:" \
         "\n  -h\t\tShow help information" \
         "\n  -l <lvl>\tLog level, default: info" \
@@ -137,7 +137,7 @@ fi
 if [[ -z "${1}" ]]
 then
     echo "No input file specified" \
-        "\nSee '${0} -h'"
+        "\nSee 'tgencode -h'"
     exit 1
 fi
 
