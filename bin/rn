@@ -1,0 +1,85 @@
+#!/usr/bin/env zsh
+#
+# Copyright (C) 2026 Maria Lisina
+# SPDX-License-Identifier: Apache-2.0
+#
+# Rename files and directories
+
+if (( __env != 1 ))
+then
+    exec /usr/bin/env -i PATH="${PATH}" __env=1 "${0}" ${@} 2> /dev/null
+fi
+
+set -e
+
+version="1.0"
+
+if [[ -n "${1}" ]]
+then
+    while getopts hu opts
+    do
+        case "${opts}" in
+            (h)
+                help=1
+            ;;
+            (u)
+                unsafe=1
+            ;;
+            (*)
+                echo "Unrecognized options" \
+                    "\nSee 'rn -h'"
+                exit 1
+            ;;
+        esac
+    done
+
+    shift $((OPTIND - 1))
+else
+    help=1
+fi
+
+if (( help == 1 ))
+then
+    echo "Rename v${version}" \
+        "\n\nUsage: rn [options] [destination] [name]" \
+        "\n\nOptions:" \
+        "\n  -h\t\tShow help information" \
+        "\n  -u\t\tUnsafe mode"
+    exit 0
+fi
+
+for zmod in zsh/files
+do
+    if ! zmodload ${zmod}
+    then
+        failed+=(${zmod})
+    fi
+done
+
+if [[ -n "${failed}" ]]
+then
+    echo "Failed to load Z Shell modules: ${failed}" \
+        "\nUpdate your Z Shell or get a version with all required modules"
+    exit 1
+fi
+
+if [[ -z "${1}" || -z "${2}" ]]
+then
+    echo "Missing arguments" \
+        "\nSee 'rn -h'"
+    exit 1
+fi
+
+if ! [[ -a "${1}" ]]
+then
+    echo "File or directory '${1}' does not exist"
+    exit 1
+fi
+
+if (( unsafe == 0 )) && [[ -a "${1:h}/${2}" ]]
+then
+    echo "File or directory '${2}' already exists"
+    exit 1
+fi
+
+mv "${1}" "${1:h}/${2}"
